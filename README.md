@@ -11,9 +11,7 @@ Verifier for Verificatum generated NIZK proofs.
   * [ ] Verifying NIZK proof
     * [ ] Generation of a proof to be parsed
     * [ ] Parsing of proof ouputs into relevant variables.
-    * [ ] NIZK verifier. (Partially done using other reference)[^2][^,4]
-
-## References
+    * [ ] NIZK verifier. (Partially done using other reference)[^2][^ 4]
 
 [^1]: Wikstrom, “How To Implement A Stand-Alone Veriﬁer for the Veriﬁcatum Mix-Net.”
 [^2]: Wikström, “A Commitment-Consistent Proof of a Shuffle.”
