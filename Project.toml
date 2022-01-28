@@ -1,0 +1,7 @@
+name = "Verificatum"
+uuid = "1f563a0d-7743-47a1-ae75-8271047b5d57"
+authors = ["akels <akels14@gmail.com>"]
+version = "0.1.0"
+
+[deps]
+Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
