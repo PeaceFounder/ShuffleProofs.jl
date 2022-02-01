@@ -1,0 +1,69 @@
+
+-----------------------------------------------------------
+ Copyright Douglas Wikstrom 2008-2018
+ Licensed under AGPL as defined in:
+ https://www.gnu.org/licenses/agpl-3.0.en.html
+-----------------------------------------------------------
+-----------------------------------------------------------
+Party01
+-----------------------------------------------------------
+220201 21:21:30 Starting hint server.
+220201 21:21:30 Starting http server.
+220201 21:21:30 Synchronizing with the other servers. Please wait.
+220201 21:21:30 Generate keys for secret communication.
+220201 21:21:30 | Generate and read plain keys.
+220201 21:21:30 | | Generate key-pair.
+220201 21:21:30 | | Exchange public keys with all parties.
+220201 21:21:30 | | | Publish public key.
+220201 21:21:30 | | Writing keys to file.
+220201 21:21:30 | Generate independent generator.
+220201 21:21:30 | | Execute Pedersen 1 times with rotating dealer.
+220201 21:21:30 | | | Deal a secret using Pedersen VSS.
+220201 21:21:30 | | | | Generate checking elements.
+220201 21:21:30 | | | | Compute encrypted shares for all parties.
+220201 21:21:30 | | | | Publish checking elements and encrypted shares.
+220201 21:21:30 | | | | Exchange verdicts.
+220201 21:21:30 | | | | | Publish verdict (true).
+220201 21:21:30 | | | | Sharing completed.
+220201 21:21:30 | | Write independent generator to file.
+220201 21:21:30 Shuffle 10 ciphertexts.
+220201 21:21:30 | Derive independent generators using RO.
+220201 21:21:31 | Generate reencryption exponents.
+220201 21:21:31 | Compute reencryption factors.
+220201 21:21:31 | Perform local pre-computation.
+220201 21:21:31 | Compute permutation commitment.
+220201 21:21:31 | Compute output list.
+220201 21:21:31 | Publish output list.
+220201 21:21:31 | Prove correctness of shuffle.
+220201 21:21:31 | | Publish our permutation commitment.
+220201 21:21:31 | | Generate batching vector.
+220201 21:21:31 | | | Derive 256 bits using random oracle.
+220201 21:21:31 | | Compute commitment.
+220201 21:21:32 | | Publish our commitment.
+220201 21:21:32 | | Generate challenge.
+220201 21:21:32 | | | Derive 256 bits using random oracle.
+220201 21:21:32 | | Compute reply.
+220201 21:21:32 | | Publish reply.
+220201 21:21:32 Waiting for mutual shutdown acknowledgements.
+220201 21:21:32 | Publish acknowledgement.
+220201 21:21:32 | Publish acknowledgement.
+220201 21:21:32 Allow download of our acknowledgment for another 1 seconds.
+220201 21:21:33 Stopping hint server.
+220201 21:21:33 Stopping http server.
+-----------------------------------------------------------
+Completed shuffling.
+
+Running time:                                          (ms)
+- Execution         0h  0m  2s                         2897
+- Network           0h  0m  0s                          112
+- Effective         0h  0m  2s                         2785
+- Idle              0h  0m  0s                            0
+- Computation       0h  0m  2s                         2785
+
+Communication:                                      (bytes)
+- Sent                  0.0 B                             0
+- Received              0.0 B                             0
+- Total                 0.0 B                             0
+
+Proof size:             8.6 KB                         8559
+

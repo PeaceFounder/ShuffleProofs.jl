@@ -5,8 +5,8 @@ Verifier for Verificatum generated NIZK proofs.
 ## Current progress
 
   * [x] Binary tree parser
-  * [ ] Random oracles according to specification[^1] (according to verifier document)
-  * [ ] Independent generators (as generated from output `vmnv -t bas.h`)[^3]
+  * [x] Random oracles according to specification[^1] (according to verifier document)
+  * [ ] Independent generators (as generated from output `vmnv -t bas.h`)[^3] [Strugling to match]
   * [ ] Verifying ciphertexts shufling by decrypting with a secret key. (Tests correctness of ElGamal and correct passage of a key)
   * [ ] Verifying NIZK proof
     * [ ] Generation of a proof to be parsed

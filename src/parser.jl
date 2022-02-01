@@ -61,8 +61,13 @@ function parseb(x)
 end
 
 
-convert(::Type{Tree}, x::Vector{UInt8}) = parseb(x)[1]
-convert(::Type{Tree}, x::AbstractString) = convert(Tree, hex2bytes(replace(x, " "=>"")))
+# decode(x::Vector{UInt8})
+# parse(::Type{Tree}, x::Vector{UInt8})
+
+decode(x::Vector{UInt8}) = parseb(x)[1]
+decode(x::AbstractString) = decode(hex2bytes(replace(x, " "=>""))) # I could have optional arguments here as well
+#convert(::Type{Tree}, x::Vector{UInt8}) = parseb(x)[1]
+#convert(::Type{Tree}, x::AbstractString) = convert(Tree, hex2bytes(replace(x, " "=>"")))
 
 
 ### Reverse
@@ -95,21 +100,27 @@ function tobin(node::Node)
     return bin
 end
 
-convert(::Type{Vector{UInt8}}, x::T) where T <: Tree = tobin(x)
+encode(::Type{Vector{UInt8}}, x::Tree) = tobin(x)
+encode(::Type{String}, x::Tree) = bytes2hex(encode(Vector{UInt8}, x))
+#convert(::Type{Vector{UInt8}}, x::T) where T <: Tree = tobin(x) ### Ambigious
+# convert(::Type{String}, x::T) where T <: Tree
 
-tobig(x) = parse(BigInt, bytes2hex(x), base=16)
+# function convert(::Type{BigInt}, x::Leaf)
+#     return tobig(reverse(x.x))
+# end
 
-
-function convert(::Type{BigInt}, x::Leaf)
-    return tobig(x.x)
+function convert(::Type{T}, x::Leaf) where T <: Integer
+    return frombytes(T, reverse(x.x))
 end
+
 
 function convert(::Type{String}, x::Leaf)
     return String(copy(x.x))
 end
 
-function convert(::Type{Vector{BigInt}}, x::Node)
-    return BigInt[tobig(i.x) for i in x.x]
+function convert(::Type{Vector{T}}, x::Node) where T <: Integer 
+    #return BigInt[tobig(reverse(i.x)) for i in x.x] # Why not convert?
+    return T[convert(T, i) for i in x.x] # Why not convert?
 end
 
 function convert(cfact::Type{T}, x::Node) where T <: Tuple 
@@ -119,26 +130,45 @@ end
 
 ### The last part then remains to convert tuple to tree! This is of practical importance to specify 
 
-function int2bytes(x::Integer)
-    hex = string(x, base=16)
-    if mod(length(hex), 2) != 0
-        hex = string("0", hex)
-    end
-    return hex2bytes(hex)
-end
-
 #function convert(::Type{Tree}, x::BigInt)
 function Leaf(x::BigInt)
     bytes = reverse(int2bytes(x)) ### Do I need to reverse order here?
-    return Leaf(bytes)
+    
+    #return Leaf(bytes)
+    # Need to decode this from Java documentaion
+    # May experiment with it on https://compiler.javatpoint.com/opr/test.jsp?filename=BigIntegerBitLengthExample
+    # the most significant byte is in the zeroth element. The array will contain the minimum number of bytes required to represent this BigInteger, including at least one sign bit, which is (ceil((this.bitLength() + 1)/8)). 
+
+    # https://en.wikipedia.org/wiki/Signed_number_representations#Signed_magnitude_representation
+
+    if bytes[1] > 127
+        return Leaf(UInt8[0, bytes...]) # Adding a redundant byte to ensure that the number is positive. 
+    else
+        return Leaf(bytes)
+    end
 end
 
 
-function Leaf(x::Integer)
+function Leaf(x::Integer; trim = true)
     bytes = reverse(reinterpret(UInt8, [x]))
-    N = findfirst(x -> x != 0, bytes)
-    return Leaf(bytes[N:end])
+    
+    if trim
+        N = findfirst(x -> x != 0, bytes)
+        leaf = Leaf(bytes[N:end])
+    else
+        leaf = Leaf(bytes)
+    end
+
+    return leaf
 end
+
+function Leaf(x::Integer, k::Integer)
+    leaf = Leaf(x)
+    pad = k - length(leaf.x)
+    newleaf = Leaf(UInt8[zeros(UInt8, pad)...,leaf.x...])
+    return newleaf
+end
+
 
 
 function Leaf(x::String)
@@ -146,7 +176,8 @@ function Leaf(x::String)
     return Leaf(bytes)
 end
 
-Tree(x::Union{String, Integer}) = Leaf(x)
+Tree(x::Any) = Leaf(x)
+Tree(x::Leaf) = x
 Tree(x::Tuple) = Node(x)
 
 function Node(x::Tuple)
@@ -157,3 +188,4 @@ function Node(x::Tuple)
     end
     return node
 end
+
