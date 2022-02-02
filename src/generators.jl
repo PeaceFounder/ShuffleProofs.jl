@@ -143,10 +143,18 @@ function crs(g::PrimeGenerator, N::Int, prg::PRG, nr::Int)
 
     𝐭 = rand(prg, BigInt, N; l = l)
 
+    #r = big(2)^(np + nr)
     r = big(2)^(np + nr)
-    𝐭′ = (t-> PrimeGenerator(mod(t, r), p)).(𝐭)
+    #𝐭′ = (t-> PrimeGenerator(mod(t, r), p)).(𝐭)
+    𝐭′ = mod.(𝐭, r)
 
-    𝐡 = 𝐭′ .^ ((p - 1) ÷ q)
+    
+    # @infiltrate
+
+    #𝐡 = 𝐭′ .^ ((p - 1) ÷ q)
+
+    𝐡 = powermod.(𝐭′, (p - 1) ÷ q, p)
+
 
     #@infiltrate
     
