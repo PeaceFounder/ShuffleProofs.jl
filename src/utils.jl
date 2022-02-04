@@ -9,50 +9,24 @@ function int2bytes(x::Integer)
     return reverse(hex2bytes(hex))
 end
 
-bitsize(::Type{T}) where T <: Integer = T.size * 8
-#bitsize(::Type{UInt8}) = 8
+bitlength(::Type{T}) where T <: Integer = T.size * 8
 
 
-### This piece will be different for BigInt
-function frombytes(::Type{T}, x::Vector{UInt8}) where T <: Integer 
+#bitlength(p) = Int(ceil(log2(p + 1)))
 
-    L = bitsize(T) ÷ 8
-    y = UInt8[x..., zeros(UInt8, L - length(x))...]
-    r = reinterpret(T, y)[1]
-
-    return r
-end
-
-frombytes(::Type{BigInt}, x::Vector{UInt8}) = tobig(x) # I do also need to know number of bits here 
-
-
-function frombytes(::Type{T}, x::Vector{UInt8}, N::Int) where T <: Integer
-    
-    M = length(x) ÷ N
-    x = reshape(x, (M, N))
-
-    numbers = T[frombytes(T, x[:, i]) for i in 1:N]
-
-    return numbers
-end
-
-
-function bitsize(p::Integer)
-    # ceil(log2( c + 1)) is another option
-    @assert p > 0 "Not implemented"
+function bitlength(p::Integer)
 
     bits = bitstring(p)
     start = findfirst(x -> x == '1', bits)
-    N = length(bits[start:end])
+    N = length(bits) - start + 1
+
     return N
 end
 
 
-function bitsize(p::BigInt)
-    @assert p > 0 "Not implemented"
+function bitlength(p::BigInt)
 
     bytes = int2bytes(p)
-    #bits = bitstring(bytes[1])
     bits = bitstring(bytes[end])
     start = findfirst(x -> x == '1', bits)
     N = length(bytes) * 8  - (start - 1)
@@ -60,3 +34,29 @@ function bitsize(p::BigInt)
     return N
 end
 
+
+
+
+interpret(::Type{BigInt}, x::Vector{UInt8}) = tobig(reverse(x))
+
+function interpret(::Type{T}, x::Vector{UInt8}) where T <: Integer 
+
+    L = bitlength(T) ÷ 8
+    y = UInt8[zeros(UInt8, L - length(x))..., x...]
+
+    r = reinterpret(T, reverse(y))[1]
+    return r
+end
+
+
+
+interpret(::Type{Vector{UInt8}}, x::BigInt) = reverse(int2bytes(x))
+
+interpret(::Type{Vector{UInt8}}, x::Integer) = reverse(reinterpret(UInt8, [x])) # Number of bytes are useful for construction for bytes. 
+
+function interpret(::Type{Vector{T}}, 𝐫::Vector{UInt8}, N::Int) where T <: Integer
+    M = length(𝐫) ÷ N
+    𝐮 = reshape(𝐫, (M, N))
+    𝐭 = [interpret(T, 𝐮[:, i]) for i in 1:N]
+    return 𝐭
+end

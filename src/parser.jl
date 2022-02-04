@@ -23,14 +23,15 @@ Node() = Node([])
 Base.push!(n::Node, y) = push!(n.x, y)
 
 
-toint(x) = reinterpret(UInt32, x[4:-1:1])[1]
+
+toint(x) = reinterpret(UInt32, x[4:-1:1])[1] ### TOREMOVE
 
 
 function parseb(x)
     
     if x[1] == LEAF
 
-        L = toint(x[2:5])
+        L = interpret(UInt32, x[2:5])
 
         bytes = x[6:5+L]
         leaf = Leaf(bytes)
@@ -45,7 +46,8 @@ function parseb(x)
 
     elseif x[2] == NODE
 
-        N = toint(x[2:5])
+        N = interpret(UInt32, x[2:5])
+
         rest = x[6:end]
 
         node = Node()
@@ -61,23 +63,17 @@ function parseb(x)
 end
 
 
-# decode(x::Vector{UInt8})
-# parse(::Type{Tree}, x::Vector{UInt8})
-
 decode(x::Vector{UInt8}) = parseb(x)[1]
 decode(x::AbstractString) = decode(hex2bytes(replace(x, " "=>""))) # I could have optional arguments here as well
-#convert(::Type{Tree}, x::Vector{UInt8}) = parseb(x)[1]
-#convert(::Type{Tree}, x::AbstractString) = convert(Tree, hex2bytes(replace(x, " "=>"")))
-
 
 ### Reverse
 
 
 function tobin(leaf::Leaf)
 
-    N = UInt32[length(leaf.x)]
+    N = UInt32(length(leaf.x))
 
-    Nbin = reinterpret(UInt8, N)[end:-1:1]
+    Nbin = interpret(Vector{UInt8}, N)
     bin = UInt8[LEAF, Nbin..., leaf.x...]
 
     return bin
@@ -85,9 +81,9 @@ end
 
 function tobin(node::Node)
     
-    N = UInt32[length(node.x)]
-    Nbin = reinterpret(UInt8, N)[end:-1:1]
-
+    N = UInt32(length(node.x))
+    Nbin = interpret(Vector{UInt8}, N)
+    
     data = UInt8[]
 
     for n in node.x
@@ -102,73 +98,47 @@ end
 
 encode(::Type{Vector{UInt8}}, x::Tree) = tobin(x)
 encode(::Type{String}, x::Tree) = bytes2hex(encode(Vector{UInt8}, x))
-#convert(::Type{Vector{UInt8}}, x::T) where T <: Tree = tobin(x) ### Ambigious
-# convert(::Type{String}, x::T) where T <: Tree
 
-# function convert(::Type{BigInt}, x::Leaf)
-#     return tobig(reverse(x.x))
-# end
 
-function convert(::Type{T}, x::Leaf) where T <: Integer
-    return frombytes(T, reverse(x.x))
-end
-
+convert(::Type{T}, x::Leaf) where T <: Integer = interpret(T, x.x)
 
 function convert(::Type{String}, x::Leaf)
     return String(copy(x.x))
 end
 
 function convert(::Type{Vector{T}}, x::Node) where T <: Integer 
-    #return BigInt[tobig(reverse(i.x)) for i in x.x] # Why not convert?
-    return T[convert(T, i) for i in x.x] # Why not convert?
+    return T[convert(T, i) for i in x.x] 
 end
 
 function convert(cfact::Type{T}, x::Node) where T <: Tuple 
      return Tuple((convert(ci, xi) for (xi, ci) in zip(x.x, cfact.types)))
 end
 
+function Leaf(x::Signed)
 
-### The last part then remains to convert tuple to tree! This is of practical importance to specify 
+    bytes = interpret(Vector{UInt8}, x) 
 
-#function convert(::Type{Tree}, x::BigInt)
-function Leaf(x::BigInt)
-    bytes = reverse(int2bytes(x)) ### Do I need to reverse order here?
-    
-    #return Leaf(bytes)
-    # Need to decode this from Java documentaion
-    # May experiment with it on https://compiler.javatpoint.com/opr/test.jsp?filename=BigIntegerBitLengthExample
-    # the most significant byte is in the zeroth element. The array will contain the minimum number of bytes required to represent this BigInteger, including at least one sign bit, which is (ceil((this.bitLength() + 1)/8)). 
-
-    # https://en.wikipedia.org/wiki/Signed_number_representations#Signed_magnitude_representation
-
+    # Adding a redundant byte to ensure that the number is positive. 
     if bytes[1] > 127
-        return Leaf(UInt8[0, bytes...]) # Adding a redundant byte to ensure that the number is positive. 
+        return Leaf(UInt8[0, bytes...]) 
     else
         return Leaf(bytes)
     end
 end
 
-
-function Leaf(x::Integer; trim = true)
-    bytes = reverse(reinterpret(UInt8, [x]))
+Leaf(x::Unsigned) = Leaf(interpret(Vector{UInt8}, x))
     
-    if trim
-        N = findfirst(x -> x != 0, bytes)
-        leaf = Leaf(bytes[N:end])
-    else
-        leaf = Leaf(bytes)
-    end
 
-    return leaf
-end
-
-function Leaf(x::Integer, k::Integer)
+# Encoding with fixed size bytes
+function Leaf(x::Integer, k::Integer) ### The logic here also seems better could belong to an interpret method.
     leaf = Leaf(x)
-    pad = k - length(leaf.x)
-    newleaf = Leaf(UInt8[zeros(UInt8, pad)...,leaf.x...])
+    N = findfirst(x -> x != UInt8(0), leaf.x)
+    bytes = leaf.x[N:end]
+    pad = k - length(bytes)
+
+    newleaf = Leaf(UInt8[zeros(UInt8, pad)...,bytes...])
     return newleaf
 end
-
 
 
 function Leaf(x::String)
@@ -188,4 +158,3 @@ function Node(x::Tuple)
     end
     return node
 end
-

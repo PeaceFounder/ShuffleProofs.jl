@@ -39,19 +39,11 @@ order(g::PrimeGenerator) = (modulus(g) - 1) ÷ 2
 validate(g::PrimeGenerator) = g.x != 1 && g.x^order(g) == 1
 
 
-#Base.broadcast(::typeof(^), g::PrimeGenerator, v::Vector) = [g^i for i in v]
-
-
 import Base.^
 """
 Beacuse a prime order group is cyclic, in order to put it in power larger than that of it's order we can take it's mod.
 """
-function ^(g::PrimeGenerator, n::Integer)
-    n_mod = mod(n, order(g))
-    #@assert n_mod != 0 "Power matches prime group order pointing to element {1}."
-    n_mod==0 && (@warn "Power matches prime group order pointing to element {1}.")
-    PrimeGenerator(g.x^n_mod)
-end
+^(g::PrimeGenerator, n::Integer) = PrimeGenerator(g.x^n) # Redefining in this way because prone to make an invalid test
 
 style(x, n) = "\33[1;$(n)m$x\33[0m"
 
@@ -66,32 +58,33 @@ safeprime(q::Integer) = 2*q + 1
 
 Base.isless(x::PrimeGenerator, y::PrimeGenerator) = value(x) < value(y)
 
+
+
+############################################ TODO ##################################################
+
+struct GVector{G}
+    x::Vector{T} where T
+    g::G
+end
+
+####################################################################################################
+
+
+
 ### Representation of field elements
 
 # Need something smarter in the end
-bitsize(x::PrimeGenerator) = bitsize(modulus(x)) #length(int2bytes(modulus(x))) * 8
+bitlength(x::PrimeGenerator) = bitlength(modulus(x)) 
 
-Leaf(x::PrimeGenerator; L = bitsize(x)) = Leaf(value(x), div(L + 1, 8, RoundUp))
+Leaf(x::PrimeGenerator; L = bitlength(x)) = Leaf(value(x), div(L + 1, 8, RoundUp))
 
 
 function Tree(x::Vector{PrimeGenerator})
-    L = bitsize(x[1])
+    L = bitlength(x[1])
     s = Leaf[Leaf(i, L = L) for i in x]
     return Node(s)
 end
 
-
-# Conversion one needs to do manually as it is necessary to know additional paramters for the group. 
-
-# struct PrimeGroup # May as well make it to be CyclicGroup whoose dispatch just depends on the generator.
-#     g::PrimeGenerator
-# end
-
-# convert(::Type{Tree}, x::PrimeGroup) = convert(::Type{Tree}, ())
-
-# Instead I could define methods marshal and unmarshal for groups generators. 
-
-# I need to have four bytes for the last
 
 function marshal(x::PrimeGenerator)
 
@@ -99,8 +92,7 @@ function marshal(x::PrimeGenerator)
     p = modulus(x)
     q = order(x)
     g = Leaf(x)
-    e = Leaf(UInt32(1), trim = false)
-
+    e = UInt32(1)
 
     msg = (java_name, (p, q, g, e))
 
@@ -111,7 +103,6 @@ end
 
 function unmarshal(::Type{T}, x::Node) where T
 
-    # Perhaps g and p need to be enforced to have the same bitlength
     (java_name, (p, q, g, e)) = convert(Tuple{String, Tuple{T, T, T, UInt32}}, x)
     
     @assert java_name == "com.verificatum.arithm.ModPGroup" # Alternativelly I could have an if statement
@@ -129,42 +120,20 @@ end
 ### Now I need to make the generator group elements as desired
 
 
-
 function crs(g::PrimeGenerator, N::Int, prg::PRG, nr::Int)
     
     p = modulus(g)
     q = order(g)
 
-    np = bitsize(p)
+    np = bitlength(p)
 
-    #P = div(np + nr, 8, RoundUp) # number of bytes
+    𝐭 = rand(prg, BigInt, N; n = np + nr)
 
-    l = div(np + nr, 8, RoundUp)
-
-    𝐭 = rand(prg, BigInt, N; l = l)
-
-    #r = big(2)^(np + nr)
-    r = big(2)^(np + nr)
-    #𝐭′ = (t-> PrimeGenerator(mod(t, r), p)).(𝐭)
-    𝐭′ = mod.(𝐭, r)
-
-    
-    # @infiltrate
-
-    #𝐡 = 𝐭′ .^ ((p - 1) ÷ q)
+    𝐭′ = mod.(𝐭, big(2)^(np + nr))
 
     𝐡 = powermod.(𝐭′, (p - 1) ÷ q, p)
 
-
-    #@infiltrate
-    
     return 𝐡
 end
 
-# np is bitlengt of p
-# 
-#bitsize = np + nr
-
-
-#N = div(np + nr, 8, RoundUp)
 

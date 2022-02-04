@@ -13,6 +13,15 @@ end
     include("primitives.jl")
 end
 
-@testset "Groups, generators and independent basis" begin
+@testset "Calculation of ρ" begin
+    include("rho.jl")
+end
+
+@testset "Groups, generators" begin
     include("generators.jl")
 end
+
+@testset "Independent basis vectors" begin
+    include("generators.jl")
+end
+
