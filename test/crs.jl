@@ -1,5 +1,5 @@
 using Test
-using Verificatum: Tree, crs, PrimeGenerator, modulus, order, decode, tobig, interpret, Leaf, unmarshal
+using Verificatum: Tree, crs, PrimeGenerator, modulus, order, decode, tobig, interpret, Leaf, unmarshal, outlen
 
 ### Let's make the setup complete. From repo I ahve a following public parameters:
 nr = 100
@@ -37,11 +37,11 @@ s = ro(d) # The seed
 
 prg = PRG(h, s)
 
-𝐡′ = crs(𝓰, 10, prg, nr)
+𝐡′ = crs(group(𝓰), 10, prg, nr)
 
 for hi in 𝐡′
-    @test powermod(hi, q + 1, p) == hi
+    @test hi^(q + 1) == hi
 end
 
-@test 𝐡 == 𝐡′
+@test 𝐡 == value.(𝐡′)
 

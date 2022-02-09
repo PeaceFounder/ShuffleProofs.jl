@@ -11,17 +11,17 @@ end
 
 @testset "Random number generators and oracles" begin
     include("primitives.jl")
-end
-
-@testset "Calculation of ρ" begin
     include("rho.jl")
 end
 
 @testset "Groups, generators" begin
     include("generators.jl")
+    include("gvector.jl")
 end
 
 @testset "Independent basis vectors" begin
-    include("generators.jl")
+    include("crs.jl")
 end
+
+
 

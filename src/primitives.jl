@@ -6,7 +6,6 @@ struct Hash
 end
 
 (h::Hash)(x::Vector{UInt8}) = hex2bytes(hexdigest(h.spec, x))
-(h::Hash)(t::Tree) = h(convert(Vector{UInt8}, t))
 
 # Dispatching on value types seems as plausable solution
 outlen(::Hash) = 256 # Number of bits in the output of the hash function
@@ -76,3 +75,21 @@ function rand(prg::PRG, ::Type{T}, N::Int; n = bitlength(T)) where T
 end
 
 
+
+function crs(G::PrimeGroup, N::Int, prg::PRG, nr::Int)
+    
+    p = modulus(G)
+    q = order(G)
+
+    np = bitlength(p)
+
+    𝐭 = rand(prg, BigInt, N; n = np + nr)
+
+    𝐭′ = mod.(𝐭, big(2)^(np + nr))
+
+    𝐡 = powermod.(𝐭′, (p - 1) ÷ q, p)
+    
+    𝐡_typed = convert(Vector{PrimeGenerator{G}}, 𝐡)
+
+    return 𝐡_typed
+end

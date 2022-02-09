@@ -1,1 +1,0 @@
-jerdmanis@jerdmanis-UX305FA.2232693:1641222827

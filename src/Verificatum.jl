@@ -4,10 +4,11 @@ using Infiltrator
 
 include("utils.jl") # Common functions
 
-include("parser.jl")
-include("primitives.jl")
+include("generators.jl") 
+include("primitives.jl") 
 
-include("generators.jl")
+
+include("parser.jl") 
 
 
 export Node, Leaf, Tree

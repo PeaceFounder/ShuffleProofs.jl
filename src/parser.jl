@@ -158,3 +158,50 @@ function Node(x::Tuple)
     end
     return node
 end
+
+
+############################ COMPOSITE TYPE PARSING ############################
+
+(h::Hash)(t::Tree) = h(convert(Vector{UInt8}, t))
+
+# Need something smarter in the end
+bitlength(x::PrimeGenerator) = bitlength(modulus(x)) 
+
+Leaf(x::PrimeGenerator; L = bitlength(x)) = Leaf(value(x), div(L + 1, 8, RoundUp))
+
+function Tree(x::Vector{PrimeGenerator})
+    L = bitlength(x[1])
+    s = Leaf[Leaf(i, L = L) for i in x]
+    return Node(s)
+end
+
+function marshal(x::PrimeGenerator)
+
+    java_name = "com.verificatum.arithm.ModPGroup"
+    p = modulus(x)
+    q = order(x)
+    g = Leaf(x)
+    e = UInt32(1)
+
+    msg = (java_name, (p, q, g, e))
+
+    tree = Tree(msg)
+
+    return tree
+end
+
+function unmarshal(::Type{T}, x::Node) where T
+
+    (java_name, (p, q, g, e)) = convert(Tuple{String, Tuple{T, T, T, UInt32}}, x)
+    
+    @assert java_name == "com.verificatum.arithm.ModPGroup" # Alternativelly I could have an if statement
+    
+    # May as well do assertion here, but that is not necessary as forward and backwards conversion would be rather enough.
+
+    x = PrimeGenerator(g, p)
+
+    @assert order(x) == q "The modular group does not use safe primes"
+    
+    return x
+end
+
