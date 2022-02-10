@@ -47,7 +47,6 @@ Base.display(x::StaticBigInt) = show(x)
 
 bitlength(::Type{T}) where T <: Integer = T.size * 8
 
-
 #bitlength(p) = Int(ceil(log2(p + 1)))
 
 function bitlength(p::Integer)
@@ -70,7 +69,7 @@ function bitlength(p::BigInt)
     return N
 end
 
-
+bytelength(x::Integer) = div(bitlength(x) + 1, 8, RoundUp)
 
 
 interpret(::Type{BigInt}, x::Vector{UInt8}) = tobig(reverse(x))

@@ -51,7 +51,7 @@ Base.show(io::IO, g::NTuple{N, <:Generator}) where N = print(io, "$(value.(g)) "
 
 
 # A more generic function can be constructed if necessary
-Base.broadcasted(f::Function, x::Generator, y::Vector{<:Integer}) = f.((x for i in 1:length(y)), y)
+Base.broadcasted(f::Function, x::Generator, y::AbstractVector{<:Integer}) = f.((x for i in 1:length(y)), y)
 
 Base.broadcasted(::typeof(*), x::G, y::Vector{G}) where G <: Generator = (x for i in 1:length(y)) .* y 
 Base.broadcasted(::typeof(*), x::Vector{G}, y::G) where G <: Generator =  x .* (y for i in 1:length(x))
@@ -178,8 +178,12 @@ struct Enc{T<:Generator}
 end
 
 ### Encrytion as we see does eactually 
-(enc::Enc{T})(m::T, r::Integer) where T <: Generator = (m*enc.pk^r, enc.g^r)
-(enc::Enc)(r::Integer) = (enc.pk^r, enc.g^r) 
+#(enc::Enc{T})(m::T, r::Integer) where T <: Generator = (m*enc.pk^r, enc.g^r) ### Message first?
+#(enc::Enc)(r::Integer) = (enc.pk^r, enc.g^r)  
+
+(enc::Enc{T})(m::T, r::Integer) where T <: Generator = (enc.g^r, m*enc.pk^r) ### Message first?
+(enc::Enc)(r::Integer) = (enc.g^r, enc.pk^r)  
+
 
 
 a(x::Tuple{T, T}) where T <: Generator = x[1]
@@ -203,6 +207,12 @@ end
 ElGamal(a::Vector{G}, b::Vector{G}) where G <: Generator = ElGamal{G}(a, b)
 
 ElGamal(e::Vector{Tuple{G, G}}) where G <: Generator = ElGamal([a(i) for i in e], [b(i) for i in e])
+
+function ElGamal{G}(a::Vector{T}, b::Vector{T}) where {T, G<:Generator}
+    a′ = convert(Vector{G}, a)
+    b′ = convert(Vector{G}, b)
+    return ElGamal(a′, b′)
+end
 
 
 a(e::ElGamal) = e.a
@@ -235,10 +245,10 @@ end
 (enc::Enc)(e::ElGamal, r::Integer) = enc(r) * e 
 
 
-function (enc::Enc{G})(m::Vector{G}, r::Vector{<:Integer}) where G <: Generator
+function (enc::Enc{G})(m::Vector{G}, r::AbstractVector{<:Integer}) where G <: Generator
 
-    a′ = m .* (enc.pk .^ r)
-    b′ = enc.g .^ r
+    a′ = enc.g .^ r
+    b′ = m .* (enc.pk .^ r)
 
     return ElGamal(a′, b′)
 end
@@ -249,7 +259,9 @@ struct Dec
 end
 
 
-(dec::Dec)(e::Tuple{G, G}) where G = a(e) * b(e)^(-dec.sk) # Only operation for which it is desirable to store encryptions as a tuple. 
+#(dec::Dec)(e::Tuple{G, G}) where G = a(e) * b(e)^(-dec.sk) # Only operation for which it is desirable to store encryptions as a tuple. 
+
+(dec::Dec)(e::Tuple{G, G}) where G = b(e) * a(e)^(-dec.sk) # Only operation for which it is desirable to store encryptions as a tuple. 
 
 (dec::Dec)(e::ElGamal) = [dec(ei) for ei in e]
 

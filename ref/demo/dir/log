@@ -7,58 +7,58 @@
 -----------------------------------------------------------
 Party01
 -----------------------------------------------------------
-220201 21:21:30 Starting hint server.
-220201 21:21:30 Starting http server.
-220201 21:21:30 Synchronizing with the other servers. Please wait.
-220201 21:21:30 Generate keys for secret communication.
-220201 21:21:30 | Generate and read plain keys.
-220201 21:21:30 | | Generate key-pair.
-220201 21:21:30 | | Exchange public keys with all parties.
-220201 21:21:30 | | | Publish public key.
-220201 21:21:30 | | Writing keys to file.
-220201 21:21:30 | Generate independent generator.
-220201 21:21:30 | | Execute Pedersen 1 times with rotating dealer.
-220201 21:21:30 | | | Deal a secret using Pedersen VSS.
-220201 21:21:30 | | | | Generate checking elements.
-220201 21:21:30 | | | | Compute encrypted shares for all parties.
-220201 21:21:30 | | | | Publish checking elements and encrypted shares.
-220201 21:21:30 | | | | Exchange verdicts.
-220201 21:21:30 | | | | | Publish verdict (true).
-220201 21:21:30 | | | | Sharing completed.
-220201 21:21:30 | | Write independent generator to file.
-220201 21:21:30 Shuffle 10 ciphertexts.
-220201 21:21:30 | Derive independent generators using RO.
-220201 21:21:31 | Generate reencryption exponents.
-220201 21:21:31 | Compute reencryption factors.
-220201 21:21:31 | Perform local pre-computation.
-220201 21:21:31 | Compute permutation commitment.
-220201 21:21:31 | Compute output list.
-220201 21:21:31 | Publish output list.
-220201 21:21:31 | Prove correctness of shuffle.
-220201 21:21:31 | | Publish our permutation commitment.
-220201 21:21:31 | | Generate batching vector.
-220201 21:21:31 | | | Derive 256 bits using random oracle.
-220201 21:21:31 | | Compute commitment.
-220201 21:21:32 | | Publish our commitment.
-220201 21:21:32 | | Generate challenge.
-220201 21:21:32 | | | Derive 256 bits using random oracle.
-220201 21:21:32 | | Compute reply.
-220201 21:21:32 | | Publish reply.
-220201 21:21:32 Waiting for mutual shutdown acknowledgements.
-220201 21:21:32 | Publish acknowledgement.
-220201 21:21:32 | Publish acknowledgement.
-220201 21:21:32 Allow download of our acknowledgment for another 1 seconds.
-220201 21:21:33 Stopping hint server.
-220201 21:21:33 Stopping http server.
+220210 16:42:05 Starting hint server.
+220210 16:42:05 Starting http server.
+220210 16:42:05 Synchronizing with the other servers. Please wait.
+220210 16:42:05 Generate keys for secret communication.
+220210 16:42:05 | Generate and read plain keys.
+220210 16:42:05 | | Generate key-pair.
+220210 16:42:05 | | Exchange public keys with all parties.
+220210 16:42:05 | | | Publish public key.
+220210 16:42:05 | | Writing keys to file.
+220210 16:42:05 | Generate independent generator.
+220210 16:42:05 | | Execute Pedersen 1 times with rotating dealer.
+220210 16:42:05 | | | Deal a secret using Pedersen VSS.
+220210 16:42:05 | | | | Generate checking elements.
+220210 16:42:05 | | | | Compute encrypted shares for all parties.
+220210 16:42:05 | | | | Publish checking elements and encrypted shares.
+220210 16:42:05 | | | | Exchange verdicts.
+220210 16:42:05 | | | | | Publish verdict (true).
+220210 16:42:05 | | | | Sharing completed.
+220210 16:42:05 | | Write independent generator to file.
+220210 16:42:05 Shuffle 10 ciphertexts.
+220210 16:42:05 | Derive independent generators using RO.
+220210 16:42:05 | Generate reencryption exponents.
+220210 16:42:06 | Compute reencryption factors.
+220210 16:42:06 | Perform local pre-computation.
+220210 16:42:06 | Compute permutation commitment.
+220210 16:42:06 | Compute output list.
+220210 16:42:06 | Publish output list.
+220210 16:42:06 | Prove correctness of shuffle.
+220210 16:42:06 | | Publish our permutation commitment.
+220210 16:42:06 | | Generate batching vector.
+220210 16:42:06 | | | Derive 256 bits using random oracle.
+220210 16:42:06 | | Compute commitment.
+220210 16:42:07 | | Publish our commitment.
+220210 16:42:07 | | Generate challenge.
+220210 16:42:07 | | | Derive 256 bits using random oracle.
+220210 16:42:07 | | Compute reply.
+220210 16:42:07 | | Publish reply.
+220210 16:42:07 Waiting for mutual shutdown acknowledgements.
+220210 16:42:07 | Publish acknowledgement.
+220210 16:42:07 | Publish acknowledgement.
+220210 16:42:07 Allow download of our acknowledgment for another 1 seconds.
+220210 16:42:08 Stopping hint server.
+220210 16:42:08 Stopping http server.
 -----------------------------------------------------------
 Completed shuffling.
 
 Running time:                                          (ms)
-- Execution         0h  0m  2s                         2897
-- Network           0h  0m  0s                          112
-- Effective         0h  0m  2s                         2785
+- Execution         0h  0m  2s                         2829
+- Network           0h  0m  0s                           95
+- Effective         0h  0m  2s                         2734
 - Idle              0h  0m  0s                            0
-- Computation       0h  0m  2s                         2785
+- Computation       0h  0m  2s                         2734
 
 Communication:                                      (bytes)
 - Sent                  0.0 B                             0

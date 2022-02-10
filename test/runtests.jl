@@ -23,5 +23,7 @@ end
     include("crs.jl")
 end
 
-
+@testset "ElGamal test" begin
+    include("ciphertexts.jl")
+end
 

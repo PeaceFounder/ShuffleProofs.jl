@@ -17,7 +17,7 @@ s_Gq = "ModPGroup(safe-prime modulus=2*order+1. order bit-length = 511)::0000000
 data = (version, sid * "." * auxsid, nr, nv, ne, s_PRG, s_Gq, s_H)
 
 tree = Tree(data)
-binary = encode(Vector{UInt8}, tree)
+binary = encode(tree)
 
 
 ρ = "15e6c97600bbe30125cbc08598dcde01a769c15c8afe08fe5b7f5542533159e9"

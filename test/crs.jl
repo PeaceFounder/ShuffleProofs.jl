@@ -31,7 +31,7 @@ ns = outlen(h)
 ro = RO(h, ns)
 
 leaf = Leaf("generators")
-d = [hex2bytes(ρ)..., encode(Vector{UInt8}, leaf)...]
+d = [hex2bytes(ρ)..., encode(leaf)...]
 
 s = ro(d) # The seed 
 

@@ -29,14 +29,14 @@ tree = decode(x)
 g = unmarshal(BigInt, tree)
 
 
-@test encode(String, decode(x)) == x ### Belongs to original tests
+@test encode(decode(x)) == hex2bytes(x) ### Belongs to original tests
 
 # Temporary solved it by adding zero byte to the number.
 @test marshal(unmarshal(BigInt, tree)) == tree # which is false
 
-s = encode(String, marshal(unmarshal(BigInt, tree)))
+@test string(marshal(unmarshal(BigInt, tree))) == x
 
 
-@test decode(encode(String, marshal(g))) == marshal(g)
+@test decode(encode(marshal(g))) == marshal(g)
 
 

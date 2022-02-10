@@ -96,8 +96,8 @@ function tobin(node::Node)
     return bin
 end
 
-encode(::Type{Vector{UInt8}}, x::Tree) = tobin(x)
-encode(::Type{String}, x::Tree) = bytes2hex(encode(Vector{UInt8}, x))
+encode(x::Tree) = tobin(x)
+#encode(::Type{String}, x::Tree) = bytes2hex(encode(Vector{UInt8}, x))
 
 
 convert(::Type{T}, x::Leaf) where T <: Integer = interpret(T, x.x)
@@ -147,6 +147,7 @@ function Leaf(x::String)
 end
 
 Tree(x::Any) = Leaf(x)
+Tree(x::Node) = x
 Tree(x::Leaf) = x
 Tree(x::Tuple) = Node(x)
 
@@ -167,9 +168,10 @@ end
 # Need something smarter in the end
 bitlength(x::PrimeGenerator) = bitlength(modulus(x)) 
 
+
 Leaf(x::PrimeGenerator; L = bitlength(x)) = Leaf(value(x), div(L + 1, 8, RoundUp))
 
-function Tree(x::Vector{PrimeGenerator})
+function Tree(x::Vector{<:Generator})
     L = bitlength(x[1])
     s = Leaf[Leaf(i, L = L) for i in x]
     return Node(s)
@@ -205,3 +207,15 @@ function unmarshal(::Type{T}, x::Node) where T
     return x
 end
 
+
+function convert(::Type{ElGamal{G}}, tree::Tree) where G <: Generator
+    𝐚, 𝐛 = convert(Tuple{Vector{BigInt}, Vector{BigInt}}, tree)
+    𝐞 = ElGamal{G}(𝐚, 𝐛)
+    return 𝐞
+end
+
+function Tree(𝐞::ElGamal{<:Generator})
+    𝐚 = a(𝐞)  # 𝐚 = value.(a(𝐞))
+    𝐛 = b(𝐞)
+    tree = Tree((𝐚, 𝐛))
+end
