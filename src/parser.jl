@@ -106,7 +106,7 @@ function convert(::Type{String}, x::Leaf)
     return String(copy(x.x))
 end
 
-function convert(::Type{Vector{T}}, x::Node) where T <: Integer 
+function convert(::Type{Vector{T}}, x::Node) where T #<: Integer 
     return T[convert(T, i) for i in x.x] 
 end
 
@@ -170,6 +170,17 @@ bitlength(x::PrimeGenerator) = bitlength(modulus(x))
 
 
 Leaf(x::PrimeGenerator; L = bitlength(x)) = Leaf(value(x), div(L + 1, 8, RoundUp))
+
+
+### Perhaps I can be more specific here
+get_generator_type(G::PrimeGroup) = PrimeGenerator{G}
+convert(::Type{Generator{G}}, x::Leaf) where G = convert(get_generator_type(G), x) ### I do need a trait here
+
+
+convert(::Type{G}, x::Leaf) where G <: PrimeGenerator = convert(G, convert(BigInt, x))
+
+
+
 
 function Tree(x::Vector{<:Generator})
     L = bitlength(x[1])

@@ -62,7 +62,7 @@ function (ro::RO)(d::Vector{UInt8})
 end
 
 
-function rand(prg::PRG, ::Type{T}, N::Int; n = bitlength(T)) where T
+function Base.rand(prg::PRG, ::Type{T}, N::Int; n = bitlength(T)) where T
 
     M = div(n, 8, RoundUp) # bytes for each number
 
