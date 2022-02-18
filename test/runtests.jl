@@ -27,3 +27,11 @@ end
     include("ciphertexts.jl")
 end
 
+@testset "Bare Verifier" begin
+    include("proofparser.jl")
+end
+
+@testset "Verifier with FSM" begin
+    include("proofparser.jl")
+end
+

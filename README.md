@@ -8,10 +8,14 @@ Verifier for Verificatum generated NIZK proofs.
   * [x] Random oracles according to specification[^1] (according to verifier document)
   * [x] Independent generators (as generated from output `vmnv -t bas.h`)[^3] 
   * [x] Verifying ciphertexts shufling by decrypting with a secret key. (Tests correctness of ElGamal and correct input of the key)
-  * [ ] Verifying NIZK proof
+  * [x] Verifying NIZK proof
     * [x] Generation of a proof to be parsed
-    * [ ] Parsing of proof ouputs into relevant variables.
-    * [ ] NIZK verifier. (Partially done using other reference)[^2][^ 4]
+    * [x] Parsing of proof ouputs into relevant variables.
+    * [x] NIZK verifier. (Partially done using other reference)[^2][^ 4]
+    * [ ] Cleanup
+      * [ ] Implement checking proof from multiple parties
+      * [ ] Adding code for F
+  * [ ] Feed in the verifier in `WikstromTerelius.jl` to obtain a proof
   * [ ] Upstream to `CryptoGroups.jl`
 
 [^1]: Wikstrom, “How To Implement A Stand-Alone Veriﬁer for the Veriﬁcatum Mix-Net.”

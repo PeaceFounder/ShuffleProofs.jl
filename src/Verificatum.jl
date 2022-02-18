@@ -11,7 +11,7 @@ include("primitives.jl")
 include("parser.jl") 
 include("io.jl") # Some convinience methods
 
-
+include("verifier.jl") 
 
 
 

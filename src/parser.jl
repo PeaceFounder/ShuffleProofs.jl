@@ -141,7 +141,7 @@ function Leaf(x::Integer, k::Integer) ### The logic here also seems better could
 end
 
 
-function Leaf(x::String)
+function Leaf(x::AbstractString)
     bytes = Vector{UInt8}(x)
     return Leaf(bytes)
 end

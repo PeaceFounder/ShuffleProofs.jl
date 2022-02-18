@@ -37,7 +37,7 @@ s = ro(d) # The seed
 
 prg = PRG(h, s)
 
-𝐡′ = crs(group(𝓰), 10, prg, nr)
+𝐡′ = crs(group(𝓰), 10, prg; nr)
 
 for hi in 𝐡′
     @test hi^(q + 1) == hi

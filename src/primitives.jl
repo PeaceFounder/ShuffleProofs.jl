@@ -8,7 +8,21 @@ end
 (h::Hash)(x::Vector{UInt8}) = hex2bytes(hexdigest(h.spec, x))
 
 # Dispatching on value types seems as plausable solution
-outlen(::Hash) = 256 # Number of bits in the output of the hash function
+function outlen(h::Hash) 
+    s = h.spec
+
+    if s == "sha256"
+        return 256
+    elseif s == "sha384"
+        return 384
+    elseif s == "sha512"
+        return 512
+    else
+        error("No corepsonding mapping for $x implemented")
+    end
+end
+
+# = 256 # Number of bits in the output of the hash function
 
 struct PRG
     h::Hash
@@ -76,7 +90,7 @@ end
 
 
 
-function crs(G::PrimeGroup, N::Int, prg::PRG, nr::Int)
+function crs(G::PrimeGroup, N::Integer, prg::PRG; nr::Integer = 0)
     
     p = modulus(G)
     q = order(G)
@@ -92,4 +106,26 @@ function crs(G::PrimeGroup, N::Int, prg::PRG, nr::Int)
     𝐡_typed = convert(Vector{PrimeGenerator{G}}, 𝐡)
 
     return 𝐡_typed
+end
+
+
+leaf(x::String) = encode(Leaf(x))
+
+
+function crs(𝓖, N::Integer, prghash::Hash, rohash::Hash; nr::Integer = 0, ρ = UInt8[], d = [ρ..., leaf("generators")...])
+
+#𝐡 = let # ρ, prghash, rohash, 𝓖, ### I could put rho as an optional argument allong with nr=0
+    ns = outlen(prghash)
+    ro = RO(rohash, ns)
+
+    #leaf = Leaf("generators") ### I could instead introduce a function leaf and put it as an argument
+    #d = [ρ..., encode(leaf)...] # A stupid thing is that Leaf depends on parser where other parts do not.
+
+    s = ro(d) # The seed 
+
+    prg = PRG(prghash, s)
+
+    𝐡 = crs(𝓖, N, prg; nr)
+
+    return 𝐡
 end
