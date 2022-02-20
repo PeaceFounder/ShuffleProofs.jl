@@ -8,20 +8,20 @@ p = 2*q + 1  #safeprime(q)
 
 # Checking prime order
 
-@test validate(Generator{𝐙/p}(3)) == true
-@test validate(Generator{𝐙/p}(11)) == false
+@test validate(Generator[𝐙/p](3)) == true
+@test validate(Generator[𝐙/p](11)) == false
 
 n = let 
     n = 0
     for i in 1:p
-        validate(Generator{𝐙/p}(i)) && (n+=1)
+        validate(Generator[𝐙/p](i)) && (n+=1)
     end
     n
 end
 @test n == q - 1
 
 
-g = Generator{𝐙/p}(3)
+g = Generator[𝐙/p](3)
 
 
 #q = 17
@@ -47,7 +47,7 @@ h = g^7
 ### Testing some basics for vectors
 
 #gv = GVector([g, g^2, g^3], g)
-gv = [g, g^2, g^3]
+gv = [g, g^2, g^3]   ### So I need to look into here1
 
 @test gv .^ 2 == [g^2, g^4, g^6]
 @test value.(gv .* gv) == [9, 12, 16]

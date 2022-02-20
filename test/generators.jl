@@ -7,7 +7,8 @@ p = 3452531
 x = 2
 #g = Generator(x, 𝓖)
 
-g = Generator{𝐙/p}(x)
+#g = Generator{𝐙/p}(x)
+g = Generator[𝐙/p](x)
 
 leaf = Leaf(g)
 

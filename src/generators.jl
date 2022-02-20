@@ -1,31 +1,32 @@
-abstract type Generator{G} end
+abstract type Generator end
 
-Generator{G}(x) where G = convert(Generator{G}, x)
 
-group(::Generator{G}) where G = G
-group(::Vector{<:Generator{G}}) where G = G
-group(::NTuple{N, <:Generator{G}}) where {N, G} = G
+untype(G::Type{<:Generator}) = G.parameters[1] # A dirty hack 
 
-group(::Type{Generator{G}}) where G = G  
+group(G::Type{<:Generator}) = G.parameters[1]#.parameters[1]
+group(::G) where G <: Generator = G.parameters[1]
 
-untype(G::Type) = G.parameters[1] # A dirty hack 
 
-Base.show(io::IO, x::Type{<:Generator{G}}) where G = print(io, "Generator{$G}")
+Base.show(io::IO, 𝓖::Type{Generator}) = print(io, "Generator")
+Base.show(io::IO, 𝓖::Type{<:Generator}) = print(io, "Generator[$(group(𝓖))]")
 
-order(::Generator{G}) where G = order(G)
-order(::Vector{<:Generator{G}}) where G = order(G)
-order(::NTuple{N, <:Generator{G}}) where {N, G} = order(G)
+order(G::Type{<:Generator}) = order(G.parameters[1])
+order(::G) where G <: Generator = order(G.parameters[1])
+
+
+Base.convert(::Type{G}, x) where G <: Generator = G(x)
+Base.convert(::Type{G}, g::G) where G <: Generator = g # Identity
 
 
 """
 Returns a value of the function
 """
 function value end
-Base.isless(x::Generator, y::Generator) = value(x) < value(y)
+Base.isless(x::G, y::G) where G <: Generator = value(x) < value(y)
 
 import Base.==
 ==(x::Generator, y::Generator) = false
-==(x::Generator{G}, y::Generator{G}) where G = value(x) == value(y)
+==(x::G, y::G) where G <: Generator = value(x) == value(y)
 
 ==(x::Generator, y) = error("Uncomparable: $(typeof(x)) with $(typeof(y))")
 ==(x, y::Generator) = error("Uncomparable: $(typeof(x)) with $(typeof(y))")
@@ -66,6 +67,10 @@ end
 
 PrimeGroup(x::Integer) = PrimeGroup(StaticBigInt(x))
 PrimeGroup(; q) = PrimeGroup(2*q + 1)
+
+
+Base.getindex(::Type{Generator}, 𝓖::PrimeGroup) = PrimeGenerator{𝓖} # This is somewhat like a trait
+
 
 const 𝐙 = PrimeGroup
 import Base./
@@ -136,7 +141,7 @@ Base.show(io::IO, x::PrimeGroup) = print(io, groupstr(modulus(x)))
 ############################ PRIME GENERATOR ##################################
 
 
-struct PrimeGenerator{G} <: Generator{G} 
+struct PrimeGenerator{G} <: Generator #{G} 
     g::BigInt
 end
 
@@ -144,14 +149,12 @@ end
 PrimeGenerator(x::Integer, p::Integer) = PrimeGenerator{PrimeGroup(p)}(x)
 
 
-Generator(x::Integer, Group::PrimeGroup) = PrimeGenerator{Group}(x)
-
 modulus(g::PrimeGenerator) = modulus(group(g)) # A method which one could add. 
 value(g::PrimeGenerator) = g.g 
 
 validate(g::PrimeGenerator) = value(g) != 1 && value(g^order(g)) == 1
 
-Base.convert(::Type{<:Generator{G}}, x::Integer) where G = Generator(x, G)
+
 Base.convert(::Type{BigInt}, x::PrimeGenerator) = value(x)
 
 import Base.*
@@ -211,7 +214,8 @@ ElGamal(e::Vector{Tuple{G, G}}) where G <: Generator = ElGamal([a(i) for i in e]
 function ElGamal{G}(a::Vector{T}, b::Vector{T}) where {T, G<:Generator}
     a′ = convert(Vector{G}, a)
     b′ = convert(Vector{G}, b)
-    return ElGamal(a′, b′)
+
+    return ElGamal{G}(a′, b′)
 end
 
 

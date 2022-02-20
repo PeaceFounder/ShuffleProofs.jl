@@ -34,13 +34,13 @@ end
     bytes = read(CIPHERTEXT_FILE)
     tree = decode(bytes)
     𝐚, 𝐛 = convert(Tuple{Vector{BigInt}, Vector{BigInt}}, tree)
-    ElGamal{Generator{𝓖}}(𝐚, 𝐛)
+    ElGamal{Generator[𝓖]}(𝐚, 𝐛)
 end
 
 𝐞′ = let
     bytes = read(CIPHERTEXTOUT_FILE)
     tree = decode(bytes)
-    convert(ElGamal{Generator{𝓖}}, tree)
+    convert(ElGamal{Generator[𝓖]}, tree)
 end
 
 

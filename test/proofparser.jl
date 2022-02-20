@@ -46,7 +46,7 @@ PoS_REPLY = "$NIZKP/proofs/PoSReply01.bt"
 
 g = unmarshal(BigInt, decode(split(s_Gq, "::")[2]))
 𝓖 = group(g)
-𝓰 = Generator{𝓖}
+𝓰 = Generator[𝓖]
 pk_tree = decode(read(FULL_PUBLIC_KEY))
 pk = unmarshal_full_public_key(g, pk_tree)
 
@@ -66,8 +66,8 @@ pk = unmarshal_full_public_key(g, pk_tree)
 L_tree = decode(read(CIPHERTEXTS))
 L′_tree = decode(read(SHUFFLED_CIPHERTEXTS))
 
-𝔀 = convert(ElGamal{Generator{𝓖}}, L_tree)
-𝔀′ = convert(ElGamal{Generator{𝓖}}, L′_tree)
+𝔀 = convert(ElGamal{𝓰}, L_tree)
+𝔀′ = convert(ElGamal{𝓰}, L′_tree)
 
 μ_tree = decode(read(PERMUTATION_COMMITMENT))
 𝐮 = convert(Vector{𝓰}, μ_tree)

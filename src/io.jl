@@ -7,7 +7,7 @@ function unmarshal_full_public_key(g::Generator, tree::Tree)
     
     𝓖 = group(g)
 
-    g′, y = convert(Tuple{Generator{𝓖}, Generator{𝓖}}, tree)    
+    g′, y = convert(Tuple{Generator[𝓖], Generator[𝓖]}, tree)    
 
     @assert g′ == g
 
@@ -26,7 +26,8 @@ function unmarshal_publickey(tree::Tree)
     @assert value(g) == c1
 
     𝓖 = group(g)
-    y = convert(Generator{𝓖}, c2)
+    #y = convert(Generator{𝓖}, c2)
+    y = convert(Generator[𝓖], c2)
 
     return y, g
 end

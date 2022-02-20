@@ -173,8 +173,10 @@ Leaf(x::PrimeGenerator; L = bitlength(x)) = Leaf(value(x), div(L + 1, 8, RoundUp
 
 
 ### Perhaps I can be more specific here
-get_generator_type(G::PrimeGroup) = PrimeGenerator{G}
-convert(::Type{Generator{G}}, x::Leaf) where G = convert(get_generator_type(G), x) ### I do need a trait here
+#get_generator_type(G::PrimeGroup) = PrimeGenerator{G}
+#convert(::Type{Generator{G}}, x::Leaf) where G = convert(get_generator_type(G), x) ### I do need a trait here
+
+#convert(::Type{G}, x::Leaf) where G <: Generator = convert(G, x) ### I do need a trait here
 
 
 convert(::Type{G}, x::Leaf) where G <: PrimeGenerator = convert(G, convert(BigInt, x))

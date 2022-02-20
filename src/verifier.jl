@@ -33,10 +33,9 @@ function ProtocolSpec(protinfo::AbstractDict, pk_tree::Tree; auxsid = "default")
     g = unmarshal(BigInt, decode(split(s_Gq, "::")[2]))
 
     𝓖 = group(g)
-    𝓰 = Generator{𝓖}
+    𝓰 = Generator[𝓖]
 
     pk = unmarshal_full_public_key(g, pk_tree)
-    #@assert g == g′ 
 
     version = String(protinfo["version"])
     sid = String(protinfo["sid"])
@@ -106,11 +105,10 @@ end
 
 struct Simulator{𝓰<:Generator} # I could latter call it even VerificatumSimulator
     spec::ProtocolSpec{𝓰}
-    # TODO: Fill a a bug report?
-    𝔀::ElGamal#{𝓰}
-    𝔀′::ElGamal#{𝓰}
-    μ::Vector#{𝓰}
-    τ::Tuple#{Vector{𝓰}, 𝓰, Vector{𝓰}, 𝓰, 𝓰, Tuple{𝓰, 𝓰}}
+    𝔀::ElGamal{𝓰}
+    𝔀′::ElGamal{𝓰}
+    μ::Vector{𝓰}
+    τ::Tuple{Vector{𝓰}, 𝓰, Vector{𝓰}, 𝓰, 𝓰, Tuple{𝓰, 𝓰}}
     σ::Tuple{BigInt, Vector{BigInt}, BigInt, BigInt, Vector{BigInt}, 𝓰}
 end
 
@@ -129,13 +127,13 @@ function Simulator(basedir::AbstractString; auxsid = "default")
     PoS_REPLY = "$NIZKP/proofs/PoSReply01.bt"
 
     𝓖 = group(spec.g)
-    𝓰 = Generator{𝓖}
+    𝓰 = Generator[𝓖]
 
     L_tree = decode(read(CIPHERTEXTS))
     L′_tree = decode(read(SHUFFLED_CIPHERTEXTS))
 
-    𝔀 = convert(ElGamal{Generator{𝓖}}, L_tree)
-    𝔀′ = convert(ElGamal{Generator{𝓖}}, L′_tree)
+    𝔀 = convert(ElGamal{𝓰}, L_tree) ## Is there anything I can do so that I would get a concrete type here?
+    𝔀′ = convert(ElGamal{𝓰}, L′_tree)
 
     μ_tree = decode(read(PERMUTATION_COMMITMENT))
     μ = convert(Vector{𝓰}, μ_tree)
@@ -146,6 +144,7 @@ function Simulator(basedir::AbstractString; auxsid = "default")
     σ_tree = decode(read(PoS_REPLY))
     σ = convert(Tuple{BigInt, Vector{BigInt}, BigInt, BigInt, Vector{BigInt}, 𝓰}, σ_tree)
 
+#    @infiltrate
 
     return Simulator(spec, 𝔀, 𝔀′, μ, τ, σ)
 end
@@ -157,11 +156,11 @@ abstract type Verifier end
 ### The simulator type will deal with loading the data. 
 
 struct VInit{𝓰<:Generator} <: Verifier
-    spec::ProtocolSpec
+    spec::ProtocolSpec{𝓰}
     𝔀::ElGamal{𝓰}
     𝔀′::ElGamal{𝓰}
     ρ::Vector{UInt8} 
-    𝐡::Vector#{𝓰}
+    𝐡::Vector{𝓰}
 end
 
 function VInit(spec::ProtocolSpec, 𝔀::ElGamal{𝓰}, 𝔀′::ElGamal{𝓰}) where 𝓰 <: Generator
@@ -183,11 +182,11 @@ function VInit(spec::ProtocolSpec, 𝔀::ElGamal{𝓰}, 𝔀′::ElGamal{𝓰}) 
 end
 
 struct VPermCommit{𝓰<:Generator} <: Verifier
-    spec::ProtocolSpec
+    spec::ProtocolSpec{𝓰}
     𝔀::ElGamal{𝓰}
     𝔀′::ElGamal{𝓰}
     ρ::Vector{UInt8} 
-    𝐡::Vector#{𝓰}
+    𝐡::Vector{𝓰} 
     𝐮::Vector{𝓰}
     s::Vector{UInt8}  
     𝐞::Vector{BigInt} 
@@ -217,11 +216,11 @@ end
 
 
 struct VPoSCommit{𝓰<:Generator} <: Verifier
-    spec::ProtocolSpec
+    spec::ProtocolSpec{𝓰}
     𝔀::ElGamal{𝓰}
     𝔀′::ElGamal{𝓰}
-    #ρ::Vector{UInt8} 
-    𝐡::Vector#{𝓰}
+    ρ::Vector{UInt8} 
+    𝐡::Vector{𝓰}
     𝐮::Vector{𝓰}
     𝐞::Vector{BigInt}
     τ::Tuple{Vector{𝓰}, 𝓰, Vector{𝓰}, 𝓰, 𝓰, Tuple{𝓰, 𝓰}}
@@ -237,7 +236,7 @@ function VPoSCommit(v::VPermCommit{𝓰}, τ::Tuple{Vector{𝓰}, 𝓰, Vector{�
     tree_challenge = Tree((Leaf(s), τ))
     𝓿 = interpret(BigInt, ro_challenge([ρ..., encode(tree_challenge)...]))
 
-    return VPoSCommit(spec, 𝔀, 𝔀′, 𝐡, 𝐮, 𝐞, τ, 𝓿)
+    return VPoSCommit(spec, 𝔀, 𝔀′, ρ, 𝐡, 𝐮, 𝐞, τ, 𝓿)
 end
 
 
@@ -246,7 +245,7 @@ struct VEnd{𝓰<:Generator} <: Verifier
     pk::𝓰
     𝔀::ElGamal{𝓰}
     𝔀′::ElGamal{𝓰}
-    𝐡::Vector#{𝓰}
+    𝐡::Vector{𝓰}
     𝐮::Vector{𝓰}
     𝐞::Vector{BigInt}
     τ::Tuple{Vector{𝓰}, 𝓰, Vector{𝓰}, 𝓰, 𝓰, Tuple{𝓰, 𝓰}}
