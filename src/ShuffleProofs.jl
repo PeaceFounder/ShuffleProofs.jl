@@ -1,22 +1,23 @@
-module Verificatum
+module ShuffleProofs
 
-using Infiltrator
 
 include("utils.jl") # Common functions
 
 include("generators.jl") 
 include("primitives.jl") 
 
-
-include("parser.jl") 
-include("io.jl") # Some convinience methods
-
 include("verifier.jl") 
 
 
 
-# I could add a similar mwthod to string. 
+include("parser.jl") 
+include("io.jl") # Some convinience methods
+include("vverifier.jl") 
 
-export Node, Leaf, Tree
+
+
+
+
+#greet() = print("Hello World!")
 
 end # module

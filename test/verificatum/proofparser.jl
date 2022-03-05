@@ -1,12 +1,12 @@
 using Test
 using XMLDict
-using Verificatum: decode, convert, unmarshal_publickey, ElGamal, group, Generator, RO, crs, Hash, outlen, interpret, Tree, encode, Leaf, PRG, value, order, interpret, Leaf, ro_prefix, map_hash_name, unmarshal, unmarshal_full_public_key
+using ShuffleProofs: decode, convert, unmarshal_publickey, ElGamal, group, Generator, RO, crs, Hash, outlen, interpret, Tree, encode, Leaf, PRG, value, order, interpret, Leaf, ro_prefix, map_hash_name, unmarshal, unmarshal_full_public_key
 
 
 
-PROT_INFO = "$(@__DIR__)/../ref/demo/protInfo.xml"
+PROT_INFO = "$(@__DIR__)/../../ref/demo/protInfo.xml"
 auxsid = "default"
-NIZKP = "$(@__DIR__)/../ref/demo/dir/nizkp/$auxsid/"
+NIZKP = "$(@__DIR__)/../../ref/demo/dir/nizkp/$auxsid/"
 #AUXSID = "$(@__DIR__)/../ref/demo/dir/nizkp/default/auxsid"
 
 

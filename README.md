@@ -1,4 +1,4 @@
-# Verificatum.jl
+# ShuffleProofs.jl
 
 Verifier for Verificatum generated NIZK proofs. 
 
@@ -12,11 +12,21 @@ Verifier for Verificatum generated NIZK proofs.
     * [x] Generation of a proof to be parsed
     * [x] Parsing of proof ouputs into relevant variables.
     * [x] NIZK verifier. (Partially done using other reference)[^2][^ 4]
-    * [ ] Cleanup
-      * [ ] Implement checking proof from multiple parties
-      * [ ] Adding code for F
-  * [ ] Feed in the verifier in `WikstromTerelius.jl` to obtain a proof
-  * [ ] Upstream to `CryptoGroups.jl`
+  * [x] Feed in the verifier in `WikstromTerelius.jl` to obtain a proof
+  * [ ] Cleanup
+    * [ ] Implement checking proof from multiple parties
+    * [ ] Adding code for F in the Verificatum verifier
+    * [ ] Upstream to `CryptoGroups.jl`
+    * [ ] Remove `g` and `pk` from `ProtocolSpec`
+    * [ ] Consistent notation between `g, G, 𝓰, 𝓖`
+    * [ ] Adding `verbose::Bool` option to `verify` and evalueate the return value
+    * [ ] Abstract cryptographic operations in Haines proof and find a way to remove `_a, _b`
+    * [ ] Strong random numbers in the proofs
+  * [ ] Elliptic groups
+  * [ ] Benchmarks
+  * [ ] Storing the simulator in Verificatum understandable way
+  * [ ] Decryption proofs
+  * [ ] Documentation
 
 [^1]: Wikstrom, “How To Implement A Stand-Alone Veriﬁer for the Veriﬁcatum Mix-Net.”
 [^2]: Wikström, “A Commitment-Consistent Proof of a Shuffle.”

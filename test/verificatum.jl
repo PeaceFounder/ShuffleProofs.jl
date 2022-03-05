@@ -1,21 +1,18 @@
+# A test for verifiying existing Verificatum proof
+
 using Test
-using Verificatum: Simulator, VInit, VPermComit, VPoSCommit, VEnd,  verify
-using Verificatum: interpret, value # For additional verification
-
-
+import ShuffleProofs: Simulator, VInit, VPermComit, VPoSCommit, PoSChallenge, verify, load_verificatum_simulator
+import ShuffleProofs: interpret, value # For additional verification
 
 DEMO_DIR = "$(@__DIR__)/../ref/demo/"
 
-#spec = ProtocolSpec(DEMO_DIR)
-
-simulator = Simulator(DEMO_DIR)
-
+simulator = load_verificatum_simulator(DEMO_DIR)
 
 # I may also add a test on the group parameter as the test set must be compatible, for actual testing. Unless v1.rho is accepted as an ultimate truth.
 
+(; verifier, proposition, proof) = simulator
 
-(; spec, 𝔀, 𝔀′) = simulator
-v1 = VInit(spec, 𝔀, 𝔀′)
+v1 = VInit(verifier, proposition)
 
 @test bytes2hex(v1.ρ) == "15e6c97600bbe30125cbc08598dcde01a769c15c8afe08fe5b7f5542533159e9"
 
@@ -24,19 +21,28 @@ h_str = "(1da949a3dfbeb316e9b225bc7d75b78d0ddd5e44fc382e74f3de95ad10eac798c4cc7b
 
 @test 𝐡′ == value.(v1.𝐡)
 
+verify(proposition, proof, verifier)
 
-(; μ) = simulator
-v2 = VPermComit(v1, μ)
+### Let's now test the primitives
+import ShuffleProofs: VInit, VPermCommit, VPoSCommit, PoSChallenge
 
-(; τ) = simulator
+v1 = VInit(verifier, proposition)
+
+(; μ) = proof
+v2 = VPermCommit(v1, μ)
+
+(; τ) = proof
 v3 = VPoSCommit(v2, τ)
 
+chg = PoSChallenge(v3)
 
-(; σ) = simulator
-v4 = VEnd(v3, σ)
+@test verify(proposition, proof, chg)
 
-@show verify(v4) 
+import ShuffleProofs: PoSProof
 
-# All of the above can be done directly with
-@show verify(simulator)
+hproof = PoSProof(proof)
 
+@test verify(proposition, hproof, chg)
+
+# The full verification of converted proof
+@test verify(proposition, hproof, verifier)

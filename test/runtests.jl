@@ -1,37 +1,22 @@
 using Test
 
-
-@testset "Number conversations" begin
-    include("utils.jl")
-end
-
-@testset "Binary tree parser tests" begin
-    include("parser.jl")
-end
-
-@testset "Random number generators and oracles" begin
-    include("primitives.jl")
-    include("rho.jl")
-end
-
-@testset "Groups, generators" begin
+@testset "Opperations with cryptographic groups" begin
     include("generators.jl")
-    include("gvector.jl")
 end
 
-@testset "Independent basis vectors" begin
-    include("crs.jl")
+@testset "Implementation of WikstromTererlius prover and verifier using Haines paper" begin
+    include("proof.jl")
 end
 
-@testset "ElGamal test" begin
-    include("ciphertexts.jl")
+@testset "Some Verificatum proof parsing tests" begin
+    include("verificatum/runtests.jl")
 end
 
-@testset "Bare Verifier" begin
-    include("proofparser.jl")
+@testset "Verificatum proof verification API" begin
+    include("verificatum.jl")
 end
 
-@testset "Verifier with FSM" begin
-    include("proofparser.jl")
+@testset "Verifiactum verifier compatible proof generation" begin
+    nothing
 end
 

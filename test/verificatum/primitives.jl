@@ -1,5 +1,5 @@
 using Test
-using Verificatum: Hash, PRG, RO
+using ShuffleProofs: Hash, PRG, RO
 
 h = Hash("sha256")
 

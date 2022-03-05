@@ -1,5 +1,5 @@
 using Test
-using Verificatum: Leaf, Tree, Node, encode, decode, Hash, PRG
+using ShuffleProofs: Leaf, Tree, Node, encode, decode, Hash, PRG
 
 h = Hash("sha256")
 

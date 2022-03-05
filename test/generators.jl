@@ -1,43 +1,85 @@
 using Test
-using Verificatum: Leaf, Generator, marshal, unmarshal, decode, encode, PrimeGroup, 𝐙
-
-p = 3452531
-#𝓖 = PrimeGroup(p)
-
-x = 2
-#g = Generator(x, 𝓖)
-
-#g = Generator{𝐙/p}(x)
-g = Generator[𝐙/p](x)
-
-leaf = Leaf(g)
-
-@test convert(BigInt, leaf) == 2
-@test length(leaf.x) == 3
-
-#y = PrimeGenerator[g, g, g]
-#Tree(y)
-
-@test unmarshal(Int, marshal(g)) == g
-
-x = "00000000020100000020636f6d2e766572696669636174756d2e61726974686d2e4d6f645047726f757000000000040100000041009a91c3b704e382e0c772fa7cf0e5d6363edc53d156e841555702c5b6f906574204bf49a551b695bed292e0218337c0861ee649d2fe4039174514fe2c23c10f6701000000404d48e1db8271c17063b97d3e7872eb1b1f6e29e8ab7420aaab8162db7c832ba1025fa4d2a8db4adf69497010c19be0430f7324e97f201c8ba28a7f1611e087b3010000004100300763b0150525252e4989f51e33c4e6462091152ef2291e45699374a3aa8acea714ff30260338bddbb48fc7446b273aaada90e3ee8326f388b582ea8a073502010000000400000001"
-
-# Mocking
-#tree.x[2].x[2] = Leaf(UInt8[0, tree.x[2].x[2].x...])
-
-tree = decode(x)
-#tree.x[2].x[2].x[1] = UInt8(0) # Checking if manipulation of the prime is noticed
-g = unmarshal(BigInt, tree)
+import ShuffleProofs: PrimeGenerator, validate, order, Enc, Dec, modulus, value
 
 
-@test encode(decode(x)) == hex2bytes(x) ### Belongs to original tests
+q = 11
+p = 2*q + 1
 
-# Temporary solved it by adding zero byte to the number.
-@test marshal(unmarshal(BigInt, tree)) == tree # which is false
+@test validate(PrimeGenerator(3, p)) == true
+@test validate(PrimeGenerator(11, p)) == false
 
-@test string(marshal(unmarshal(BigInt, tree))) == x
+n = let 
+    n = 0
+    for i in 1:p
+        validate(PrimeGenerator(i, p)) && (n+=1)
+    end
+    n
+end
+@test n == q - 1
 
 
-@test decode(encode(marshal(g))) == marshal(g)
+
+g = PrimeGenerator(3, p)
+
+#q = 17
+#g = PrimeGenerator(3, q)
+
+@test g*g^2 == g^3
+@test (g^2)^2 == g^4
+@test g^(order(g) + 1) == g
+
+h = g^7
+
+@test h*h^2 == h^3
+@test (h^2)^2 == h^4
+@test h^(order(h) + 1) == h
+
+
+@test inv(g)*g^2 == g
+@test (g^7)^6 == g^(7*6) # This is only true for a cyclic group
+@test g*g*g == g^3 # Checking multiplication
+@test g^2/g == g
+
+
+
+### Let's test ElGammal encryption
+
+
+sk = 5
+pk = g^sk
+r = 3
+m = g^5
+r2 = 4
+
+enc = Enc(pk, g)
+dec = Dec(sk)
+
+@test dec(enc(m, r)) == m
+@test enc(enc(m, r), r2) == enc(m, r + r2)
+
+### Shuffle generation
+
+sk = 5
+pk = g^sk
+
+enc = Enc(pk, g)
+
+
+m_vec = [g, g^2, g^3]
+e_vec = enc.(m_vec, 1) # It is not necessary to randomize encryption for user. It however does make sense to do so for intermidiatery who collects messages from users to not reveal internals. 
+
+### The shuffling
+r_vec = Int[1, 2, 3]
+
+e_enc = enc.(e_vec, r_vec)
+ψ = sortperm(e_enc)
+sort!(e_enc)
+
+@test sort(dec.(e_enc)) == sort(m_vec)
+
+
+m_vec = [g, g^2, g^3]
+e_vec = enc.(m_vec, 1)
+
 
 

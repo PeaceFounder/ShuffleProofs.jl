@@ -1,5 +1,5 @@
 using Test
-using Verificatum: Tree, crs, PrimeGenerator, modulus, order, decode, tobig, interpret, Leaf, unmarshal, outlen
+using ShuffleProofs: Tree, crs, PrimeGenerator, modulus, order, decode, tobig, interpret, Leaf, unmarshal, outlen, group
 
 ### Let's make the setup complete. From repo I ahve a following public parameters:
 nr = 100

@@ -1,5 +1,5 @@
 using Test
-using Verificatum: tobig, int2bytes, bitlength, interpret
+using ShuffleProofs: tobig, int2bytes, bitlength, interpret
 
 x = big(2)^100
 

@@ -1,11 +1,11 @@
 using Test
-using Verificatum: decode, encode, Tree, unmarshal, ElGamal, Generator, marshal_publickey, unmarshal_publickey, unmarshal_privatekey, Dec
+using ShuffleProofs: decode, encode, Tree, unmarshal, ElGamal, Generator, marshal_publickey, unmarshal_publickey, unmarshal_privatekey, Dec
 
 
-CIPHERTEXT_FILE = "$(@__DIR__)/../ref/demo/ciphertexts"
-CIPHERTEXTOUT_FILE = "$(@__DIR__)/../ref/demo/ciphertextsout"
-PUBLIC_KEY = "$(@__DIR__)/../ref/demo/publicKey"
-PRIVATE_KEY = "$(@__DIR__)/../ref/privateKey" 
+CIPHERTEXT_FILE = "$(@__DIR__)/../../ref/demo/ciphertexts"
+CIPHERTEXTOUT_FILE = "$(@__DIR__)/../../ref/demo/ciphertextsout"
+PUBLIC_KEY = "$(@__DIR__)/../../ref/demo/publicKey"
+PRIVATE_KEY = "$(@__DIR__)/../../ref/privateKey" 
 
 
 y, g = let

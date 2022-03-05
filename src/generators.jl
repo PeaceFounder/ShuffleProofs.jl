@@ -1,3 +1,50 @@
+using StaticArrays: SVector
+
+
+
+
+#tobig(x) = parse(BigInt, bytes2hex(reverse(x)), base=16)
+
+# function int2bytes(x::Integer)
+#     hex = string(x, base=16)
+#     if mod(length(hex), 2) != 0
+#         hex = string("0", hex)
+#     end
+    
+#     return reverse(hex2bytes(hex))
+# end
+
+
+# struct StaticBigInt{N} <: Integer
+#     x::SVector{N, UInt8}
+# end
+
+# function StaticBigInt(x::Integer)
+#     bytes = int2bytes(x)
+#     N = length(bytes)
+#     sv = SVector{N, UInt8}(bytes)
+
+#     return StaticBigInt(sv)
+# end
+
+# Base.BigInt(x::StaticBigInt) = tobig(x.x)
+
+
+# style(x, n) = "\33[1;$(n)m$x\33[0m"
+
+# # Some nice printing 
+# intstyle(g::StaticBigInt) = style(" $(bytesize(g)) bytes", 90)
+
+# function Base.show(io::IO, a::StaticBigInt)
+#     show(io, BigInt(a))
+#     print(io, intstyle(a))
+# end
+
+# Base.display(x::StaticBigInt) = show(x)
+
+
+
+
 abstract type Generator end
 
 
@@ -84,44 +131,6 @@ order(G::PrimeGroup) = (modulus(G) - 1) ÷ 2
 postfix(G::PrimeGroup) = "mod $(modulus(G)) (q = $(order(G)))"
 
 
-# An alternative for presenting the group
-
-# function subscript(x::Integer)
-#     str = string(x)
-#     chararr = Char[]
-
-#     for c in str
-#         if c == '1'
-#             push!(chararr, '₁')
-#         elseif c == '2'
-#             push!(chararr, '₂')
-#         elseif c == '3'
-#             push!(chararr, '₃')
-#         elseif c == '4'
-#             push!(chararr, '₄')
-#         elseif c == '5'
-#             push!(chararr, '₅')
-#         elseif c == '6'
-#             push!(chararr, '₆')
-#         elseif c == '7'
-#             push!(chararr, '₇')
-#         elseif c == '8'
-#             push!(chararr, '₈')
-#         elseif c == '9'
-#             push!(chararr, '₉')
-#         elseif c == '0'
-#             push!(chararr, '₀')
-#         end
-#     end
-    
-#     subscript = String(chararr)
-    
-#     return subscript
-# end
-
-# groupstr(m) = "𝓩$(subscript(m))"
-
-
 function trimnumber(x::String)
     if length(x) < 30
         return x
@@ -141,6 +150,8 @@ Base.show(io::IO, x::PrimeGroup) = print(io, groupstr(modulus(x)))
 ############################ PRIME GENERATOR ##################################
 
 
+
+
 struct PrimeGenerator{G} <: Generator #{G} 
     g::BigInt
 end
@@ -153,6 +164,9 @@ modulus(g::PrimeGenerator) = modulus(group(g)) # A method which one could add.
 value(g::PrimeGenerator) = g.g 
 
 validate(g::PrimeGenerator) = value(g) != 1 && value(g^order(g)) == 1
+
+### NEW METHOD
+Base.show(io::IO, 𝓖::Type{PrimeGenerator}) = print(io, "PrimeGenerator")  # Need to remember 
 
 
 Base.convert(::Type{BigInt}, x::PrimeGenerator) = value(x)
@@ -207,6 +221,7 @@ struct ElGamal{G <: Generator} <: AbstractVector{G}
     end
 end
 
+
 ElGamal(a::Vector{G}, b::Vector{G}) where G <: Generator = ElGamal{G}(a, b)
 
 ElGamal(e::Vector{Tuple{G, G}}) where G <: Generator = ElGamal([a(i) for i in e], [b(i) for i in e])
@@ -223,8 +238,20 @@ a(e::ElGamal) = e.a
 b(e::ElGamal) = e.b
 
 Base.getindex(e::ElGamal, i::Int) = (a(e)[i], b(e)[i])
+Base.getindex(e::ElGamal{G}, ivec::Vector) where G <: Generator = ElGamal{G}(a(e)[ivec], b(e)[ivec])
 Base.length(e::ElGamal) = length(a(e))
 Base.size(e::ElGamal) = size(a(e))
+
+Base.copy(e::ElGamal{G}) where G <: Generator = ElGamal{G}(copy(a(e)), copy(b(e)))
+Base.sort(e::ElGamal) = sort!(copy(e))
+
+### NEW METHOD
+function Base.setindex!(e::ElGamal{G}, val::Tuple{G, G}, i) where G <: Generator
+    a(e)[i] = a(val)
+    b(e)[i] = b(val)
+end
+
+
 
 function *(x::ElGamal{G}, y::ElGamal{G}) where G
 
@@ -255,6 +282,16 @@ function (enc::Enc{G})(m::Vector{G}, r::AbstractVector{<:Integer}) where G <: Ge
     b′ = m .* (enc.pk .^ r)
 
     return ElGamal(a′, b′)
+end
+
+
+function (enc::Enc{G})(𝐞::ElGamal{G}, 𝐫::AbstractVector{<:Integer}) where G <: Generator
+    
+    ### Need to improve this 
+    r = ElGamal(enc.(𝐫))
+    𝐞′ = 𝐞 * r
+    
+    return 𝐞′    
 end
 
 

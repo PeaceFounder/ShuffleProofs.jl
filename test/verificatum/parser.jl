@@ -1,5 +1,5 @@
 using Test
-using Verificatum: Node, Leaf, Tree, encode, decode
+using ShuffleProofs: Node, Leaf, Tree, encode, decode
 
 ### Testing parser
 
