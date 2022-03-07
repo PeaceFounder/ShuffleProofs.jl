@@ -253,7 +253,7 @@ end
 
 
 
-function *(x::ElGamal{G}, y::ElGamal{G}) where G
+function *(x::ElGamal{G}, y::ElGamal{G}) where G <: Generator
 
     @assert length(x) == length(y)
 
@@ -263,7 +263,7 @@ function *(x::ElGamal{G}, y::ElGamal{G}) where G
     return ElGamal(a′, b′)
 end
 
-function *(x::ElGamal{G}, y::Tuple{G, G}) where G 
+function *(x::ElGamal{G}, y::Tuple{G, G}) where G <: Generator
     
     a′ = a(x) .* a(y)
     b′ = b(x) .* b(y)
@@ -271,7 +271,19 @@ function *(x::ElGamal{G}, y::Tuple{G, G}) where G
     return ElGamal(a′, b′)
 end
 
-*(x::Tuple{G, G}, y::ElGamal{G}) where G = y * x
+*(x::Tuple{G, G}, y::ElGamal{G}) where G <: Generator = y * x
+
+
+import Base: ^
+
+^(x::Tuple{G, G}, k::Integer) where G <: Generator = (x[1]^k, x[2]^k)
+^(x::ElGamal, k::AbstractVector{<:Integer}) = ElGamal(a(x) .^ k, b(x) .^ k)
+^(x::ElGamal, k::Integer) = ElGamal(a(x) .^ k, b(x) .^ k)
+
+Base.broadcasted(::typeof(^), x::ElGamal, y::AbstractVector{<:Integer}) = x^y
+
+
+
 
 (enc::Enc)(e::ElGamal, r::Integer) = enc(r) * e 
 

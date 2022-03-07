@@ -2,10 +2,14 @@ using Test
 
 import ShuffleProofs: ElGamal, PrimeGenerator, prove, verify, Simulator, Enc, Dec, gen_shuffle, Verifier, PoSChallenge, Shuffle, shuffle, VShuffleProof, PoSProof, ProtocolSpec
 
-DEMO_DIR = "$(@__DIR__)/../ref/demo/"
-verifier = ProtocolSpec(DEMO_DIR)
+SPEC = "$(@__DIR__)/../ref/demo/protInfo.xml"
+verifier = ProtocolSpec(SPEC)
 
-(; g, pk) = verifier
+#(; g, pk) = verifier
+(; g) = verifier
+sk = 123
+pk = g^sk
+
 
 enc = Enc(pk, g)
 

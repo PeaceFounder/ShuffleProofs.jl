@@ -1,5 +1,6 @@
 module ShuffleProofs
 
+using Infiltrator
 
 include("utils.jl") # Common functions
 
@@ -13,9 +14,6 @@ include("verifier.jl")
 include("parser.jl") 
 include("io.jl") # Some convinience methods
 include("vverifier.jl") 
-
-
-
 
 
 #greet() = print("Hello World!")

@@ -15,15 +15,19 @@ Verifier for Verificatum generated NIZK proofs.
   * [x] Feed in the verifier in `WikstromTerelius.jl` to obtain a proof
   * [ ] Cleanup
     * [ ] Implement checking proof from multiple parties
-    * [ ] Adding code for F in the Verificatum verifier
+    * [x] Adding code for F in the Verificatum verifier
     * [ ] Upstream to `CryptoGroups.jl`
-    * [ ] Remove `g` and `pk` from `ProtocolSpec`
-    * [ ] Consistent notation between `g, G, 𝓰, 𝓖`
-    * [ ] Adding `verbose::Bool` option to `verify` and evalueate the return value
-    * [ ] Abstract cryptographic operations in Haines proof and find a way to remove `_a, _b`
-    * [ ] Strong random numbers in the proofs
+    * [x] Remove `g` and `pk` from `ProtocolSpec`
+    * [x] Consistent notation between `g, G, 𝓰, 𝓖`
+    * [x] Adding `verbose::Bool` option to `verify` and evalueate the return value
+    * [x] Abstract cryptographic operations in Haines proof and find a way to remove `_a, _b`
+    * [ ] Strong random numbers in the proofs (pass as function argument)
+    * [x] Make releavnt types concrete
+    * [ ] `t₃` sensitive to randomization factors (to investigate).
+    * [ ] Review possible overflow errors due to wrong integer types
   * [ ] Elliptic groups
   * [ ] Benchmarks
+  * [ ] Storing the simulator in convinient directory structure
   * [ ] Storing the simulator in Verificatum understandable way
   * [ ] Decryption proofs
   * [ ] Documentation

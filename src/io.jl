@@ -5,9 +5,9 @@ Base.string(tree::Tree) = bytes2hex(encode(tree))
 
 function unmarshal_full_public_key(g::Generator, tree::Tree)
     
-    𝓖 = group(g)
+    G = typeof(g)
 
-    g′, y = convert(Tuple{Generator[𝓖], Generator[𝓖]}, tree)    
+    g′, y = convert(Tuple{G, G}, tree)    
 
     @assert g′ == g
 
@@ -20,14 +20,12 @@ marshal_full_public_key(g::G, y::G) where G <: Generator = Tree((g, y))
 function unmarshal_publickey(tree::Tree)
     
     g = unmarshal(BigInt, tree.x[1])
-    # It is possilbe to have a some logic here
     c1, c2 = convert(Tuple{BigInt, BigInt}, tree.x[2])
 
     @assert value(g) == c1
 
-    𝓖 = group(g)
-    #y = convert(Generator{𝓖}, c2)
-    y = convert(Generator[𝓖], c2)
+    G = typeof(g)
+    y = convert(G, c2)
 
     return y, g
 end
@@ -74,9 +72,6 @@ function unmarshal_privatekey(tree::Tree)
 end
 
 
-
-
-
 function map_hash_name(x::AbstractString)
     if x == "SHA-256"
         return "sha256"
@@ -106,11 +101,7 @@ end
 map_hash_name_back(x::Hash) = map_hash_name_back(x.spec)
 
 
-
 function ro_prefix(protinfo::AbstractDict; auxsid="default")
-
-### I could pass a simple protocol info file for parsing 
-#ρ = let
 
     version = protinfo["version"]
     sid = protinfo["sid"]

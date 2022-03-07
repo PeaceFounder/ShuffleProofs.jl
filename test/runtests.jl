@@ -17,6 +17,6 @@ end
 end
 
 @testset "Verifiactum verifier compatible proof generation" begin
-    nothing
+    include("vproof.jl")
 end
 

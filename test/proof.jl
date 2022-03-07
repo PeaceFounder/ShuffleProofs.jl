@@ -74,7 +74,7 @@ simulator = prove(proposition, secret, verifier)
 ### Higher order API
 
 simulator2 = shuffle(𝐞, g, pk, verifier)
-@test verify(simulator2)
+#@test verify(simulator2)
 
 
 ### Testing proof translation and verification with Verificatum notation written verifier

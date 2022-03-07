@@ -1,7 +1,7 @@
 # A test for verifiying existing Verificatum proof
 
 using Test
-import ShuffleProofs: Simulator, VInit, VPermComit, VPoSCommit, PoSChallenge, verify, load_verificatum_simulator
+import ShuffleProofs: Simulator, VInit, VPoSCommit, PoSChallenge, verify, load_verificatum_simulator
 import ShuffleProofs: interpret, value # For additional verification
 
 DEMO_DIR = "$(@__DIR__)/../ref/demo/"

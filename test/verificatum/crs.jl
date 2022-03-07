@@ -1,5 +1,5 @@
 using Test
-using ShuffleProofs: Tree, crs, PrimeGenerator, modulus, order, decode, tobig, interpret, Leaf, unmarshal, outlen, group
+using ShuffleProofs: Tree, crs, PrimeGenerator, modulus, order, decode, tobig, interpret, Leaf, unmarshal, outlen, group, value
 
 ### Let's make the setup complete. From repo I ahve a following public parameters:
 nr = 100

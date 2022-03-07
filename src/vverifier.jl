@@ -2,9 +2,8 @@ using XMLDict: parse_xml
 
 using Base: @kwdef
 
-@kwdef struct ProtocolSpec{𝓰<:Generator} <: Verifier
-    g::𝓰
-    pk::𝓰 
+@kwdef struct ProtocolSpec{G<:Generator} <: Verifier
+    g::G
     nr::Int32
     nv::Int32
     ne::Int32
@@ -15,12 +14,11 @@ using Base: @kwdef
     auxsid::String = "default"
 end
 
-function ProtocolSpec(protinfo::AbstractDict, pk_tree::Tree; auxsid = "default")
+function ProtocolSpec(protinfo::AbstractDict; auxsid = "default")
 
     s_H = protinfo["rohash"]  
     s_PRG = protinfo["prg"]
     s_Gq = protinfo["pgroup"]
-
 
     prghash = Hash(map_hash_name(protinfo["prg"]))
     rohash = Hash(map_hash_name(protinfo["rohash"]))
@@ -32,44 +30,19 @@ function ProtocolSpec(protinfo::AbstractDict, pk_tree::Tree; auxsid = "default")
     
     g = unmarshal(BigInt, decode(split(s_Gq, "::")[2]))
 
-    𝓖 = group(g)
-    𝓰 = Generator[𝓖]
-
-    pk = unmarshal_full_public_key(g, pk_tree)
-
     version = String(protinfo["version"])
     sid = String(protinfo["sid"])
 
-    return ProtocolSpec(; g, pk, nr, nv, ne, prghash, rohash, version, sid, auxsid)
+    return ProtocolSpec(; g, nr, nv, ne, prghash, rohash, version, sid, auxsid)
 end
 
-
-# The public key is from the main direcotry as it can mach best the meaning
-function ProtocolSpec(PROT_INFO::AbstractString, PUBLIC_KEY::AbstractString; auxsid = "default")
+function ProtocolSpec(PROT_INFO::AbstractString; auxsid = "default")
 
     xml = String(read(PROT_INFO))
     protinfo = parse_xml(xml)
 
-    # There are two publickey files with different formating, thus both can be accepted
-    tree = decode(read(PUBLIC_KEY))
-    if tree.x[1] isa Leaf
-        pk_tree = tree
-    else
-        pk_tree = tree.x[2]
-    end
-
-    return ProtocolSpec(protinfo, pk_tree; auxsid)
+    return ProtocolSpec(protinfo; auxsid)
 end
-
-
-function ProtocolSpec(basedir::AbstractString; auxsid = "default")
-    
-    PROT_INFO = "$basedir/protInfo.xml"
-    PUBLIC_KEY = "$basedir/publicKey"
-
-    return ProtocolSpec(PROT_INFO, PUBLIC_KEY; auxsid)
-end
-
 
 
 function marshal_s_Gq(g::PrimeGenerator)
@@ -103,43 +76,41 @@ function ro_prefix(spec::ProtocolSpec)
 end
 
 
-struct VShuffleProof{𝓰<:Generator} <: Proof
-    μ::Vector{𝓰}
-    τ::Tuple{Vector{𝓰}, 𝓰, Vector{𝓰}, 𝓰, 𝓰, Tuple{𝓰, 𝓰}}
+struct VShuffleProof{G<:Generator} <: Proof
+    μ::Vector{G}
+    τ::Tuple{Vector{G}, G, Vector{G}, G, G, Tuple{G, G}}
     σ::Tuple{BigInt, Vector{BigInt}, BigInt, BigInt, Vector{BigInt}, BigInt}
 end
 
-==(x::VShuffleProof{𝓰}, y::VShuffleProof{𝓰}) where 𝓰 <: Generator = x.μ == y.μ && x.τ == y.τ && x.σ == y.σ
+==(x::VShuffleProof{G}, y::VShuffleProof{G}) where G <: Generator = x.μ == y.μ && x.τ == y.τ && x.σ == y.σ
 
 
 function VShuffleProof(proof::PoSProof)
 
     (; 𝐜, 𝐜̂, t, s) = proof
 
-    # Now we can look into translation
-
-    𝓰 = typeof(𝐜[1])
+    G = typeof(𝐜[1])
 
     𝐮 = 𝐜
     μ = 𝐮
 
-    (t₁, t₂, t₃, (t₄₁, t₄₂), 𝐭̂) = t # 𝐭̂ = 𝐁′, t₃ = A′, t₄ = F
+    (t₁, t₂, t₃, t₄, 𝐭̂) = t 
     𝐁 = 𝐜̂
-    𝐁′= Vector{𝓰}(𝐭̂)
+    𝐁′= 𝐭̂
     D′ = t₂
     A′ = t₃
     C′ = t₁
-    F′ = (t₄₂, t₄₁)
+    F′ = t₄ 
 
     τ = (𝐁, A′, 𝐁′, C′, D′, F′)
 
-    (s₁, s₂, s₃, s₄, 𝐬̂, 𝐬′) = s # 𝐬̂ = 𝐤_B, 𝐬′ = 𝐤_E, s₃ = k_A
+    (s₁, s₂, s₃, s₄, 𝐬̂, 𝐬′) = s 
     𝐤_B = 𝐬̂
     𝐤_E = 𝐬′
     k_D = s₂
     k_A = s₃
-    k_C = s₁ # 
-    k_F = s₄ # Yet to be tested
+    k_C = s₁ 
+    k_F = s₄ 
 
     σ = (k_A, 𝐤_B, k_C, k_D, 𝐤_E, k_F)
 
@@ -162,12 +133,11 @@ function PoSProof(vproof::VShuffleProof)
     t₂ = D′
     t₃ = A′
     t₁ = C′ 
-    (t₄₂, t₄₁) = F′
+    t₄ = F′
 
-    t = (t₁, t₂, t₃, (t₄₁, t₄₂), 𝐭̂) 
+    t = (t₁, t₂, t₃, t₄, 𝐭̂) 
 
     (k_A, 𝐤_B, k_C, k_D, 𝐤_E, k_F) = σ 
-
 
     𝐬̂ = 𝐤_B 
     𝐬′ = 𝐤_E 
@@ -184,42 +154,58 @@ function PoSProof(vproof::VShuffleProof)
 end
 
 
-function load_verificatum_simulator(basedir::AbstractString; auxsid = "default")
+function load_verificatum_proposition(basedir::AbstractString, auxsid::AbstractString)
 
-    spec = ProtocolSpec(basedir; auxsid)
+    PUBLIC_KEY = "$basedir/publicKey"
+
+    tree = decode(read(PUBLIC_KEY))
+    pk, g = unmarshal_publickey(tree)
 
     NIZKP = basedir * "/dir/nizkp/$auxsid/"
 
     CIPHERTEXTS = "$NIZKP/Ciphertexts.bt"
     SHUFFLED_CIPHERTEXTS = "$NIZKP/ShuffledCiphertexts.bt"
 
-    PERMUTATION_COMMITMENT = "$NIZKP/proofs/PermutationCommitment01.bt"
-    PoS_COMMITMENT = "$NIZKP/proofs/PoSCommitment01.bt"
-    PoS_REPLY = "$NIZKP/proofs/PoSReply01.bt"
-
-    (; g, pk) = spec
-
-    𝓖 = group(g)
-    𝓰 = Generator[𝓖]
+    G = typeof(g)
 
     L_tree = decode(read(CIPHERTEXTS))
     L′_tree = decode(read(SHUFFLED_CIPHERTEXTS))
 
-    𝔀 = convert(ElGamal{𝓰}, L_tree) ## Is there anything I can do so that I would get a concrete type here?
-    𝔀′ = convert(ElGamal{𝓰}, L′_tree)
+    𝔀 = convert(ElGamal{G}, L_tree) ## Is there anything I can do so that I would get a concrete type here?
+    𝔀′ = convert(ElGamal{G}, L′_tree)
+
+    return Shuffle(g, pk, 𝔀, 𝔀′)
+end
+
+function load_verificatum_proof(proofs::AbstractString, g::Generator)
+
+    PERMUTATION_COMMITMENT = "$proofs/PermutationCommitment01.bt"
+    PoS_COMMITMENT = "$proofs/PoSCommitment01.bt"
+    PoS_REPLY = "$proofs/PoSReply01.bt"
+
+    G = typeof(g)
 
     μ_tree = decode(read(PERMUTATION_COMMITMENT))
-    μ = convert(Vector{𝓰}, μ_tree)
+    μ = convert(Vector{G}, μ_tree)
 
     τ_tree = decode(read(PoS_COMMITMENT))
-    τ = convert(Tuple{Vector{𝓰}, 𝓰, Vector{𝓰}, 𝓰, 𝓰, Tuple{𝓰, 𝓰}}, τ_tree)
+    τ = convert(Tuple{Vector{G}, G, Vector{G}, G, G, Tuple{G, G}}, τ_tree)
 
     σ_tree = decode(read(PoS_REPLY))
     σ = convert(Tuple{BigInt, Vector{BigInt}, BigInt, BigInt, Vector{BigInt}, BigInt}, σ_tree)
 
+    return VShuffleProof(μ, τ, σ)    
+end
+
+
+function load_verificatum_simulator(basedir::AbstractString; auxsid = "default")
+
+    spec = ProtocolSpec(basedir * "/protInfo.xml"; auxsid)
+
+    proposition = load_verificatum_proposition(basedir, auxsid)
     
-    proof = VShuffleProof(μ, τ, σ)
-    proposition = Shuffle(g, pk, 𝔀, 𝔀′)
+    NIZKP = basedir * "/dir/nizkp/$auxsid/"
+    proof = load_verificatum_proof("$NIZKP/proofs/", proposition.g)
     
     simulator = Simulator(proposition, proof, spec)
 
@@ -229,14 +215,14 @@ end
 
 ### The simulator type will deal with loading the data. 
 
-struct VInit{𝓰<:Generator} #<: Verifier
-    spec::ProtocolSpec{𝓰}
+struct VInit{G<:Generator} #<: Verifier
+    spec::ProtocolSpec{G}
     proposition::Shuffle
     ρ::Vector{UInt8} 
-    𝐡::Vector{𝓰}
+    𝐡::Vector{G}
 end
 
-function VInit(spec::ProtocolSpec, proposition::Shuffle) where 𝓰 <: Generator
+function VInit(spec::ProtocolSpec, proposition::Shuffle) where G <: Generator
 
     ρ = ro_prefix(spec) ### I can add another method there
 
@@ -253,23 +239,21 @@ function VInit(spec::ProtocolSpec, proposition::Shuffle) where 𝓰 <: Generator
 end
 
 
-#VInit(spec::ProtocolSpec, proposition::Shuffle) = VInit(spec, proposition.𝐞, proposition.𝐞′)
-
-
-struct VPermCommit{𝓰<:Generator} #<: Verifier
-    spec::ProtocolSpec{𝓰}
+struct VPermCommit{G<:Generator} #<: Verifier
+    spec::ProtocolSpec{G}
     proposition::Shuffle
     ρ::Vector{UInt8} 
-    𝐡::Vector{𝓰} 
+    𝐡::Vector{G} 
     s::Vector{UInt8}  
     𝐞::Vector{BigInt} 
 end
 
 
-function VPermCommit(v::VInit{𝓰}, 𝐮::Vector{𝓰}) where 𝓰 <: Generator
+function VPermCommit(v::VInit{G}, 𝐮::Vector{G}) where G <: Generator
     (; 𝐡, ρ, spec, proposition) = v
-    (; ne, prghash, rohash, g, pk) = spec
+    (; ne, prghash, rohash) = spec
     𝔀, 𝔀′ = proposition.𝐞, proposition.𝐞′
+    (; g, pk) = proposition
 
     N = length(𝔀)
 
@@ -289,17 +273,17 @@ function VPermCommit(v::VInit{𝓰}, 𝐮::Vector{𝓰}) where 𝓰 <: Generator
 end
 
 
-struct VPoSCommit{𝓰<:Generator} #<: Verifier
-    spec::ProtocolSpec{𝓰}
+struct VPoSCommit{G<:Generator} #<: Verifier
+    spec::ProtocolSpec{G}
     proposition::Shuffle
     ρ::Vector{UInt8} 
-    𝐡::Vector{𝓰}
+    𝐡::Vector{G}
     𝐞::Vector{BigInt}
     𝓿::BigInt
 end
 
 
-function VPoSCommit(v::VPermCommit{𝓰}, τ::Tuple{Vector{𝓰}, 𝓰, Vector{𝓰}, 𝓰, 𝓰, Tuple{𝓰, 𝓰}}) where 𝓰 <: Generator
+function VPoSCommit(v::VPermCommit{G}, τ::Tuple{Vector{G}, G, Vector{G}, G, G, Tuple{G, G}}) where G <: Generator
     (; 𝐡, ρ, 𝐞, spec, proposition, s) = v
     (; nv, rohash) = spec
 
@@ -310,17 +294,15 @@ function VPoSCommit(v::VPermCommit{𝓰}, τ::Tuple{Vector{𝓰}, 𝓰, Vector{�
     return VPoSCommit(spec, proposition, ρ, 𝐡, 𝐞, 𝓿)
 end
 
-function VPoSCommit(v::VPermCommit, 𝐜̂, t)
-    (t₁, t₂, t₃, (t₄₁, t₄₂), 𝐭̂) = t # 𝐭̂ = 𝐁′, t₃ = A′, t₄ = F
+function VPoSCommit(v::VPermCommit{G}, 𝐜̂::Vector{G}, t::Tuple{G, G, G, Tuple{G, G}, Vector{G}}) where G <: Generator
+    (t₁, t₂, t₃, t₄, 𝐭̂) = t 
     𝐁 = 𝐜̂
 
-    𝓰 = typeof(𝐜̂[1])
-
-    𝐁′= Vector{𝓰}(𝐭̂)
+    𝐁′= 𝐭̂
     D′ = t₂
     A′ = t₃
     C′ = t₁
-    F′ = (t₄₂, t₄₁)
+    F′ = t₄
 
     τ = (𝐁, A′, 𝐁′, C′, D′, F′)
 
@@ -331,7 +313,7 @@ end
 PoSChallenge(verifier::VPoSCommit) = PoSChallenge(verifier.𝐡, verifier.𝐞, verifier.𝓿)
 
 
-function verify(proposition::Shuffle, proof::VShuffleProof, challenge::PoSChallenge)
+function verify(proposition::Shuffle, proof::VShuffleProof, challenge::PoSChallenge; verbose=true)
     
     𝐡, 𝐞, 𝓿 = challenge.𝐡, challenge.𝐮, challenge.c
     𝔀, 𝔀′ = proposition.𝐞, proposition.𝐞′
@@ -349,18 +331,28 @@ function verify(proposition::Shuffle, proof::VShuffleProof, challenge::PoSChalle
 
     C = prod(𝐮) / prod(𝐡)
     D = 𝐁[N] * inv(𝐡[1])^prod(𝐞)
-
-    @show A^𝓿 * A′ == g^k_A * prod(𝐡 .^ 𝐤_E)
-    @show C^𝓿 * C′ == g^k_C
-    @show D^𝓿 * D′ == g^k_D
-
-    @show 𝐁[1]^𝓿 * 𝐁′[1] == g^𝐤_B[1] * 𝐡[1]^𝐤_E[1]
-
-    for i in 2:N
-        @show 𝐁[i]^𝓿 * 𝐁′[i] == g^𝐤_B[i] * 𝐁[i - 1]^𝐤_E[i]
-    end
     
-    return true
+    F = ∏(𝔀 .^ 𝐞)
+
+    report = Report()
+
+    report &= "A", A^𝓿 * A′ == g^k_A * prod(𝐡 .^ 𝐤_E)
+    report &= "C", C^𝓿 * C′ == g^k_C
+    report &= "D", D^𝓿 * D′ == g^k_D
+    
+    report &= "B", Bool[
+        𝐁[1]^𝓿 * 𝐁′[1] == g^𝐤_B[1] * 𝐡[1]^𝐤_E[1],
+        (𝐁[i]^𝓿 * 𝐁′[i] == g^𝐤_B[i] * 𝐁[i - 1]^𝐤_E[i] for i in 2:N)...
+    ]
+
+    enc = Enc(pk, g)
+    report &= "F", F^𝓿 * F′ == enc(-k_F) * ∏(𝔀′ .^ 𝐤_E) 
+
+    if verbose
+        println(report)
+    end
+
+    return isvalid(report)
 end
 
 
@@ -382,7 +374,7 @@ end
 
 
 step(spec::ProtocolSpec, proposition::Proposition) = VInit(spec, proposition)
-step(v::VInit{𝓰}, 𝐜::Vector{𝓰}) where 𝓰 <: Generator = VPermCommit(v, 𝐜)
+step(v::VInit{G}, 𝐜::Vector{G}) where G <: Generator = VPermCommit(v, 𝐜)
 step(v::VPermCommit, 𝐜̂, t) = VPoSCommit(v, 𝐜̂, t)
 
 challenge(v::VInit) = (v.𝐡, v.𝐡[1])

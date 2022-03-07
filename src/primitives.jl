@@ -1,6 +1,5 @@
 using Nettle
 
-
 struct Hash
     spec::String
 end
@@ -22,8 +21,6 @@ function outlen(h::Hash)
     end
 end
 
-# = 256 # Number of bits in the output of the hash function
-
 struct PRG
     h::Hash
     s::Vector{UInt8}
@@ -35,9 +32,7 @@ end
 function Base.getindex(prg::PRG, range)
     (; start, stop) = range
     
-    # I will be rather primitive on the matter here. 
-    
-    a = outlen(prg.h) ÷ 8 # which just gives 32
+    a = outlen(prg.h) ÷ 8 
 
     K = div(stop, a, RoundUp) - 1
 
@@ -114,12 +109,8 @@ leaf(x::String) = encode(Leaf(x))
 
 function crs(𝓖, N::Integer, prghash::Hash, rohash::Hash; nr::Integer = 0, ρ = UInt8[], d = [ρ..., leaf("generators")...])
 
-#𝐡 = let # ρ, prghash, rohash, 𝓖, ### I could put rho as an optional argument allong with nr=0
     ns = outlen(prghash)
     ro = RO(rohash, ns)
-
-    #leaf = Leaf("generators") ### I could instead introduce a function leaf and put it as an argument
-    #d = [ρ..., encode(leaf)...] # A stupid thing is that Leaf depends on parser where other parts do not.
 
     s = ro(d) # The seed 
 

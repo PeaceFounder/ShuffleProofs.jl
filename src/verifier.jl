@@ -38,25 +38,31 @@ struct Simulator
     verifier::Verifier
 end
 
+struct Shuffle{G <: Generator} <: Proposition
+    g::G
+    pk::G
+    𝐞::ElGamal{G}
+    𝐞′::ElGamal{G}
 
-struct Shuffle <: Proposition
-    g
-    pk
-    𝐞
-    𝐞′
+    function Shuffle{G}(g::G, pk::G, 𝐞::ElGamal{G}, 𝐞′::ElGamal{G}) where G <: Generator
+        @assert length(𝐞) == length(𝐞′)
+        new(g, pk, 𝐞, 𝐞′)
+    end
+
+    Shuffle(g::G, pk::G, 𝐞::ElGamal{G}, 𝐞′::ElGamal{G}) where G <: Generator = Shuffle{G}(g, pk, 𝐞, 𝐞′)
 end
 
 struct ShuffleSecret
-    𝛙
-    𝐫′
+    𝛙::Vector{<:Integer}
+    𝐫′::Vector{<:Integer}
 end
 
 
-struct PoSProof <: Proof
-    𝐜
-    𝐜̂
-    t
-    s
+struct PoSProof{G <: Generator} <: Proof
+    𝐜::Vector{G}
+    𝐜̂::Vector{G}
+    t::Tuple{G, G, G, Tuple{G, G}, Vector{G}}
+    s::Tuple{BigInt, BigInt, BigInt, BigInt, Vector{BigInt}, Vector{BigInt}}
 end
 
 import Base: ==
@@ -64,9 +70,9 @@ import Base: ==
 ==(x::PoSProof, y::PoSProof) = x.𝐜 == y.𝐜 && x.𝐜̂ == y.𝐜̂ && x.t == y.t && x.s == y.s
 
 struct PoSChallenge
-    𝐡 # Independent set of generators
-    𝐮 # PoS commitment challenge
-    c # Last bit of a challenge
+    𝐡::Vector{<:Generator} # Independent set of generators
+    𝐮::Vector{BigInt} # PoS commitment challenge
+    c::BigInt # Last bit of a challenge
 end
 
 ### 
@@ -111,7 +117,6 @@ end
 
 function gen_commitment(g::G, 𝐡::Vector{G}, b::Vector, r::Integer) where G <: Generator
 
-    #(; g, h) = crs
     com = g^r * prod(𝐡 .^ b)
 
     return com
@@ -120,7 +125,6 @@ end
 
 function gen_perm_commitment(g::G, 𝐡::Vector{G}, 𝛙::Vector, 𝐫::Vector) where G <: Generator
 
-    #(; g, 𝐡) = crs
 
     commitments = [g^𝐫[j] * 𝐡[i] for (i, j) in enumerate(𝛙)]
     sorted_commitments = commitments[𝛙]
@@ -148,14 +152,9 @@ end
 ∏(𝐱) = prod(𝐱)
 ∏(f, 𝐱) = prod(f, 𝐱)
 
-
-_a(x) = b(x)
-_b(x) = a(x)
-
 using Random: default_rng, rand
 
-
-function prove(proposition::Shuffle, secret::ShuffleSecret, verifier::Verifier; rng = default_rng())
+function prove(proposition::Shuffle{G}, secret::ShuffleSecret, verifier::Verifier; rng = default_rng()) where G <: Generator
 
     (; 𝛙, 𝐫′) = secret
     (; g, pk, 𝐞, 𝐞′) = proposition
@@ -167,15 +166,13 @@ function prove(proposition::Shuffle, secret::ShuffleSecret, verifier::Verifier; 
 
     N = length(𝛙)
     q = order(g)
-    
+
+    # Need to abstract this piece out. A function seems reasonable here
     𝐫 = rand(rng, 2:q-1, N) 
     𝐫̂ = rand(rng, 2:q-1, N)
     𝛚 = rand(rng, 2:q-1, 4)
     𝛚̂ = rand(rng, 2:q-1, N)
     𝛚̂′ = rand(rng, 2:q-1, N)
-
-    𝐚′ = _a(𝐞′)
-    𝐛′ = _b(𝐞′)
 
     𝐜 = gen_perm_commitment(g, 𝐡, 𝛙, 𝐫)
 
@@ -186,7 +183,7 @@ function prove(proposition::Shuffle, secret::ShuffleSecret, verifier::Verifier; 
 
     𝐜̂ = gen_commitment_chain(g, h, 𝐮′, 𝐫̂)
 
-    𝐯 = Vector(undef, N)
+    𝐯 = Vector{BigInt}(undef, N) 
     𝐯[N] = 1
     for i in N-1:-1:1
         𝐯[i] = 𝐮′[i+1] * 𝐯[i+1] 
@@ -199,20 +196,19 @@ function prove(proposition::Shuffle, secret::ShuffleSecret, verifier::Verifier; 
 
     t₁ = g^𝛚[1] 
     t₂ = g^𝛚[2]
-
     t₃ = g^𝛚[3] * ∏(𝐡 .^ 𝛚̂′)
 
-    t₄₁ = pk^(-𝛚[4]) * ∏(𝐚′ .^ 𝛚̂′)
-    t₄₂ = g^(-𝛚[4]) * ∏(𝐛′ .^ 𝛚̂′)
+    enc = Enc(pk, g)
+    t₄ = enc(-𝛚[4]) * ∏(𝐞′ .^ 𝛚̂′)
 
-    𝐭̂ = Vector(undef, N)
+    𝐭̂ = Vector{G}(undef, N)
     𝐭̂[1] = g^𝛚̂[1] * h^𝛚̂′[1]
     for i in 2:N
         𝐭̂[i] = g^𝛚̂[i] * 𝐜̂[i-1]^𝛚̂′[i]
     end
 
     y = (𝐞, 𝐞′, 𝐜, 𝐜̂, pk)
-    t = (t₁, t₂, t₃, (t₄₁, t₄₂), 𝐭̂) 
+    t = (t₁, t₂, t₃, t₄, 𝐭̂) 
 
     v3 = step(v2, 𝐜̂, t)
     c = challenge(v3)
@@ -251,20 +247,15 @@ end
 
 
 
-function verify(proposition::Shuffle, proof::PoSProof, challenge::PoSChallenge)
+function verify(proposition::Shuffle, proof::PoSProof, challenge::PoSChallenge; verbose=true)
 
     (; g, pk, 𝐞, 𝐞′) = proposition
     (; 𝐜, 𝐜̂, t, s) = proof
     (; 𝐡, 𝐮, c) = challenge
+    h = 𝐡[1]
 
     (s₁, s₂, s₃, s₄, 𝐬̂, 𝐬′) = s 
-    (t₁, t₂, t₃, (t₄₁, t₄₂), 𝐭̂) = t 
-
-    𝐚 = _a(𝐞)
-    𝐛 = _b(𝐞)
-    𝐚′ = _a(𝐞′)
-    𝐛′ = _b(𝐞′)
-    h = 𝐡[1]
+    (t₁, t₂, t₃, t₄, 𝐭̂) = t 
 
     q = order(g)
     N = length(𝐞)
@@ -276,35 +267,37 @@ function verify(proposition::Shuffle, proof::PoSProof, challenge::PoSChallenge)
     ĉ = 𝐜̂[N] / h^u
     c̃ = ∏(𝐜 .^ 𝐮)
 
-    a′ = ∏(𝐚 .^ 𝐮)
-    b′ = ∏(𝐛 .^ 𝐮)
+    e′ =  ∏(𝐞 .^ 𝐮)
 
     t₁′ = c̄^(-c) * g^s₁
     t₂′ = ĉ^(-c) * g^s₂
     t₃′ = c̃^(-c) * g^s₃ * ∏(𝐡 .^ 𝐬′)
 
-    t₄₁′ = a′^(-c) * pk^(-s₄) * ∏(𝐚′ .^ 𝐬′)
-    t₄₂′ = b′^(-c) * g^(-s₄) * ∏(𝐛′ .^ 𝐬′)
+    enc = Enc(pk, g)
+    t₄′ = e′^(-c) * enc(-s₄) * ∏(𝐞′ .^ 𝐬′)
 
     𝐭̂′ = Vector(undef, N)
 
-    𝐭̂′[1] = 𝐜̂[1]^(-c) * g^𝐬̂[1] * h^𝐬′[1]    #ĉ0 = h
+    𝐭̂′[1] = 𝐜̂[1]^(-c) * g^𝐬̂[1] * h^𝐬′[1]
 
     for i in 2:N
         𝐭̂′[i] = 𝐜̂[i]^(-c) * g^𝐬̂[i] * 𝐜̂[i-1]^𝐬′[i]
     end
-    
-    @show t₁ == t₁′
-    @show t₂ == t₂′ 
-    @show t₃ == t₃′
-    @show t₄₁ == t₄₁′
-    @show t₄₂ == t₄₂′ 
 
-    for i in 1:N
-        @show 𝐭̂[i] == 𝐭̂′[i]
+    report = Report()
+    
+    report &= "t₁", t₁ == t₁′
+    report &= "t₂", t₂ == t₂′ 
+    report &= "t₃", t₃ == t₃′
+    report &= "t₄", t₄ == t₄′ 
+
+    report &= "𝐭̂", 𝐭̂ .== 𝐭̂′
+
+    if verbose
+        println(report)
     end
 
-    return true # ToDo
+    return isvalid(report)
 end
 
 
