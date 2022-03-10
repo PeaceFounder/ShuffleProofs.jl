@@ -125,11 +125,16 @@ end
 
 function gen_perm_commitment(g::G, 𝐡::Vector{G}, 𝛙::Vector, 𝐫::Vector) where G <: Generator
 
+    N = length(𝛙)
 
-    commitments = [g^𝐫[j] * 𝐡[i] for (i, j) in enumerate(𝛙)]
-    sorted_commitments = commitments[𝛙]
+    𝐜 = Vector{G}(undef, N)
 
-    return sorted_commitments
+    for i in 1:N
+        j = 𝛙[i]
+        𝐜[j] = g^𝐫[j] * 𝐡[i]
+    end
+
+    return 𝐜
 end
 
 function gen_commitment_chain(g::Generator, c0::T, 𝐮::Vector, 𝐫::Vector) where T
@@ -152,9 +157,22 @@ end
 ∏(𝐱) = prod(𝐱)
 ∏(f, 𝐱) = prod(f, 𝐱)
 
-using Random: default_rng, rand
 
-function prove(proposition::Shuffle{G}, secret::ShuffleSecret, verifier::Verifier; rng = default_rng()) where G <: Generator
+using Random: RandomDevice
+
+function gen_roprg(ρ::AbstractVector{UInt8})
+
+    rohash = Hash("sha256")
+    prghash = Hash("sha256")
+    roprg = ROPRG(ρ, rohash, prghash)
+
+    return roprg
+end
+
+gen_roprg() = gen_roprg(rand(RandomDevice(), UInt8, 32))
+
+
+function prove(proposition::Shuffle{G}, secret::ShuffleSecret, verifier::Verifier; roprg = gen_roprg()) where G <: Generator
 
     (; 𝛙, 𝐫′) = secret
     (; g, pk, 𝐞, 𝐞′) = proposition
@@ -162,17 +180,19 @@ function prove(proposition::Shuffle{G}, secret::ShuffleSecret, verifier::Verifie
     v1 = step(verifier, proposition) # So I could keep a proposition in the coresponding state machine in the end
     𝐡, h = challenge(v1) 
 
+    # Would make more sense for length(proposition) == length(secret)
     @assert length(𝛙) == length(𝐞)
 
     N = length(𝛙)
     q = order(g)
 
-    # Need to abstract this piece out. A function seems reasonable here
-    𝐫 = rand(rng, 2:q-1, N) 
-    𝐫̂ = rand(rng, 2:q-1, N)
-    𝛚 = rand(rng, 2:q-1, 4)
-    𝛚̂ = rand(rng, 2:q-1, N)
-    𝛚̂′ = rand(rng, 2:q-1, N)
+    n = bitlength(q)
+
+    𝐫 = rand(roprg(:𝐫), n, N) # n is part of the sampler here
+    𝐫̂ = rand(roprg(:𝐫̂), n, N)
+    𝛚 = rand(roprg(:𝛚), n, 4) 
+    𝛚̂ = rand(roprg(:𝛚̂), n, N)
+    𝛚̂′ = rand(roprg(:𝛚̂′), n, N)
 
     𝐜 = gen_perm_commitment(g, 𝐡, 𝛙, 𝐫)
 
@@ -196,7 +216,7 @@ function prove(proposition::Shuffle{G}, secret::ShuffleSecret, verifier::Verifie
 
     t₁ = g^𝛚[1] 
     t₂ = g^𝛚[2]
-    t₃ = g^𝛚[3] * ∏(𝐡 .^ 𝛚̂′)
+    t₃ = g^𝛚[3] * ∏(𝐡 .^ 𝛚̂′) 
 
     enc = Enc(pk, g)
     t₄ = enc(-𝛚[4]) * ∏(𝐞′ .^ 𝛚̂′)
@@ -247,7 +267,7 @@ end
 
 
 
-function verify(proposition::Shuffle, proof::PoSProof, challenge::PoSChallenge; verbose=true)
+function verify(proposition::Shuffle, proof::PoSProof, challenge::PoSChallenge; verbose=false)
 
     (; g, pk, 𝐞, 𝐞′) = proposition
     (; 𝐜, 𝐜̂, t, s) = proof
@@ -293,7 +313,7 @@ function verify(proposition::Shuffle, proof::PoSProof, challenge::PoSChallenge; 
 
     report &= "𝐭̂", 𝐭̂ .== 𝐭̂′
 
-    if verbose
+    if verbose || isvalid(report) == false
         println(report)
     end
 
@@ -305,13 +325,15 @@ verify(simulator::Simulator) = verify(simulator.proposition, simulator.proof, si
 
 
 
-function shuffle(𝐞::ElGamal{G}, g::G, pk::G) where G <: Generator 
+function shuffle(𝐞::ElGamal{G}, g::G, pk::G; roprg = gen_roprg()) where G <: Generator 
 
     # Need to abstract this into a function argument
     q = order(g)
     N = length(𝐞)
 
-    𝐫′ = rand(2:q-1, N)
+    n = bitlength(q)
+
+    𝐫′ = rand(roprg(:𝐫′), n, N)
 
     enc = Enc(pk, g)
     
@@ -319,7 +341,7 @@ function shuffle(𝐞::ElGamal{G}, g::G, pk::G) where G <: Generator
 end
 
 
-function shuffle(𝐞::ElGamal{G}, g::G, pk::G, verifier::Verifier) where G <: Generator
-    proposition, secret = shuffle(𝐞, g, pk)
-    return prove(proposition, secret, verifier)
+function shuffle(𝐞::ElGamal{G}, g::G, pk::G, verifier::Verifier; roprg = gen_roprg()) where G <: Generator
+    proposition, secret = shuffle(𝐞, g, pk; roprg)
+    return prove(proposition, secret, verifier; roprg)
 end

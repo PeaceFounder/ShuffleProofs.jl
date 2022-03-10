@@ -1,11 +1,10 @@
 using Test
 
-import ShuffleProofs: ElGamal, PrimeGenerator, prove, verify, Simulator, Enc, Dec, gen_shuffle, Verifier, PoSChallenge, Shuffle, shuffle, VShuffleProof, PoSProof, ProtocolSpec
+import ShuffleProofs: ElGamal, PrimeGenerator, prove, verify, Simulator, Enc, Dec, gen_shuffle, Verifier, PoSChallenge, Shuffle, shuffle, VShuffleProof, PoSProof, ProtocolSpec, gen_roprg
 
 SPEC = "$(@__DIR__)/../ref/demo/protInfo.xml"
 verifier = ProtocolSpec(SPEC)
 
-#(; g, pk) = verifier
 (; g) = verifier
 sk = 123
 pk = g^sk
@@ -38,5 +37,7 @@ vproof = VShuffleProof(proof)
 
 ### Higher order API
 
-simulator2 = shuffle(𝐞, g, pk, verifier)
+roprg = gen_roprg(UInt8[2])
+
+simulator2 = shuffle(𝐞, g, pk, verifier; roprg)
 @test verify(simulator2)

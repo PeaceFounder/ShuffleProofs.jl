@@ -212,7 +212,6 @@ function load_verificatum_simulator(basedir::AbstractString; auxsid = "default")
     return simulator
 end
 
-
 ### The simulator type will deal with loading the data. 
 
 struct VInit{G<:Generator} #<: Verifier
@@ -257,15 +256,24 @@ function VPermCommit(v::VInit{G}, 𝐮::Vector{G}) where G <: Generator
 
     N = length(𝔀)
 
-    ns = outlen(prghash)
-    ro = RO(rohash, ns)
+    roprg = ROPRG(ρ, rohash, prghash)
 
     pk_tree = (g, pk)
-
     tree = Tree((g, 𝐡, 𝐮, pk_tree, 𝔀, 𝔀′))
-    s = ro([ρ..., encode(tree)...])
+    prg = roprg(encode(tree))
+    
+    (; s) = prg
 
-    prg = PRG(prghash, s)
+    # ns = outlen(prghash)
+    # ro = RO(rohash, ns)
+
+    # pk_tree = (g, pk)
+
+    # tree = Tree((g, 𝐡, 𝐮, pk_tree, 𝔀, 𝔀′))
+    # s = ro([ρ..., encode(tree)...])
+
+    # prg = PRG(prghash, s)
+
     𝐭 = rand(prg, BigInt, N; n = ne)
     𝐞 = mod.(𝐭, BigInt(2)^ne)
 
@@ -313,7 +321,7 @@ end
 PoSChallenge(verifier::VPoSCommit) = PoSChallenge(verifier.𝐡, verifier.𝐞, verifier.𝓿)
 
 
-function verify(proposition::Shuffle, proof::VShuffleProof, challenge::PoSChallenge; verbose=true)
+function verify(proposition::Shuffle, proof::VShuffleProof, challenge::PoSChallenge; verbose=false)
     
     𝐡, 𝐞, 𝓿 = challenge.𝐡, challenge.𝐮, challenge.c
     𝔀, 𝔀′ = proposition.𝐞, proposition.𝐞′
@@ -348,7 +356,7 @@ function verify(proposition::Shuffle, proof::VShuffleProof, challenge::PoSChalle
     enc = Enc(pk, g)
     report &= "F", F^𝓿 * F′ == enc(-k_F) * ∏(𝔀′ .^ 𝐤_E) 
 
-    if verbose
+    if verbose || isvalid(report) == false
         println(report)
     end
 

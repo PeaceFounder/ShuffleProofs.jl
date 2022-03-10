@@ -21,7 +21,9 @@ function outlen(h::Hash)
     end
 end
 
-struct PRG
+#using Random: AbstractRNG
+
+struct PRG #<: AbstractRNG
     h::Hash
     s::Vector{UInt8}
 end
@@ -83,6 +85,34 @@ function Base.rand(prg::PRG, ::Type{T}, N::Int; n = bitlength(T)) where T
     return 𝐭
 end
 
+Base.rand(prg::PRG, n::Int, N::Int) = Base.rand(prg, BigInt, N; n)
+
+
+
+struct ROPRG
+    ρ::Vector{UInt8}
+    rohash::Hash
+    prghash::Hash
+end
+
+
+function (roprg::ROPRG)(x::Vector{UInt8})
+
+    (; ρ, rohash, prghash) = roprg
+
+    ns = outlen(prghash)
+    ro = RO(rohash, ns)
+
+    d = UInt8[ρ..., x...]   
+
+    s = ro(d)
+    prg = PRG(prghash, s)
+    return prg
+end
+
+(roprg::ROPRG)(x::String) = roprg(Vector{UInt8}(x))
+(roprg::ROPRG)(x::Symbol) = roprg(string(x))
+
 
 
 function crs(G::PrimeGroup, N::Integer, prg::PRG; nr::Integer = 0)
@@ -106,17 +136,10 @@ end
 
 leaf(x::String) = encode(Leaf(x))
 
-
 function crs(𝓖, N::Integer, prghash::Hash, rohash::Hash; nr::Integer = 0, ρ = UInt8[], d = [ρ..., leaf("generators")...])
-
-    ns = outlen(prghash)
-    ro = RO(rohash, ns)
-
-    s = ro(d) # The seed 
-
-    prg = PRG(prghash, s)
-
-    𝐡 = crs(𝓖, N, prg; nr)
-
-    return 𝐡
+    
+    roprg = ROPRG(d, rohash, prghash)
+    prg = roprg(UInt8[]) # d is a better argument than x
+    
+    return crs(𝓖, N, prg; nr)
 end
