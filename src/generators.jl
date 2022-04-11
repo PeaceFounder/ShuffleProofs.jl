@@ -141,15 +141,11 @@ end
 
 trimnumber(x::Integer)= trimnumber(string(x))
 
-
-
 groupstr(m) = "𝐙/($(trimnumber(m)))"
 
 Base.show(io::IO, x::PrimeGroup) = print(io, groupstr(modulus(x)))
 
 ############################ PRIME GENERATOR ##################################
-
-
 
 
 struct PrimeGenerator{G} <: Generator #{G} 

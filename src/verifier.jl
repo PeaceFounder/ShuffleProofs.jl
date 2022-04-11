@@ -1,5 +1,3 @@
-# GOAL: refactor the code in such a way so that verifier could be written outsied the main module. 
-
 # verify(proposition, proof, verifier) -> Bool
 # verify(simulator) -> Bool
 
@@ -341,7 +339,14 @@ function shuffle(𝐞::ElGamal{G}, g::G, pk::G; roprg = gen_roprg()) where G <: 
 end
 
 
+shuffle(𝐞::ElGamal{G}, enc::Enc; roprg = gen_roprg()) where G <: Generator = shuffle(𝐞, enc.g, enc.pk; roprg)
+
+
+
 function shuffle(𝐞::ElGamal{G}, g::G, pk::G, verifier::Verifier; roprg = gen_roprg()) where G <: Generator
     proposition, secret = shuffle(𝐞, g, pk; roprg)
     return prove(proposition, secret, verifier; roprg)
 end
+
+
+shuffle(𝐞::ElGamal{G}, enc::Enc, verifier::Verifier; roprg = gen_roprg()) where G <: Generator = shuffle(𝐞, enc.g, enc.pk, verifier; roprg)

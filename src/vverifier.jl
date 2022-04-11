@@ -4,13 +4,13 @@ using Base: @kwdef
 
 @kwdef struct ProtocolSpec{G<:Generator} <: Verifier
     g::G
-    nr::Int32
-    nv::Int32
-    ne::Int32
-    prghash::Hash
-    rohash::Hash
-    version::String
-    sid::String
+    nr::Int32 = Int32(100)
+    nv::Int32 = Int32(256)
+    ne::Int32 = Int32(256)
+    prghash::Hash = Hash("sha256")
+    rohash::Hash = Hash("sha256")
+    version::String = "3.0.4"
+    sid::String = "SessionID"
     auxsid::String = "default"
 end
 
