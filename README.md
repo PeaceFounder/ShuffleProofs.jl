@@ -12,8 +12,8 @@ It's best to illustrate it with the ElGamal cryptosystem. Let's say that officia
 
 1. The voter selects an option corresponding to a message `m` and encrypts it with a freely secretly chosen randomization factor `r` and obtains a tuple `c <- (g^r, m*pk^r)`, which they submit to a bulletin board. 
 2. The votes are re-encrypted and shuffled
-   a. each received ciphertext is re-encrypted as `c′ <- (c[1]*g^p, c[2] * pk^p)
-   `b. all re-encrypted ciphertexts are sorted constituting a shuffle and published to a buletinboard
+   - each received ciphertext is re-encrypted as `c′ <- (c[1]*g^p, c[2] * pk^p)`
+   - all re-encrypted ciphertexts are sorted constituting a shuffle and published to a buletinboard  
 3. The authority who knows the secret key `sk` (`pk = g^sk`) decrypts each ciphertext `c′` as `m <- c′[2] * c′[1]^(-sk)` and publishes that to a bulletin board.
 
 This scheme, however, does pose serious drawbacks for election integrity. If the election authority is malicious, it can deviate from the re-encryption procedure in step 2. omit and substitute their own desired ciphertexts. Similarly, in the third step, nothing prevents the adversary from publishing their own desired decryption at step 3. 
@@ -77,13 +77,19 @@ verify(proposition, secret)
 
 However, if `secret` is used as evidence, it can't be made public; otherwise, it would violate the anonymity of the voters. Instead, we really want to prove that we know a `secret` such that `verify(proposition, secret) == true`, which in the literature is known as zero-knowledge proofs and, in particular, proofs of shuffle.
 
-Currently, WikstromTerelius proof of shuffle is the most widely used protocol implemented in Verificatum, CHVote and has been used to add verifiability for remote electronic voting systems used in Estonia, Norway, Switzerland and others[^5]. Verification, in particular, has a diligently written specification encouraging anyone willing to implement an independent verifier[^1] so that proofs would not need to be trusted at face value. On the other hand, Haines[^4] provides the most concise pseudocode for anyone willing to implement the prover but does deviate with verifier implementation from the Verifiactum protocol. The `ShuffleProofs.jl` implements a Verificatum verifier and compatible prover (so that the original Java code for Verificatum, in principle, could validate the integrity of the statement).
+Currently, WikstromTerelius proof of shuffle is the most widely used protocol implemented in Verificatum, CHVote and has been used to add verifiability for remote electronic voting systems in Estonia, Norway, Switzerland and others[^5]. Verification, in particular, has a diligently written specification encouraging anyone willing to implement an independent verifier[^1] so that proofs would not need to be trusted at face value. On the other hand, Haines[^4] provides the most concise pseudocode for anyone willing to implement the prover but does deviate with verifier implementation from the Verifiactum protocol. The `ShuffleProofs.jl` implements a Verificatum verifier and compatible prover (so that the original Java code for Verificatum, in principle, could validate the integrity of a proof generated with `ShuffleProofs.jl`).
 
 To prove a statement for a corresponding proposition, it is necessary to instantiate a verifier which challenges the prover. A non-interactive zero-knowledge verifier compatible with Verifiactum can be initiated as:
 ```
 verifier = ProtocolSpec(; g) 
 ```
+<<<<<<< HEAD
 It contains details on how independent basis vectors are chosen in a verifiable way, how challenges are computed from provers outputs like hash function to be used for random oracles and pseudo-random number generators, and how many bits are needed for random numbers. With such a verifier, a proof then can be constructed easily as:
+=======
+It contains details on how independent basis vectors are chosen in a verifiable way, how challenges are computed from provers outputs like hash function to be used for random oracles and pseudo-random number generators, and how many bits are needed for pseudorandom numbers.
+
+With such a verifier, a proof then can be constructed easily as:
+>>>>>>> 57d93cba3150cefea2f4645d0b4f526999847cca
 ```
 proof = prove(proposition, secret, verifier)
 ```
