@@ -83,13 +83,9 @@ To prove a statement for a corresponding proposition, it is necessary to instant
 ```
 verifier = ProtocolSpec(; g) 
 ```
-<<<<<<< HEAD
-It contains details on how independent basis vectors are chosen in a verifiable way, how challenges are computed from provers outputs like hash function to be used for random oracles and pseudo-random number generators, and how many bits are needed for random numbers. With such a verifier, a proof then can be constructed easily as:
-=======
 It contains details on how independent basis vectors are chosen in a verifiable way, how challenges are computed from provers outputs like hash function to be used for random oracles and pseudo-random number generators, and how many bits are needed for pseudorandom numbers.
 
 With such a verifier, a proof then can be constructed easily as:
->>>>>>> 57d93cba3150cefea2f4645d0b4f526999847cca
 ```
 proof = prove(proposition, secret, verifier)
 ```
