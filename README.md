@@ -80,17 +80,13 @@ However, if `secret` is used as evidence, it can't be made public; otherwise, it
 Currently, WikstromTerelius proof of shuffle is the most widely used protocol implemented in Verificatum, CHVote and has been used to add verifiability for remote electronic voting systems used in Estonia, Norway, Switzerland and others[^5]. Verification, in particular, has a diligently written specification encouraging anyone willing to implement an independent verifier[^1] so that proofs would not need to be trusted at face value. On the other hand, Haines[^4] provides the most concise pseudocode for anyone willing to implement the prover but does deviate with verifier implementation from the Verifiactum protocol. The `ShuffleProofs.jl` implements a Verificatum verifier and compatible prover (so that the original Java code for Verificatum, in principle, could validate the integrity of the statement).
 
 To prove a statement for a corresponding proposition, it is necessary to instantiate a verifier which challenges the prover. A non-interactive zero-knowledge verifier compatible with Verifiactum can be initiated as:
-
 ```
 verifier = ProtocolSpec(; g) 
 ```
-It contains details on how independent basis vectors are chosen in a verifiable way, how challenges are computed from provers outputs like hash function to be used for random oracles and pseudo-random number generators, and how many bits are needed for random numbers.
-
-With such a verifier, a proof then can be constructed easily as:
+It contains details on how independent basis vectors are chosen in a verifiable way, how challenges are computed from provers outputs like hash function to be used for random oracles and pseudo-random number generators, and how many bits are needed for random numbers. With such a verifier, a proof then can be constructed easily as:
 ```
-simulator = prove(proposition, secret, verifier)
+proof = prove(proposition, secret, verifier)
 ```
-which returns a simulator struct containing three fields `simulator.proposition` (discussed earlier), `simulator.verifier` and lastly, the proof as `simulator.proof`. The simulator contains all necessary information and can be published on the bulletin board (The exact way duplication of data is avoided up to the user of the library to decide). 
 
 Now finally, the proposition that no votes have been added, modified (spoiled) or removed at step 2. can be verified as:
 ```
@@ -98,8 +94,7 @@ verify(proposition, proof, verifier)
 ```
 where `proof` and `verifier` can be published on the bulletin board along with `proposition` so that everyone can verify the integrity of elections. 
 
-
-Lastly, the `SuffleProofs.jl` implements a `shuffle(e::ElGamal, g, pk, verifier::Verifier)::Simulator`, which does the proof generation at the time of shuffling for convenience. 
+Lastly, the `SuffleProofs.jl` implements a `shuffle(e::ElGamal, g, pk, verifier::Verifier)::Simulator`, which does the proof generation at the time of shuffling for convenience. The returned type then is `Simulator` which contains three fields `simulator.proposition` (discussed earlier), `simulator.verifier` and lastly, the proof as `simulator.proof`. The simulator contains all necessary information and can be published on the bulletin board (The exact way duplication of data is avoided up to the user of the library to decide). 
 
 ## Verifying Verificatum generated proof of shuffle
 
@@ -119,7 +114,6 @@ Originally, I implemented Haines[^4] described prover and verifier first directl
 Every verifier state does have two methods `step(verifier::Verifier, msg)::Verifier` where `msg` is new commitments from prover at a particular stage of execution. The other method is `challenge(verifier::Verifier)`, which returns a challenge to the prover upon which the protocol's security lies. 
 
 For example, let's consider a verifier, `HonestVerifier`, which has chosen all challenges in advance. Although it is insecure, it will help to illustrate the point. We shall use the `PoSChallenge` type, which runs the last verification step after which challenges from proof have been computed. The resulting implementation can be represented as:
-
 ```
 import ShuffleProofs: step, challenge, PoSChallenge
 
@@ -176,6 +170,13 @@ The generality of the verifier can easily be extended to satisfy all kinds of va
     * [x] Make releavnt types concrete
     * [x] `t₃` sensitive to randomization factors (to investigate).
   * [ ] Elliptic groups
+      * [x] Implementation of fields Fp and F2 (done internally)
+      * [x] Elliptic curve point multiplication by an integer (done internally; tested on P-192 curve)
+      * [ ] Upstream and expose curve implementations in `CryptoGroups.jl`
+      * [ ] Basis generation
+      * [ ] Test that prover and verifier works also with elliptic groups
+      * [ ] Field, Point encoding according to X9.62 spec
+      * [ ] Parser for cyphertexts
   * [ ] Benchmarks
   * [ ] Storing the simulator in convinient directory structure
   * [ ] Storing the simulator in Verificatum understandable way
