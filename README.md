@@ -163,7 +163,7 @@ The generality of the verifier can easily be extended to satisfy all kinds of va
   * [ ] Cleanup
     * [ ] Implement checking proof from multiple parties
     * [x] Adding code for F in the Verificatum verifier
-    * [ ] Upstream to `CryptoGroups.jl`
+    * [x] Upstream to `CryptoGroups.jl`
     * [x] Remove `g` and `pk` from `ProtocolSpec`
     * [x] Consistent notation between `g, G, 𝓰, 𝓖`
     * [x] Adding `verbose::Bool` option to `verify` and evalueate the return value
@@ -174,8 +174,8 @@ The generality of the verifier can easily be extended to satisfy all kinds of va
   * [ ] Elliptic groups
       * [x] Implementation of fields Fp and F2 (done internally)
       * [x] Elliptic curve point multiplication by an integer (done internally; tested on P-192 curve)
-      * [ ] Upstream and expose curve implementations in `CryptoGroups.jl`
-      * [ ] Basis generation
+      * [x] Upstream and expose curve implementations in `CryptoGroups.jl`
+      * [ ] Elliptic curve basis generation
       * [ ] Test that prover and verifier works also with elliptic groups
       * [ ] Field, Point encoding according to X9.62 spec
       * [ ] Parser for cyphertexts
