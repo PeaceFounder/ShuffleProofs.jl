@@ -1,315 +1,361 @@
-# verify(proposition, proof, verifier) -> Bool
-# verify(simulator) -> Bool
+using CryptoGroups: Group, Hash, PRG, RO, PGroup, ROPRG
+using XMLDict: parse_xml
 
-# The proposition of course can be verified knowing the secret (secret key or randomization factors) alone:
-# verify(proposition, secret) -> Bool
+using Base: @kwdef
 
-# The challnege is last step obtained executing finite state machine. Does not need to contain responses. 
-# verify(proposition, proof, challenge) -> Bool
-
-# prove(proposition, secret, verifier) -> Simulator
-
-# shuffle(𝔀, g, pk) -> Tuple{Proposition, Secret}
-# shuffle(𝔀, g, pk, verifier) -> Simulator
-
-
-# decrypt(A, g, sk) -> Proposition # secret key is the one which is possible to be used 
-# decrypt(A, g, sk, verifier) -> Simulator
-
-# Derives a public key for a given secret key
-# Proving knowldge of sk such that: x = g^sk
-# power(g, sk) -> Proposition
-# power(g, sk, verifier) -> Simulator
-
-
-abstract type Proposition end
-abstract type Proof end
-abstract type Verifier end
-
-
-function step end
-function challenge end
-
-struct Simulator
-    proposition::Proposition # Proposition type is the one which selects a type of prover being used
-    proof::Proof
-    verifier::Verifier
-end
-
-struct Shuffle{G <: Generator} <: Proposition
+@kwdef struct ProtocolSpec{G<:Group} <: Verifier
     g::G
-    pk::G
-    𝐞::ElGamal{G}
-    𝐞′::ElGamal{G}
-
-    function Shuffle{G}(g::G, pk::G, 𝐞::ElGamal{G}, 𝐞′::ElGamal{G}) where G <: Generator
-        @assert length(𝐞) == length(𝐞′)
-        new(g, pk, 𝐞, 𝐞′)
-    end
-
-    Shuffle(g::G, pk::G, 𝐞::ElGamal{G}, 𝐞′::ElGamal{G}) where G <: Generator = Shuffle{G}(g, pk, 𝐞, 𝐞′)
+    nr::Int32 = Int32(100)
+    nv::Int32 = Int32(256)
+    ne::Int32 = Int32(256)
+    prghash::Hash = Hash("sha256")
+    rohash::Hash = Hash("sha256")
+    version::String = "3.0.4"
+    sid::String = "SessionID"
+    auxsid::String = "default"
 end
 
-struct ShuffleSecret
-    𝛙::Vector{<:Integer}
-    𝐫′::Vector{<:Integer}
-end
+function ProtocolSpec(protinfo::AbstractDict; auxsid = "default")
 
+    s_H = protinfo["rohash"]  
+    s_PRG = protinfo["prg"]
+    s_Gq = protinfo["pgroup"]
 
-struct PoSProof{G <: Generator} <: Proof
-    𝐜::Vector{G}
-    𝐜̂::Vector{G}
-    t::Tuple{G, G, G, Tuple{G, G}, Vector{G}}
-    s::Tuple{BigInt, BigInt, BigInt, BigInt, Vector{BigInt}, Vector{BigInt}}
-end
-
-import Base: ==
-
-==(x::PoSProof, y::PoSProof) = x.𝐜 == y.𝐜 && x.𝐜̂ == y.𝐜̂ && x.t == y.t && x.s == y.s
-
-struct PoSChallenge
-    𝐡::Vector{<:Generator} # Independent set of generators
-    𝐮::Vector{BigInt} # PoS commitment challenge
-    c::BigInt # Last bit of a challenge
-end
-
-### 
-function verify(proposition::Shuffle, secret::ShuffleSecret)
+    prghash = Hash(map_hash_name(protinfo["prg"]))
+    rohash = Hash(map_hash_name(protinfo["rohash"]))
     
-    (; 𝐞, 𝐞′, g, pk) = proposition
-    (; 𝛙, 𝐫′) = secret
 
-    enc = Enc(pk, g)
+    nr = parse(Int32, protinfo["statdist"])
+    nv = parse(Int32, protinfo["vbitlenro"])
+    ne = parse(Int32, protinfo["ebitlenro"])
+    
+    g = unmarshal(BigInt, decode(split(s_Gq, "::")[2]))
 
-    return enc(𝐞, 𝐫′)[𝛙] == 𝐞′
+    version = String(protinfo["version"])
+    sid = String(protinfo["sid"])
+
+    return ProtocolSpec(; g, nr, nv, ne, prghash, rohash, version, sid, auxsid)
+end
+
+function ProtocolSpec(PROT_INFO::AbstractString; auxsid = "default")
+
+    xml = String(read(PROT_INFO))
+    protinfo = parse_xml(xml)
+
+    return ProtocolSpec(protinfo; auxsid)
 end
 
 
-function verify(proposition::Shuffle, sk::Integer)
-    
-    (; 𝐞, 𝐞′, g, pk) = proposition
+function marshal_s_Gq(g::PGroup)
 
-    @assert g^sk == pk
+    M = bitlength(order(g))
+
+    tree = marshal(g)
+    str = "ModPGroup(safe-prime modulus=2*order+1. order bit-length = $M)::" * string(tree)
     
-    dec = Dec(sk)
-    
-    return sort(dec(𝐞)) == sort(dec(𝐞′))
+    return Leaf(str)
 end
 
 
-function gen_shuffle(enc::Enc, e::ElGamal, r::Vector{T}) where T <: Integer
+function ro_prefix(spec::ProtocolSpec)
 
-    e_enc = enc(e, r)
-    ψ = sortperm(e_enc)
+    (; version, sid, auxsid, rohash, prghash, g, nr, nv, ne) = spec
 
-    sort!(e_enc)
-
-    (; g, pk) = enc
-
-    proposition = Shuffle(g, pk, e, e_enc)
-    secret = ShuffleSecret(ψ, r)
+    s_PRG = map_hash_name_back(prghash)
+    s_H = map_hash_name_back(rohash)
     
-    return proposition, secret
+    s_Gq = marshal_s_Gq(g)
+
+    data = (version, sid * "." * auxsid, nr, nv, ne, s_PRG, s_Gq, s_H)
+
+    tree = Tree(data)
+    binary = encode(tree)
+
+    ρ = rohash(binary)
+
+    return ρ
 end
 
 
-function gen_commitment(g::G, 𝐡::Vector{G}, b::Vector, r::Integer) where G <: Generator
-
-    com = g^r * prod(𝐡 .^ b)
-
-    return com
+struct VShuffleProof{G<:Group} <: Proof
+    μ::Vector{G}
+    τ::Tuple{Vector{G}, G, Vector{G}, G, G, Tuple{G, G}}
+    σ::Tuple{BigInt, Vector{BigInt}, BigInt, BigInt, Vector{BigInt}, BigInt}
 end
 
+==(x::VShuffleProof{G}, y::VShuffleProof{G}) where G <: Group = x.μ == y.μ && x.τ == y.τ && x.σ == y.σ
 
-function gen_perm_commitment(g::G, 𝐡::Vector{G}, 𝛙::Vector, 𝐫::Vector) where G <: Generator
 
-    N = length(𝛙)
+function VShuffleProof(proof::PoSProof)
 
-    𝐜 = Vector{G}(undef, N)
+    (; 𝐜, 𝐜̂, t, s) = proof
 
-    for i in 1:N
-        j = 𝛙[i]
-        𝐜[j] = g^𝐫[j] * 𝐡[i]
-    end
+    G = typeof(𝐜[1])
 
-    return 𝐜
+    𝐮 = 𝐜
+    μ = 𝐮
+
+    (t₁, t₂, t₃, t₄, 𝐭̂) = t 
+    𝐁 = 𝐜̂
+    𝐁′= 𝐭̂
+    D′ = t₂
+    A′ = t₃
+    C′ = t₁
+    F′ = t₄ 
+
+    τ = (𝐁, A′, 𝐁′, C′, D′, F′)
+
+    (s₁, s₂, s₃, s₄, 𝐬̂, 𝐬′) = s 
+    𝐤_B = 𝐬̂
+    𝐤_E = 𝐬′
+    k_D = s₂
+    k_A = s₃
+    k_C = s₁ 
+    k_F = s₄ 
+
+    σ = (k_A, 𝐤_B, k_C, k_D, 𝐤_E, k_F)
+
+    vproof = VShuffleProof(μ, τ, σ)
+
+    return vproof
 end
 
-function gen_commitment_chain(g::Generator, c0::T, 𝐮::Vector, 𝐫::Vector) where T
+function PoSProof(vproof::VShuffleProof)
+
+    (; μ, τ, σ) = vproof
     
-    N = length(𝐮)
+    𝐮 = μ
+    𝐜 = 𝐮
 
-    𝐜 = Vector{T}(undef, N)
+    (𝐁, A′, 𝐁′, C′, D′, F′) = τ 
 
-    𝐜[1] = g^𝐫[1] * c0^𝐮[1]
+    𝐜̂ = 𝐁
+    𝐭̂ = 𝐁′
+    t₂ = D′
+    t₃ = A′
+    t₁ = C′ 
+    t₄ = F′
 
-    for i in 2:N
-        𝐜[i] = g^𝐫[i] * 𝐜[i-1]^𝐮[i]
-    end
-    
-    return 𝐜
-end
-
-
-∑(𝐱, q) = mod(sum(𝐱), q) ### Need to improve
-∏(𝐱) = prod(𝐱)
-∏(f, 𝐱) = prod(f, 𝐱)
-
-
-using Random: RandomDevice
-
-function gen_roprg(ρ::AbstractVector{UInt8})
-
-    rohash = Hash("sha256")
-    prghash = Hash("sha256")
-    roprg = ROPRG(ρ, rohash, prghash)
-
-    return roprg
-end
-
-gen_roprg() = gen_roprg(rand(RandomDevice(), UInt8, 32))
-
-
-function prove(proposition::Shuffle{G}, secret::ShuffleSecret, verifier::Verifier; roprg = gen_roprg()) where G <: Generator
-
-    (; 𝛙, 𝐫′) = secret
-    (; g, pk, 𝐞, 𝐞′) = proposition
-    
-    v1 = step(verifier, proposition) # So I could keep a proposition in the coresponding state machine in the end
-    𝐡, h = challenge(v1) 
-
-    # Would make more sense for length(proposition) == length(secret)
-    @assert length(𝛙) == length(𝐞)
-
-    N = length(𝛙)
-    q = order(g)
-
-    n = bitlength(q)
-
-    𝐫 = rand(roprg(:𝐫), n, N) # n is part of the sampler here
-    𝐫̂ = rand(roprg(:𝐫̂), n, N)
-    𝛚 = rand(roprg(:𝛚), n, 4) 
-    𝛚̂ = rand(roprg(:𝛚̂), n, N)
-    𝛚̂′ = rand(roprg(:𝛚̂′), n, N)
-
-    𝐜 = gen_perm_commitment(g, 𝐡, 𝛙, 𝐫)
-
-    v2 = step(v1, 𝐜)
-    𝐮 = challenge(v2)
-
-    𝐮′ = 𝐮[𝛙]
-
-    𝐜̂ = gen_commitment_chain(g, h, 𝐮′, 𝐫̂)
-
-    𝐯 = Vector{BigInt}(undef, N) 
-    𝐯[N] = 1
-    for i in N-1:-1:1
-        𝐯[i] = 𝐮′[i+1] * 𝐯[i+1] 
-    end
-
-    r̄ = ∑(𝐫, q) 
-    r̂ = ∑(𝐫̂ .* 𝐯, q)
-    r̃ = ∑(𝐫 .* 𝐮, q)
-    r′ = ∑(𝐫′ .* 𝐮, q)
-
-    t₁ = g^𝛚[1] 
-    t₂ = g^𝛚[2]
-    t₃ = g^𝛚[3] * ∏(𝐡 .^ 𝛚̂′) 
-
-    enc = Enc(pk, g)
-    t₄ = enc(-𝛚[4]) * ∏(𝐞′ .^ 𝛚̂′)
-
-    𝐭̂ = Vector{G}(undef, N)
-    𝐭̂[1] = g^𝛚̂[1] * h^𝛚̂′[1]
-    for i in 2:N
-        𝐭̂[i] = g^𝛚̂[i] * 𝐜̂[i-1]^𝛚̂′[i]
-    end
-
-    y = (𝐞, 𝐞′, 𝐜, 𝐜̂, pk)
     t = (t₁, t₂, t₃, t₄, 𝐭̂) 
 
-    v3 = step(v2, 𝐜̂, t)
-    c = challenge(v3)
+    (k_A, 𝐤_B, k_C, k_D, 𝐤_E, k_F) = σ 
 
-    s₁ = mod(𝛚[1] + c * r̄, q)
-    s₂ = mod(𝛚[2] + c * r̂, q)
-    s₃ = mod(𝛚[3] + c * r̃, q)
-    s₄ = mod(𝛚[4] + c * r′, q)
-    
-    𝐬̂ = mod.(𝛚̂ .+ c .* 𝐫̂, q) ### What can I do if I have a 0 as one of the elements?
-    𝐬′ = mod.(𝛚̂′ .+ c .* 𝐮′, q)
-    
-    s = (s₁, s₂, s₃, s₄, 𝐬̂, 𝐬′) # Do I need to ensure that `s` are without 0 elements
+    𝐬̂ = 𝐤_B 
+    𝐬′ = 𝐤_E 
+    s₂ = k_D 
+    s₃ = k_A 
+    s₁ = k_C 
+    s₄ = k_F 
 
+    s = (s₁, s₂, s₃, s₄, 𝐬̂, 𝐬′) 
+    
     proof = PoSProof(𝐜, 𝐜̂, t, s)
 
-    simulator = Simulator(proposition, proof, verifier) 
+    return proof
+end
+
+
+function load_verificatum_proposition(basedir::AbstractString, auxsid::AbstractString)
+
+    PUBLIC_KEY = "$basedir/publicKey"
+
+    tree = decode(read(PUBLIC_KEY))
+    pk, g = unmarshal_publickey(tree)
+
+    NIZKP = basedir * "/dir/nizkp/$auxsid/"
+
+    CIPHERTEXTS = "$NIZKP/Ciphertexts.bt"
+    SHUFFLED_CIPHERTEXTS = "$NIZKP/ShuffledCiphertexts.bt"
+
+    G = typeof(g)
+
+    L_tree = decode(read(CIPHERTEXTS))
+    L′_tree = decode(read(SHUFFLED_CIPHERTEXTS))
+
+    𝔀 = convert(ElGamal{G}, L_tree) ## Is there anything I can do so that I would get a concrete type here?
+    𝔀′ = convert(ElGamal{G}, L′_tree)
+
+    return Shuffle(g, pk, 𝔀, 𝔀′)
+end
+
+function load_verificatum_proof(proofs::AbstractString, g::Group)
+
+    PERMUTATION_COMMITMENT = "$proofs/PermutationCommitment01.bt"
+    PoS_COMMITMENT = "$proofs/PoSCommitment01.bt"
+    PoS_REPLY = "$proofs/PoSReply01.bt"
+
+    G = typeof(g)
+
+    μ_tree = decode(read(PERMUTATION_COMMITMENT))
+    μ = convert(Vector{G}, μ_tree)
+
+    τ_tree = decode(read(PoS_COMMITMENT))
+    τ = convert(Tuple{Vector{G}, G, Vector{G}, G, G, Tuple{G, G}}, τ_tree)
+
+    σ_tree = decode(read(PoS_REPLY))
+    σ = convert(Tuple{BigInt, Vector{BigInt}, BigInt, BigInt, Vector{BigInt}, BigInt}, σ_tree)
+
+    return VShuffleProof(μ, τ, σ)    
+end
+
+
+function load_verificatum_simulator(basedir::AbstractString; auxsid = "default")
+
+    spec = ProtocolSpec(basedir * "/protInfo.xml"; auxsid)
+
+    proposition = load_verificatum_proposition(basedir, auxsid)
+    
+    NIZKP = basedir * "/dir/nizkp/$auxsid/"
+    proof = load_verificatum_proof("$NIZKP/proofs/", proposition.g)
+    
+    simulator = Simulator(proposition, proof, spec)
 
     return simulator
 end
 
+### The simulator type will deal with loading the data. 
 
-function verify(proposition::Shuffle, proof::PoSProof, verifier::Verifier)
-    
-    v1 = step(verifier, proposition)
+struct VInit{G<:Group} #<: Verifier
+    spec::ProtocolSpec{G}
+    proposition::Shuffle{G} # ADD G!
+    ρ::Vector{UInt8} 
+    𝐡::Vector{G}
+end
 
-    (; 𝐜) = proof
-    v2 = step(v1, 𝐜)
+leaf(x::String) = encode(Leaf(x))
 
-    (; 𝐜̂, t) = proof
-    v3 = step(v2, 𝐜̂, t)
+function gen_verificatum_basis(::Type{G}, prghash::Hash, rohash::Hash, N::Integer; nr::Integer = 0, ρ = UInt8[], d = [ρ..., leaf("generators")...]) where G <: Group
 
-    chg = PoSChallenge(v3)
-    return verify(proposition, proof, chg)
+    roprg = ROPRG(d, rohash, prghash)
+    prg = roprg(UInt8[]) # d is a better argument than x
+
+    return rand(prg, G, N; nr)
 end
 
 
 
-function verify(proposition::Shuffle, proof::PoSProof, challenge::PoSChallenge; verbose=false)
+function VInit(spec::ProtocolSpec{G}, proposition::Shuffle) where G <: Group
 
-    (; g, pk, 𝐞, 𝐞′) = proposition
-    (; 𝐜, 𝐜̂, t, s) = proof
-    (; 𝐡, 𝐮, c) = challenge
-    h = 𝐡[1]
+    ρ = ro_prefix(spec) ### I can add another method there
 
-    (s₁, s₂, s₃, s₄, 𝐬̂, 𝐬′) = s 
+    𝔀 = proposition.𝐞
+    N = length(𝔀)
+
+    (; g, nr, rohash, prghash)  = spec
+
+    𝐡 = gen_verificatum_basis(G, prghash, rohash, N; nr, ρ)
+
+    return VInit(spec, proposition, ρ, 𝐡)
+end
+
+
+struct VPermCommit{G<:Group} #<: Verifier
+    spec::ProtocolSpec{G}
+    proposition::Shuffle{G} 
+    ρ::Vector{UInt8} 
+    𝐡::Vector{G} 
+    s::Vector{UInt8}  
+    𝐞::Vector{BigInt} 
+end
+
+
+function VPermCommit(v::VInit{G}, 𝐮::Vector{G}) where G <: Group
+    (; 𝐡, ρ, spec, proposition) = v
+    (; ne, prghash, rohash) = spec
+    𝔀, 𝔀′ = proposition.𝐞, proposition.𝐞′
+    (; g, pk) = proposition
+
+    N = length(𝔀)
+
+    roprg = ROPRG(ρ, rohash, prghash)
+
+    pk_tree = (g, pk)
+    tree = Tree((g, 𝐡, 𝐮, pk_tree, 𝔀, 𝔀′))
+    prg = roprg(encode(tree))
+    
+    (; s) = prg
+
+    𝐭 = rand(prg, BigInt, N; n = ne)
+    𝐞 = mod.(𝐭, BigInt(2)^ne)
+
+    return VPermCommit(spec, proposition, ρ, 𝐡, s, 𝐞)
+end
+
+
+struct VPoSCommit{G<:Group} #<: Verifier
+    spec::ProtocolSpec{G}
+    proposition::Shuffle{G} # ADD G!
+    ρ::Vector{UInt8} 
+    𝐡::Vector{G}
+    𝐞::Vector{BigInt}
+    𝓿::BigInt
+end
+
+
+function VPoSCommit(v::VPermCommit{G}, τ::Tuple{Vector{G}, G, Vector{G}, G, G, Tuple{G, G}}) where G <: Group
+    (; 𝐡, ρ, 𝐞, spec, proposition, s) = v
+    (; nv, rohash) = spec
+
+    ro_challenge = RO(rohash, nv)
+    tree_challenge = Tree((Leaf(s), τ))
+    𝓿 = interpret(BigInt, ro_challenge([ρ..., encode(tree_challenge)...]))
+
+    return VPoSCommit(spec, proposition, ρ, 𝐡, 𝐞, 𝓿)
+end
+
+function VPoSCommit(v::VPermCommit{G}, 𝐜̂::Vector{G}, t::Tuple{G, G, G, Tuple{G, G}, Vector{G}}) where G <: Group
     (t₁, t₂, t₃, t₄, 𝐭̂) = t 
+    𝐁 = 𝐜̂
 
-    q = order(g)
-    N = length(𝐞)
+    𝐁′= 𝐭̂
+    D′ = t₂
+    A′ = t₃
+    C′ = t₁
+    F′ = t₄
 
+    τ = (𝐁, A′, 𝐁′, C′, D′, F′)
+
+    return VPoSCommit(v, τ)
+end
+
+
+PoSChallenge(verifier::VPoSCommit) = PoSChallenge(verifier.𝐡, verifier.𝐞, verifier.𝓿)
+
+
+function verify(proposition::Shuffle, proof::VShuffleProof, challenge::PoSChallenge; verbose=false)
     
-    c̄ = ∏(𝐜) / ∏(𝐡)
-    u = mod(∏(𝐮), q)
+    𝐡, 𝐞, 𝓿 = challenge.𝐡, challenge.𝐮, challenge.c
+    𝔀, 𝔀′ = proposition.𝐞, proposition.𝐞′
+    (; g, pk) = proposition
+
+    (; μ, τ, σ) = proof
     
-    ĉ = 𝐜̂[N] / h^u
-    c̃ = ∏(𝐜 .^ 𝐮)
+    𝐮 = μ
+    𝐁, A′, 𝐁′, C′, D′, F′ = τ
+    k_A, 𝐤_B, k_C, k_D, 𝐤_E, k_F = σ
 
-    e′ =  ∏(𝐞 .^ 𝐮)
+    N = length(𝔀)
 
-    t₁′ = c̄^(-c) * g^s₁
-    t₂′ = ĉ^(-c) * g^s₂
-    t₃′ = c̃^(-c) * g^s₃ * ∏(𝐡 .^ 𝐬′)
-
-    enc = Enc(pk, g)
-    t₄′ = e′^(-c) * enc(-s₄) * ∏(𝐞′ .^ 𝐬′)
-
-    𝐭̂′ = Vector(undef, N)
-
-    𝐭̂′[1] = 𝐜̂[1]^(-c) * g^𝐬̂[1] * h^𝐬′[1]
-
-    for i in 2:N
-        𝐭̂′[i] = 𝐜̂[i]^(-c) * g^𝐬̂[i] * 𝐜̂[i-1]^𝐬′[i]
-    end
+    A = prod(𝐮 .^ 𝐞)
+    
+    C = prod(𝐮) / prod(𝐡)
+    D = 𝐁[N] * inv(𝐡[1])^prod(𝐞)
+    
+    F = ∏(𝔀 .^ 𝐞)
 
     report = Report()
-    
-    report &= "t₁", t₁ == t₁′
-    report &= "t₂", t₂ == t₂′ 
-    report &= "t₃", t₃ == t₃′
-    report &= "t₄", t₄ == t₄′ 
 
-    report &= "𝐭̂", 𝐭̂ .== 𝐭̂′
+    report &= "A", A^𝓿 * A′ == g^k_A * prod(𝐡 .^ 𝐤_E)
+    report &= "C", C^𝓿 * C′ == g^k_C
+    report &= "D", D^𝓿 * D′ == g^k_D
+    
+    report &= "B", Bool[
+        𝐁[1]^𝓿 * 𝐁′[1] == g^𝐤_B[1] * 𝐡[1]^𝐤_E[1],
+        (𝐁[i]^𝓿 * 𝐁′[i] == g^𝐤_B[i] * 𝐁[i - 1]^𝐤_E[i] for i in 2:N)...
+    ]
+
+    enc = Enc(pk, g)
+    report &= "F", F^𝓿 * F′ == enc(-k_F) * ∏(𝔀′ .^ 𝐤_E) 
 
     if verbose || isvalid(report) == false
         println(report)
@@ -319,34 +365,27 @@ function verify(proposition::Shuffle, proof::PoSProof, challenge::PoSChallenge; 
 end
 
 
-verify(simulator::Simulator) = verify(simulator.proposition, simulator.proof, simulator.verifier)
+function verify(proposition::Shuffle, proof::VShuffleProof, verifier::ProtocolSpec)
 
-
-
-function shuffle(𝐞::ElGamal{G}, g::G, pk::G; roprg = gen_roprg()) where G <: Generator 
-
-    # Need to abstract this into a function argument
-    q = order(g)
-    N = length(𝐞)
-
-    n = bitlength(q)
-
-    𝐫′ = rand(roprg(:𝐫′), n, N)
-
-    enc = Enc(pk, g)
+    v1 = VInit(verifier, proposition)
     
-    return gen_shuffle(enc, 𝐞, 𝐫′) # I may also refactor it as shuffle. 
+    (; μ) = proof
+    v2 = VPermCommit(v1, μ)
+
+    (; τ) = proof
+    v3 = VPoSCommit(v2, τ)
+
+    v4 = PoSChallenge(v3)
+
+    return verify(proposition, proof, v4) 
 end
 
 
-shuffle(𝐞::ElGamal{G}, enc::Enc; roprg = gen_roprg()) where G <: Generator = shuffle(𝐞, enc.g, enc.pk; roprg)
 
+step(spec::ProtocolSpec, proposition::Proposition) = VInit(spec, proposition)
+step(v::VInit{G}, 𝐜::Vector{G}) where G <: Group = VPermCommit(v, 𝐜)
+step(v::VPermCommit, 𝐜̂, t) = VPoSCommit(v, 𝐜̂, t)
 
-
-function shuffle(𝐞::ElGamal{G}, g::G, pk::G, verifier::Verifier; roprg = gen_roprg()) where G <: Generator
-    proposition, secret = shuffle(𝐞, g, pk; roprg)
-    return prove(proposition, secret, verifier; roprg)
-end
-
-
-shuffle(𝐞::ElGamal{G}, enc::Enc, verifier::Verifier; roprg = gen_roprg()) where G <: Generator = shuffle(𝐞, enc.g, enc.pk, verifier; roprg)
+challenge(v::VInit) = (v.𝐡, v.𝐡[1])
+challenge(v::VPermCommit) = v.𝐞
+challenge(v::VPoSCommit) = v.𝓿

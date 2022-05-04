@@ -1,5 +1,3 @@
-using StaticArrays: SVector
-
 tobig(x) = parse(BigInt, bytes2hex(reverse(x)), base=16)
 
 function int2bytes(x::Integer)
@@ -11,37 +9,7 @@ function int2bytes(x::Integer)
     return reverse(hex2bytes(hex))
 end
 
-
-struct StaticBigInt{N} <: Integer
-    x::SVector{N, UInt8}
-end
-
-function StaticBigInt(x::Integer)
-    bytes = int2bytes(x)
-    N = length(bytes)
-    sv = SVector{N, UInt8}(bytes)
-
-    return StaticBigInt(sv)
-end
-
-Base.BigInt(x::StaticBigInt) = tobig(x.x)
-
-
-bytesize(a::StaticBigInt) = typeof(a).size
-
-
 style(x, n) = "\33[1;$(n)m$x\33[0m"
-
-# Some nice printing 
-intstyle(g::StaticBigInt) = style(" $(bytesize(g)) bytes", 90)
-
-function Base.show(io::IO, a::StaticBigInt)
-    show(io, BigInt(a))
-    print(io, intstyle(a))
-end
-
-Base.display(x::StaticBigInt) = show(x)
-
 
 bitlength(::Type{T}) where T <: Integer = T.size * 8
 
@@ -91,7 +59,6 @@ function interpret(::Type{Vector{T}}, 𝐫::Vector{UInt8}, N::Int) where T <: In
     𝐭 = [interpret(T, 𝐮[:, i]) for i in 1:N]
     return 𝐭
 end
-
 
 
 import Base: &

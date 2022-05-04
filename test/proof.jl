@@ -1,8 +1,11 @@
 using Test
 
-import ShuffleProofs: ElGamal, PrimeGenerator, prove, verify, Simulator, Enc, Dec, gen_shuffle, Verifier, PoSChallenge, Shuffle, shuffle, VShuffleProof, PoSProof
+import CryptoGroups: ElGamal, PGroup, Enc, Dec, specialize, ECGroup, generator, <|
+import CryptoGroups
 
-import ShuffleProofs: step, challenge, PoSChallenge
+import ShuffleProofs: prove, verify, Simulator, gen_shuffle, Verifier, PoSChallenge, Shuffle, shuffle, VShuffleProof, PoSProof
+
+import ShuffleProofs: step, challenge, PoSChallenge, gen_roprg
 
 
 @enum VState Config Init PermCommit PoSCommit
@@ -28,57 +31,83 @@ challenge(verifier::HonestVerifier{PermCommit}) = verifier.challenge.𝐮
 challenge(verifier::HonestVerifier{PoSCommit}) = verifier.challenge.c
 
 
+function test_prover(g)
+
+    sk = 5
+    pk = g^sk
+
+    enc = Enc(pk, g)
+    dec = Dec(sk)
+
+
+    𝐦 = [g^4, g^2, g^3]
+    𝐞 = enc(𝐦, [2, 3, 7])
+
+    N = length(𝐞)
+
+    𝐡 = [g^i for i in 2:N+1]
+
+
+    𝐫′ = [4, 2, 3] 
+    proposition, secret = gen_shuffle(enc, 𝐞, 𝐫′) # In practice total of random factors can't match as it reveals 
+    @test verify(proposition, secret)
+    @test verify(proposition, sk)
+
+
+    (; 𝛙) = secret
+    (; 𝐞, 𝐞′) = proposition
+    @test dec(𝐞)[𝛙] == dec(𝐞′)
+
+
+    𝐡 = [g^i for i in 2:N+1]
+    𝐮 = [3, 4, 5]
+    c = 9
+
+    chg = PoSChallenge(𝐡, 𝐮, c)
+
+    verifier = HonestVerifier(chg)
+
+    # Since the group is small
+    # chances that at least one group element will point to 1 are large
+    #roprg = gen_roprg(UInt8[7]) # 14, 27, 152
+    roprg = gen_roprg(reinterpret(UInt8, Int[304])) # 14, 27, 152, 204, 689, 961
+    simulator = prove(proposition, secret, verifier; roprg)
+    @test verify(simulator)
+
+
+    roprg = gen_roprg(reinterpret(UInt8, Int[409])) # 14, 27, 152, 204, 689, 961
+    simulator2 = shuffle(𝐞, g, pk, verifier; roprg)
+    @test verify(simulator2)
+
+    ### Testing proof translation and verification with Verificatum notation written verifier
+
+    (; proof) = simulator
+    vproof = VShuffleProof(proof)
+    @test verify(proposition, vproof, chg)
+
+
+    ### To make it easier I need to type vproof
+    @test proof == PoSProof(vproof)
+
+end
+
 p = 23
-g = PrimeGenerator(3, p) 
+q = 11
+G = specialize(PGroup, p, q)
+g = G(3)
 
-sk = 5
-pk = g^sk
-
-enc = Enc(pk, g)
-dec = Dec(sk)
+test_prover(g)
 
 
-𝐦 = [g, g^2, g^3]
-𝐞 = enc(𝐦, [2, 3, 4])
+spec = CryptoGroups.MODP_1024
+G = specialize(PGroup, spec)
+g = G <| generator(spec)
 
-N = length(𝐞)
-
-𝐡 = [g^i for i in 2:N+1]
-
-
-𝐫′ = [4, 2, 10] 
-proposition, secret = gen_shuffle(enc, 𝐞, 𝐫′) # In practice total of random factors can't match as it reveals 
-@test verify(proposition, secret)
-@test verify(proposition, sk)
+test_prover(g)
 
 
-(; 𝛙) = secret
-(; 𝐞, 𝐞′) = proposition
-@test dec(𝐞)[𝛙] == dec(𝐞′)
+spec = CryptoGroups.Curve_P_256
+G = specialize(ECGroup, spec; name = :P_256)
+g = G <| generator(spec)
 
-
-𝐡 = [g^i for i in 2:N+1]
-𝐮 = [3, 4, 5]
-c = 9
-
-chg = PoSChallenge(𝐡, 𝐮, c)
-
-verifier = HonestVerifier(chg)
-
-simulator = prove(proposition, secret, verifier)
-(; proof) = simulator
-
-@test verify(simulator)
-
-
-simulator2 = shuffle(𝐞, g, pk, verifier)
-@test verify(simulator2)
-
-### Testing proof translation and verification with Verificatum notation written verifier
-vproof = VShuffleProof(proof)
-@test verify(proposition, vproof, chg)
-
-
-### To make it easier I need to type vproof
-@test proof == PoSProof(vproof)
-
+test_prover(g)

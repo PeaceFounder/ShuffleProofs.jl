@@ -2,7 +2,8 @@
 
 using Test
 import ShuffleProofs: Simulator, VInit, VPoSCommit, PoSChallenge, verify, load_verificatum_simulator
-import ShuffleProofs: interpret, value # For additional verification
+import ShuffleProofs: interpret # For additional verification
+import CryptoGroups: value
 
 DEMO_DIR = "$(@__DIR__)/../ref/demo/"
 

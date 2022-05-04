@@ -66,8 +66,6 @@ end
 decode(x::Vector{UInt8}) = parseb(x)[1]
 decode(x::AbstractString) = decode(hex2bytes(replace(x, " "=>""))) # I could have optional arguments here as well
 
-### Reverse
-
 
 function tobin(leaf::Leaf)
 
@@ -97,8 +95,6 @@ function tobin(node::Node)
 end
 
 encode(x::Tree) = tobin(x)
-#encode(::Type{String}, x::Tree) = bytes2hex(encode(Vector{UInt8}, x))
-
 
 convert(::Type{T}, x::Leaf) where T <: Integer = interpret(T, x.x)
 
@@ -129,8 +125,7 @@ end
 Leaf(x::Unsigned) = Leaf(interpret(Vector{UInt8}, x))
     
 
-# Encoding with fixed size bytes
-function Leaf(x::Integer, k::Integer) ### The logic here also seems better could belong to an interpret method.
+function Leaf(x::Integer, k::Integer) 
     leaf = Leaf(x)
     N = findfirst(x -> x != UInt8(0), leaf.x)
     bytes = leaf.x[N:end]
@@ -163,27 +158,28 @@ end
 
 ############################ COMPOSITE TYPE PARSING ############################
 
-(h::Hash)(t::Tree) = h(convert(Vector{UInt8}, t))
+using CryptoGroups: Hash, PGroup, Group, ElGamal, value, specialize, a, b
+
+
+(h::Hash)(t::Tree) = h(convert(Vector{UInt8}, t))  ### need to relocate
 
 # Need something smarter in the end
-bitlength(x::PrimeGenerator) = bitlength(modulus(x)) 
+bitlength(x::PGroup) = bitlength(modulus(x)) 
 
 
-Leaf(x::PrimeGenerator; L = bitlength(x)) = Leaf(value(x), div(L + 1, 8, RoundUp))
+Leaf(x::PGroup; L = bitlength(x)) = Leaf(value(x), div(L + 1, 8, RoundUp))
+
+# Probably I will need to replace 
+convert(::Type{G}, x::Leaf) where G <: PGroup = convert(G, convert(BigInt, x))
 
 
-convert(::Type{G}, x::Leaf) where G <: PrimeGenerator = convert(G, convert(BigInt, x))
-
-
-
-
-function Tree(x::Vector{<:Generator})
+function Tree(x::Vector{<:Group})
     L = bitlength(x[1])
     s = Leaf[Leaf(i, L = L) for i in x]
     return Node(s)
 end
 
-function marshal(x::PrimeGenerator)
+function marshal(x::PGroup)
 
     java_name = "com.verificatum.arithm.ModPGroup"
     p = modulus(x)
@@ -203,23 +199,23 @@ function unmarshal(::Type{T}, x::Node) where T
     (java_name, (p, q, g, e)) = convert(Tuple{String, Tuple{T, T, T, UInt32}}, x)
     
     @assert java_name == "com.verificatum.arithm.ModPGroup" # In general I I will need an if statement
-    
-    x = PrimeGenerator(g, p)
 
-    @assert order(x) == q "The modular group does not use safe primes"
+    G = specialize(PGroup, p, q)
+    
+    x = G(g)
     
     return x
 end
 
 
-function convert(::Type{ElGamal{G}}, tree::Tree) where G <: Generator
+function convert(::Type{ElGamal{G}}, tree::Tree) where G <: Group
     𝐚, 𝐛 = convert(Tuple{Vector{BigInt}, Vector{BigInt}}, tree)
     𝐞 = ElGamal{G}(𝐚, 𝐛)
     return 𝐞
 end
 
-function Tree(𝐞::ElGamal{<:Generator})
-    𝐚 = a(𝐞)  # 𝐚 = value.(a(𝐞))
+function Tree(𝐞::ElGamal{<:Group})
+    𝐚 = a(𝐞) 
     𝐛 = b(𝐞)
     tree = Tree((𝐚, 𝐛))
 end

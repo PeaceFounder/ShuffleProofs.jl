@@ -1,11 +1,21 @@
 name = "ShuffleProofs"
 uuid = "31a120cc-b3cb-4d07-bbdb-d498660ddfd8"
-authors = ["akels <akels14@gmail.com>"]
+authors = ["Janis Erdmanis <akels14@gmail.com>"]
 version = "0.1.0"
 
 [deps]
-Infiltrator = "5903a43b-9cc3-4c30-8d17-598619ec4e9b"
-Nettle = "49dea1ee-f6fa-5aa6-9a11-8816cee7d4b9"
+CryptoGroups = "bc997328-bedd-407e-bcd3-5758e064a52d"
 Random = "9a3f8284-a2c9-5f02-9a11-845980a1fd5c"
-StaticArrays = "90137ffa-7385-5640-81b9-e52037218182"
+Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 XMLDict = "228000da-037f-5747-90a9-8195ccbf91a5"
+
+[compat]
+CryptoGroups = "0.2"
+XMLDict = "0.4"
+julia = "1"
+
+[extras]
+Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
+
+[targets]
+test = ["Test"]

@@ -1,9 +1,12 @@
+using CryptoGroups: Group, PGroup, Hash
+
 Base.write(io::IO, tree::Tree) = write(io, encode(tree))
 Base.write(f::AbstractString, tree::Tree) = write(f, encode(tree))
 
 Base.string(tree::Tree) = bytes2hex(encode(tree))
 
-function unmarshal_full_public_key(g::Generator, tree::Tree)
+
+function unmarshal_full_public_key(g::Group, tree::Tree)
     
     G = typeof(g)
 
@@ -14,7 +17,7 @@ function unmarshal_full_public_key(g::Generator, tree::Tree)
     return y
 end
 
-marshal_full_public_key(g::G, y::G) where G <: Generator = Tree((g, y))
+marshal_full_public_key(g::G, y::G) where G <: Group = Tree((g, y))
 
 
 function unmarshal_publickey(tree::Tree)
@@ -31,7 +34,7 @@ function unmarshal_publickey(tree::Tree)
 end
 
 
-function marshal_publickey(g::G, y::G) where G <: PrimeGenerator
+function marshal_publickey(g::G, y::G) where G <: PGroup
     
     group_spec = marshal(g)
     
@@ -48,7 +51,7 @@ function marshal_publickey(g::G, y::G) where G <: PrimeGenerator
 end
 
 
-function marshal_privatekey(g::G, s::BigInt) where G <: PrimeGenerator
+function marshal_privatekey(g::PGroup, s::BigInt) #where G <: PGroup
     group_spec = marshal(g)
 
     q = order(g)

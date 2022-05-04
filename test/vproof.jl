@@ -1,6 +1,8 @@
 using Test
 
-import ShuffleProofs: ElGamal, PrimeGenerator, prove, verify, Simulator, Enc, Dec, gen_shuffle, Verifier, PoSChallenge, Shuffle, shuffle, VShuffleProof, PoSProof, ProtocolSpec, gen_roprg
+import ShuffleProofs: prove, verify, Simulator, gen_shuffle, Verifier, PoSChallenge, Shuffle, shuffle, VShuffleProof, PoSProof, ProtocolSpec, gen_roprg
+
+import CryptoGroups: ElGamal, PGroup, Enc, Dec
 
 SPEC = "$(@__DIR__)/../ref/demo/protInfo.xml"
 verifier = ProtocolSpec(SPEC)
@@ -12,7 +14,7 @@ pk = g^sk
 
 enc = Enc(pk, g)
 
-𝐦 = [g, g^2, g^3]
+𝐦 = [g^4, g^2, g^3]
 𝐞 = enc(𝐦, [2, 3, 4])
 
 N = length(𝐞)

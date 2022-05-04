@@ -10,7 +10,6 @@ end
 end
 
 @testset "Random number generators and oracles" begin
-    include("primitives.jl")
     include("rho.jl")
 end
 

@@ -1,9 +1,5 @@
 using Test
 
-@testset "Opperations with cryptographic groups" begin
-    include("generators.jl")
-end
-
 @testset "Implementation of WikstromTererlius prover and verifier using Haines paper" begin
     include("proof.jl")
 end
