@@ -145,8 +145,8 @@ The generality of the verifier can easily be extended to satisfy all kinds of va
 
 # Limitations
 
-  * [ ] Only prime groups are currently supported (FIPS implementations of elliptic groups are comming)
-  * Only proof of shuffle can be verified for Verificatum protocol. Implementing verificaion of correct decryption in multiparty setting has a low priority now.
+  * [ ] Only prime groups are currently supported (NIST implementations of elliptic groups are comming)
+  * Only proof of shuffle can be verified for Verificatum protocol. Implementing verificaion of correct decryption in multiparty setting has a low priority.
   * Current Julia implementation is probably slower than the Java one as little care have been taken to make code type stable and minimize the amount of allocations. 
 
 # Current progress
@@ -171,14 +171,15 @@ The generality of the verifier can easily be extended to satisfy all kinds of va
     * [x] Strong random numbers in the proofs (pass as function argument)
     * [x] Make releavnt types concrete
     * [x] `t₃` sensitive to randomization factors (to investigate).
+  * [ ] Consider moving out Verificatum tests into a seperate repository and automate their generation.
   * [ ] Elliptic groups
       * [x] Implementation of fields Fp and F2 (done internally)
       * [x] Elliptic curve point multiplication by an integer (done internally; tested on P-192 curve)
       * [x] Upstream and expose curve implementations in `CryptoGroups.jl`
-      * [ ] Elliptic curve basis generation
-      * [ ] Test that prover and verifier works also with elliptic groups
-      * [ ] Field, Point encoding according to X9.62 spec
-      * [ ] Parser for cyphertexts
+      * [x] Elliptic curve basis generation (done in `CryptoGroups.jl`)
+      * [x] Test that prover and verifier works also with elliptic groups
+      * [ ] Parser for proposition (group, public_key, cyphertexts)
+      * [ ] Parser for proofs
   * [ ] Benchmarks
   * [ ] Storing the simulator in convinient directory structure
   * [ ] Storing the simulator in Verificatum understandable way

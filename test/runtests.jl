@@ -16,3 +16,6 @@ end
     include("vproof.jl")
 end
 
+@testset "Elliptic curve tests (under development)" begin
+    include("ecverificatum/ecparser.jl")
+end

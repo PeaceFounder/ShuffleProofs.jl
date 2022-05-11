@@ -29,7 +29,7 @@ function ProtocolSpec(protinfo::AbstractDict; auxsid = "default")
     nv = parse(Int32, protinfo["vbitlenro"])
     ne = parse(Int32, protinfo["ebitlenro"])
     
-    g = unmarshal(BigInt, decode(split(s_Gq, "::")[2]))
+    g = unmarshal(decode(split(s_Gq, "::")[2]))
 
     version = String(protinfo["version"])
     sid = String(protinfo["sid"])

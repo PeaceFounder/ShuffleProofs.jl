@@ -158,7 +158,7 @@ end
 
 ############################ COMPOSITE TYPE PARSING ############################
 
-using CryptoGroups: Hash, PGroup, Group, ElGamal, value, specialize, a, b
+using CryptoGroups: Hash, PGroup, ECGroup, Group, ElGamal, value, specialize, a, b, spec, generator, <|, name
 
 
 (h::Hash)(t::Tree) = h(convert(Vector{UInt8}, t))  ### need to relocate
@@ -194,21 +194,71 @@ function marshal(x::PGroup)
     return tree
 end
 
-function unmarshal(::Type{T}, x::Node) where T
 
-    (java_name, (p, q, g, e)) = convert(Tuple{String, Tuple{T, T, T, UInt32}}, x)
+normalize_ecgroup_name(x::String) = replace(x, "_"=>"-")
+normalize_ecgroup_name(x::Symbol) = normalize_ecgroup_name(String(x))
+
+
+function marshal(g::ECGroup)
+
+    java_name = "com.verificatum.arithm.ECqPGroup"
+
+    @assert spec(g) == spec(name(g)) "wrong group name"
+
+    v_name = normalize_ecgroup_name(name(g))
+
+    msg = (java_name, v_name)
+
+    tree = Tree(msg)
+
+    return tree
+end
+
+
+function unmarshal(tree::Tree)
     
-    @assert java_name == "com.verificatum.arithm.ModPGroup" # In general I I will need an if statement
+    group_type = convert(String, tree.x[1])
 
+    if group_type == "com.verificatum.arithm.ModPGroup"
+        _unmarshal_pgroup(tree.x[2])
+    elseif group_type == "com.verificatum.arithm.ECqPGroup"
+        _unmarshal_ecgroup(tree.x[2])
+    else
+        error("Unrecognized group type: $group_type")
+    end
+end
+
+
+function _unmarshal_pgroup(x::Node) 
+
+    #(java_name, (p, q, g, e)) = convert(Tuple{String, Tuple{T, T, T, UInt32}}, x)
+    (p, q, g, e) = convert(Tuple{BigInt, BigInt, BigInt, UInt32}, x)
+    
     G = specialize(PGroup, p, q)
     
-    x = G(g)
+    #x = G(g)
+    x = G <| g
     
     return x
 end
 
 
-function convert(::Type{ElGamal{G}}, tree::Tree) where G <: Group
+spec_name(x::String) = Symbol(replace(x, "-"=>"_"))
+
+function _unmarshal_ecgroup(x::Leaf)
+    
+    group_spec_str = convert(String, x)
+    name = spec_name(group_spec_str)
+
+    group_spec = spec(name)
+    G = specialize(ECGroup, group_spec; name)
+    g = G <| generator(group_spec)
+
+    return g
+end
+
+
+function convert(::Type{ElGamal{G}}, tree::Tree) where G <: PGroup
     𝐚, 𝐛 = convert(Tuple{Vector{BigInt}, Vector{BigInt}}, tree)
     𝐞 = ElGamal{G}(𝐚, 𝐛)
     return 𝐞

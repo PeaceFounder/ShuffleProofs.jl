@@ -1,0 +1,143 @@
+
+-----------------------------------------------------------
+ Copyright Douglas Wikstrom 2008-2018
+ Licensed under AGPL as defined in:
+ https://www.gnu.org/licenses/agpl-3.0.en.html
+-----------------------------------------------------------
+-----------------------------------------------------------
+Party01
+-----------------------------------------------------------
+220510 20:07:12 Starting hint server.
+220510 20:07:12 Starting http server.
+220510 20:07:12 Synchronizing with the other servers. Please wait.
+220510 20:07:12 Generate keys for secret communication.
+220510 20:07:12 | Generate and read plain keys.
+220510 20:07:12 | | Generate key-pair.
+220510 20:07:12 | | Exchange public keys with all parties.
+220510 20:07:12 | | | Publish public key.
+220510 20:07:13 | | Writing keys to file.
+220510 20:07:13 | Generate independent generator.
+220510 20:07:13 | | Execute Pedersen 1 times with rotating dealer.
+220510 20:07:13 | | | Deal a secret using Pedersen VSS.
+220510 20:07:13 | | | | Generate checking elements.
+220510 20:07:13 | | | | Compute encrypted shares for all parties.
+220510 20:07:13 | | | | Publish checking elements and encrypted shares.
+220510 20:07:13 | | | | Exchange verdicts.
+220510 20:07:13 | | | | | Publish verdict (true).
+220510 20:07:13 | | | | Sharing completed.
+220510 20:07:13 | | Write independent generator to file.
+
+-----------------------------------------------------------
+ Copyright Douglas Wikstrom 2008-2018
+ Licensed under AGPL as defined in:
+ https://www.gnu.org/licenses/agpl-3.0.en.html
+-----------------------------------------------------------
+-----------------------------------------------------------
+Party01
+-----------------------------------------------------------
+220510 20:08:20 Starting hint server.
+
+-----------------------------------------------------------
+ Copyright Douglas Wikstrom 2008-2018
+ Licensed under AGPL as defined in:
+ https://www.gnu.org/licenses/agpl-3.0.en.html
+-----------------------------------------------------------
+-----------------------------------------------------------
+Party01
+-----------------------------------------------------------
+220510 20:08:51 Starting hint server.
+
+-----------------------------------------------------------
+ Copyright Douglas Wikstrom 2008-2018
+ Licensed under AGPL as defined in:
+ https://www.gnu.org/licenses/agpl-3.0.en.html
+-----------------------------------------------------------
+-----------------------------------------------------------
+Party01
+-----------------------------------------------------------
+220510 20:09:14 Starting hint server.
+
+-----------------------------------------------------------
+ Copyright Douglas Wikstrom 2008-2018
+ Licensed under AGPL as defined in:
+ https://www.gnu.org/licenses/agpl-3.0.en.html
+-----------------------------------------------------------
+-----------------------------------------------------------
+Party01
+-----------------------------------------------------------
+220510 20:09:48 Starting hint server.
+
+-----------------------------------------------------------
+ Copyright Douglas Wikstrom 2008-2018
+ Licensed under AGPL as defined in:
+ https://www.gnu.org/licenses/agpl-3.0.en.html
+-----------------------------------------------------------
+-----------------------------------------------------------
+Party01
+-----------------------------------------------------------
+220510 20:13:59 Starting hint server.
+220510 20:13:59 Starting http server.
+220510 20:13:59 Synchronizing with the other servers. Please wait.
+220510 20:14:00 Generate keys for secret communication.
+220510 20:14:00 | Generate and read plain keys.
+220510 20:14:00 | | Read keys from file.
+220510 20:14:00 | Generate independent generator.
+220510 20:14:00 | | Read independent generator from file.
+
+-----------------------------------------------------------
+ Copyright Douglas Wikstrom 2008-2018
+ Licensed under AGPL as defined in:
+ https://www.gnu.org/licenses/agpl-3.0.en.html
+-----------------------------------------------------------
+-----------------------------------------------------------
+Party01
+-----------------------------------------------------------
+220510 20:14:45 Starting hint server.
+220510 20:14:45 Starting http server.
+220510 20:14:45 Synchronizing with the other servers. Please wait.
+220510 20:14:45 Generate keys for secret communication.
+220510 20:14:45 | Generate and read plain keys.
+220510 20:14:45 | | Read keys from file.
+220510 20:14:45 | Generate independent generator.
+220510 20:14:45 | | Read independent generator from file.
+220510 20:14:45 Shuffle 10 ciphertexts.
+220510 20:14:45 | Derive independent generators using RO.
+220510 20:14:45 | Generate reencryption exponents.
+220510 20:14:45 | Compute reencryption factors.
+220510 20:14:45 | Perform local pre-computation.
+220510 20:14:45 | Compute permutation commitment.
+220510 20:14:46 | Compute output list.
+220510 20:14:46 | Publish output list.
+220510 20:14:46 | Prove correctness of shuffle.
+220510 20:14:46 | | Publish our permutation commitment.
+220510 20:14:46 | | Generate batching vector.
+220510 20:14:46 | | | Derive 256 bits using random oracle.
+220510 20:14:46 | | Compute commitment.
+220510 20:14:47 | | Publish our commitment.
+220510 20:14:47 | | Generate challenge.
+220510 20:14:47 | | | Derive 256 bits using random oracle.
+220510 20:14:47 | | Compute reply.
+220510 20:14:47 | | Publish reply.
+220510 20:14:47 Waiting for mutual shutdown acknowledgements.
+220510 20:14:47 | Publish acknowledgement.
+220510 20:14:47 | Publish acknowledgement.
+220510 20:14:47 Allow download of our acknowledgment for another 1 seconds.
+220510 20:14:48 Stopping hint server.
+220510 20:14:48 Stopping http server.
+-----------------------------------------------------------
+Completed shuffling.
+
+Running time:                                          (ms)
+- Execution         0h  0m  2s                         2578
+- Network           0h  0m  0s                           60
+- Effective         0h  0m  2s                         2518
+- Idle              0h  0m  0s                            0
+- Computation       0h  0m  2s                         2518
+
+Communication:                                      (bytes)
+- Sent                  0.0 B                             0
+- Received              0.0 B                             0
+- Total                 0.0 B                             0
+
+Proof size:             8.9 KB                         8882
+

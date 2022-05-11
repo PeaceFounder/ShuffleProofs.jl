@@ -37,7 +37,7 @@ PoS_COMMITMENT = "$NIZKP/proofs/PoSCommitment01.bt"
 PoS_REPLY = "$NIZKP/proofs/PoSReply01.bt"
 
 
-g = unmarshal(BigInt, decode(split(s_Gq, "::")[2]))
+g = unmarshal(decode(split(s_Gq, "::")[2]))
 G = typeof(g)
 
 pk_tree = decode(read(FULL_PUBLIC_KEY))

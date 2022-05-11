@@ -22,12 +22,13 @@ marshal_full_public_key(g::G, y::G) where G <: Group = Tree((g, y))
 
 function unmarshal_publickey(tree::Tree)
     
-    g = unmarshal(BigInt, tree.x[1])
-    c1, c2 = convert(Tuple{BigInt, BigInt}, tree.x[2])
+    g = unmarshal(tree.x[1])
+    G = typeof(g)
+
+    c1, c2 = convert(Tuple{BigInt, BigInt}, tree.x[2]) # I could have it generalized as Tuple{G, G}
 
     @assert value(g) == c1
 
-    G = typeof(g)
     y = convert(G, c2)
 
     return y, g
@@ -68,7 +69,7 @@ end
 
 function unmarshal_privatekey(tree::Tree)
 
-    g = unmarshal(BigInt, tree.x[1])
+    g = unmarshal(tree.x[1])
     s = convert(BigInt, tree.x[2])    
 
     return (s, g) ### The group can often be omited when not needed.

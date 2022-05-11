@@ -19,7 +19,7 @@ h_str = "(1da949a3dfbeb316e9b225bc7d75b78d0ddd5e44fc382e74f3de95ad10eac798c4cc7b
 tree = decode(group_spec)
 
 #𝓰 = convert(PrimeGenerator, tree)
-𝓰 = unmarshal(BigInt, tree)
+𝓰 = unmarshal(tree)
 G = typeof(𝓰)
 
 p = modulus(𝓰)
