@@ -13,10 +13,16 @@ uuid = "56f22d72-fd6d-98f1-02f0-08ddc0907c33"
 uuid = "2a0f44e3-6c83-55bd-87e4-b1978d98bd5f"
 
 [[deps.CryptoGroups]]
-deps = ["Nettle", "Primes", "Random"]
-git-tree-sha1 = "07e1a39021cacb809fb1adfe42c232acd7056002"
+deps = ["CryptoUtils", "Nettle", "Primes", "Random"]
+git-tree-sha1 = "39570097e641ec4f397711935e383f6809742d90"
 uuid = "bc997328-bedd-407e-bcd3-5758e064a52d"
-version = "0.2.0"
+version = "0.2.2"
+
+[[deps.CryptoUtils]]
+deps = ["Primes"]
+git-tree-sha1 = "5cf33e96d18c8aa607bc45b9c0db0e19367ad24c"
+uuid = "04afed74-ac16-11e9-37b6-1352e3e05830"
+version = "0.1.1"
 
 [[deps.Dates]]
 deps = ["Printf"]

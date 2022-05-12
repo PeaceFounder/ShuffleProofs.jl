@@ -51,7 +51,7 @@ function marshal_publickey(y::G, g::G) where G <: Group
 end
 
 
-function marshal_privatekey(g::PGroup, s::BigInt) 
+function marshal_privatekey(g::Group, s::BigInt) 
     group_spec = marshal(g)
 
     q = order(g)

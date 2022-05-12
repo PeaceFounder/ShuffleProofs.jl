@@ -57,6 +57,17 @@ function marshal_s_Gq(g::PGroup)
 end
 
 
+function marshal_s_Gq(g::ECGroup)
+    
+    curve_name = normalize_ecgroup_name(name(g))
+    tree = marshal(g)
+
+    str = "com.verificatum.arithm.ECqPGroup($curve_name)::" * string(tree)
+
+    return Leaf(str)
+end
+
+
 function ro_prefix(spec::ProtocolSpec)
 
     (; version, sid, auxsid, rohash, prghash, g, nr, nv, ne) = spec

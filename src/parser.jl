@@ -275,8 +275,11 @@ function _unmarshal_ecgroup(x::Leaf)
 end
 
 
-function convert(::Type{ElGamal{G}}, tree::Tree) where G <: PGroup
-    𝐚, 𝐛 = convert(Tuple{Vector{BigInt}, Vector{BigInt}}, tree)
+#function convert(::Type{ElGamal{G}}, tree::Tree) where G <: PGroup
+#    𝐚, 𝐛 = convert(Tuple{Vector{BigInt}, Vector{BigInt}}, tree)
+
+function convert(::Type{ElGamal{G}}, tree::Tree) where G <: Group
+    𝐚, 𝐛 = convert(Tuple{Vector{G}, Vector{G}}, tree)
     𝐞 = ElGamal{G}(𝐚, 𝐛)
     return 𝐞
 end

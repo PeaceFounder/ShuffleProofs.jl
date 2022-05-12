@@ -2,7 +2,6 @@ module ShuffleProofs
 
 #using Infiltrator
 
-
 include("utils.jl") # Common functions
 
 include("prover.jl") 
