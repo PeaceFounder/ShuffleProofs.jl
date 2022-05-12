@@ -1,12 +1,12 @@
 using Test
-using ShuffleProofs: Leaf, marshal, unmarshal, decode, encode
+using ShuffleProofs: Leaf, marshal, unmarshal, decode, encode, Tree
 using CryptoGroups: Group, PGroup, specialize
 
 G = specialize(PGroup, 23, 11)
 
 g = G(3)
 
-leaf = Leaf(g)
+leaf = Tree(g)
 
 @test convert(BigInt, leaf) == 3
 @test length(leaf.x) == 1

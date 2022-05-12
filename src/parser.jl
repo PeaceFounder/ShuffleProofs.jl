@@ -158,24 +158,43 @@ end
 
 ############################ COMPOSITE TYPE PARSING ############################
 
-using CryptoGroups: Hash, PGroup, ECGroup, Group, ElGamal, value, specialize, a, b, spec, generator, <|, name
+using CryptoGroups: Hash, PGroup, ECGroup, Group, ElGamal, value, specialize, a, b, spec, generator, <|, name, ECPoint, field, gx, gy
 
 
 (h::Hash)(t::Tree) = h(convert(Vector{UInt8}, t))  ### need to relocate
 
 # Need something smarter in the end
+bitlength(::Type{G}) where G <: PGroup = bitlength(modulus(G)) 
 bitlength(x::PGroup) = bitlength(modulus(x)) 
 
 
-Leaf(x::PGroup; L = bitlength(x)) = Leaf(value(x), div(L + 1, 8, RoundUp))
+bitlength(::Type{ECGroup{P}}) where P <: ECPoint = bitlength(modulus(field(P)))
+bitlength(g::G) where G <: ECGroup = bitlength(G)
+
+
+
+Tree(x::PGroup; L = bitlength(x)) = Leaf(value(x), div(L + 1, 8, RoundUp))
 
 # Probably I will need to replace 
 convert(::Type{G}, x::Leaf) where G <: PGroup = convert(G, convert(BigInt, x))
 
+### Note that only PrimeCurves are supported. 
+convert(::Type{G}, x::Node) where G <: ECGroup = G <| convert(Tuple{BigInt, BigInt}, x)
+
+
+function Tree(g::G; L = bitlength(G)) where G <: ECGroup
+    
+    gxleaf = Leaf(value(gx(g)), div(L + 1, 8, RoundUp))
+    gyleaf = Leaf(value(gy(g)), div(L + 1, 8, RoundUp))
+
+    gtree = Tree((gxleaf, gyleaf))
+
+    return gtree
+end
 
 function Tree(x::Vector{<:Group})
     L = bitlength(x[1])
-    s = Leaf[Leaf(i, L = L) for i in x]
+    s = Tree[Tree(i, L = L) for i in x]
     return Node(s)
 end
 
@@ -184,7 +203,7 @@ function marshal(x::PGroup)
     java_name = "com.verificatum.arithm.ModPGroup"
     p = modulus(x)
     q = order(x)
-    g = Leaf(x)
+    g = Tree(x)
     e = UInt32(1)
 
     msg = (java_name, (p, q, g, e))
@@ -231,12 +250,10 @@ end
 
 function _unmarshal_pgroup(x::Node) 
 
-    #(java_name, (p, q, g, e)) = convert(Tuple{String, Tuple{T, T, T, UInt32}}, x)
     (p, q, g, e) = convert(Tuple{BigInt, BigInt, BigInt, UInt32}, x)
     
     G = specialize(PGroup, p, q)
-    
-    #x = G(g)
+
     x = G <| g
     
     return x

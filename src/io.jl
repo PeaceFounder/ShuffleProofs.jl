@@ -20,39 +20,38 @@ end
 marshal_full_public_key(g::G, y::G) where G <: Group = Tree((g, y))
 
 
-function unmarshal_publickey(tree::Tree)
+function unmarshal_publickey(tree::Tree; relative::Bool = false)
     
     g = unmarshal(tree.x[1])
     G = typeof(g)
 
-    c1, c2 = convert(Tuple{BigInt, BigInt}, tree.x[2]) # I could have it generalized as Tuple{G, G}
+    g′, y = convert(Tuple{G, G}, tree.x[2]) 
 
-    @assert value(g) == c1
+    if !relative
+        @assert g′ == g "Generator does not match specification of the group. Perhaps intentioanl, if so pass `relative=true` as keyword argument."
+    end
 
-    y = convert(G, c2)
-
-    return y, g
+    return y, g′
 end
 
 
-function marshal_publickey(g::G, y::G) where G <: PGroup
+function marshal_publickey(y::G, g::G) where G <: Group
     
     group_spec = marshal(g)
     
-    p = modulus(g)
+    L = bitlength(G) # 
     
-    ### It may be actaully be forcing to use the same bytelength as prime order
-    gleaf = Leaf(g, L = bitlength(p))
-    yleaf = Leaf(y, L = bitlength(p))
+    g_tree = Tree(g; L)
+    y_tree = Tree(y; L)
 
-    public_key = Tree((gleaf, yleaf))
+    public_key = Tree((g_tree, y_tree))
     tree = Tree((group_spec, public_key))
 
     return tree
 end
 
 
-function marshal_privatekey(g::PGroup, s::BigInt) #where G <: PGroup
+function marshal_privatekey(g::PGroup, s::BigInt) 
     group_spec = marshal(g)
 
     q = order(g)
