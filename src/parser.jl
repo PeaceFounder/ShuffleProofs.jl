@@ -252,13 +252,12 @@ function _unmarshal_pgroup(x::Node)
 
     (p, q, g, e) = convert(Tuple{BigInt, BigInt, BigInt, UInt32}, x)
     
-    G = specialize(PGroup, p, q)
+    G = PGroup(p, q)
 
     x = G <| g
     
     return x
 end
-
 
 spec_name(x::String) = Symbol(replace(x, "-"=>"_"))
 

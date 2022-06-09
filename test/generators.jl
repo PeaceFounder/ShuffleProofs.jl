@@ -1,25 +1,28 @@
 using Test
-import ShuffleProofs: PrimeGenerator, validate, order, Enc, Dec, modulus, value
-
+import ShuffleProofs: validate, order, Enc, Dec, modulus, value
+import CryptoGroups: PGroup
+#import CryptoGroups: 
 
 q = 11
 p = 2*q + 1
 
-@test validate(PrimeGenerator(3, p)) == true
-@test validate(PrimeGenerator(11, p)) == false
+# @test validate(PrimeGenerator(3, p)) == true
+# @test validate(PrimeGenerator(11, p)) == false
 
-n = let 
-    n = 0
-    for i in 1:p
-        validate(PrimeGenerator(i, p)) && (n+=1)
-    end
-    n
-end
-@test n == q - 1
+# n = let 
+#     n = 0
+#     for i in 1:p
+#         validate(PrimeGenerator(i, p)) && (n+=1)
+#     end
+#     n
+# end
+# @test n == q - 1
 
 
+G = PGroup(p, q)
+g = G(3)
 
-g = PrimeGenerator(3, p)
+#g = PrimeGenerator(3, p)
 
 #q = 17
 #g = PrimeGenerator(3, q)
@@ -40,10 +43,7 @@ h = g^7
 @test g*g*g == g^3 # Checking multiplication
 @test g^2/g == g
 
-
-
 ### Let's test ElGammal encryption
-
 
 sk = 5
 pk = g^sk

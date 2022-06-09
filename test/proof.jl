@@ -99,14 +99,14 @@ g = G(3)
 test_prover(g)
 
 
-spec = CryptoGroups.MODP_1024
+spec = CryptoGroups.Specs.MODP_1024
 G = specialize(PGroup, spec)
 g = G <| generator(spec)
 
 test_prover(g)
 
 
-spec = CryptoGroups.Curve_P_256
+spec = CryptoGroups.Specs.Curve_P_256
 G = specialize(ECGroup, spec; name = :P_256)
 g = G <| generator(spec)
 

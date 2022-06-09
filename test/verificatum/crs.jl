@@ -30,7 +30,6 @@ for hi in 𝐡
     @test powermod(hi, q + 1, p) == hi
 end
 
-
 𝐡′ = gen_verificatum_basis(G, prghash, rohash, 10; nr, ρ)
 
 

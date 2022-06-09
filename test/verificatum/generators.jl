@@ -1,8 +1,8 @@
 using Test
-using ShuffleProofs: Leaf, marshal, unmarshal, decode, encode, Tree
-using CryptoGroups: Group, PGroup, specialize
+import ShuffleProofs: Leaf, marshal, unmarshal, decode, encode, Tree
+import CryptoGroups: Group, PGroup, specialize
 
-G = specialize(PGroup, 23, 11)
+G = specialize(PGroup, BigInt(23), BigInt(11)) # bigInt necessary as unmarshaling happens to a BigInt. 
 
 g = G(3)
 
