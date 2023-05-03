@@ -172,7 +172,6 @@ bitlength(::Type{ECGroup{P}}) where P <: ECPoint = bitlength(modulus(field(P)))
 bitlength(g::G) where G <: ECGroup = bitlength(G)
 
 
-
 Tree(x::PGroup; L = bitlength(x)) = Leaf(value(x), div(L + 1, 8, RoundUp))
 
 # Probably I will need to replace 
@@ -180,6 +179,7 @@ convert(::Type{G}, x::Leaf) where G <: PGroup = convert(G, convert(BigInt, x))
 
 ### Note that only PrimeCurves are supported. 
 convert(::Type{G}, x::Node) where G <: ECGroup = G <| convert(Tuple{BigInt, BigInt}, x)
+convert(::Type{ECGroup{P}}, x::Node) where P <: ECPoint = ECGroup{P} <| convert(Tuple{BigInt, BigInt}, x)
 
 
 function Tree(g::G; L = bitlength(G)) where G <: ECGroup

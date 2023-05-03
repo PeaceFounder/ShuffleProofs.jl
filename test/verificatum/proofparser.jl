@@ -1,7 +1,7 @@
 using Test
 using XMLDict
 import ShuffleProofs: decode, convert, unmarshal_publickey, interpret, Tree, encode, Leaf, Leaf, ro_prefix, map_hash_name, unmarshal, unmarshal_full_public_key, gen_verificatum_basis
-import CryptoGroups: ElGamal, PGroup, RO, Hash, PRG, value, order, outlen
+import CryptoGroups: ElGamal, PGroup, RO, Hash, PRG, value, order, CryptoGroups#, bitlength #, outlen
 
 
 PROT_INFO = "$(@__DIR__)/../../ref/demo/protInfo.xml"
@@ -82,7 +82,8 @@ h_str = "(1da949a3dfbeb316e9b225bc7d75b78d0ddd5e44fc382e74f3de95ad10eac798c4cc7b
 
 # Step 2
 
-ns = outlen(prghash)
+#ns = outlen(prghash)
+ns = CryptoGroups.bitlength(prghash)
 ro = RO(rohash, ns)
 
 tree = Tree((g, 𝐡, 𝐮, pk_tree, 𝔀, 𝔀′))

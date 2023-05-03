@@ -1,6 +1,6 @@
 using Test
 using ShuffleProofs: Tree, decode, interpret, unmarshal, gen_verificatum_basis
-using CryptoGroups: Hash, value, validate, order, modulus
+using CryptoGroups: Hash, value, order, modulus
 
 ### Let's make the setup complete. From repo I ahve a following public parameters:
 nr = 100

@@ -1,3 +1,5 @@
+#import CryptoGroups: bitlength
+
 tobig(x) = parse(BigInt, bytes2hex(reverse(x)), base=16)
 
 function int2bytes(x::Integer)
