@@ -33,7 +33,7 @@ abstract type Verifier end
 function step end
 function challenge end
 
-struct Simulator
+struct Simulator #{T<:Proposition} 
     proposition::Proposition # Proposition type is the one which selects a type of prover being used
     proof::Proof
     verifier::Verifier
@@ -254,9 +254,9 @@ function prove(proposition::Shuffle{G}, secret::ShuffleSecret, verifier::Verifie
 
     proof = PoSProof(𝐜, 𝐜̂, t, s)
 
-    simulator = Simulator(proposition, proof, verifier) 
-
-    return simulator
+    #simulator = Simulator(proposition, proof, verifier) 
+    #return simulator
+    return proof
 end
 
 
@@ -296,7 +296,6 @@ function verify(proposition::Shuffle, proof::PoSProof, challenge::PoSChallenge; 
     ĉ = 𝐜̂[N] / h^u
     c̃ = ∏(𝐜 .^ 𝐮)
 
-    #@infiltrate
     e′ =  ∏(𝐞 .^ 𝐮)
 
     t₁′ = c̄^(-c) * g^s₁
@@ -334,7 +333,6 @@ end
 verify(simulator::Simulator) = verify(simulator.proposition, simulator.proof, simulator.verifier)
 
 
-
 function shuffle(𝐞::ElGamal{G}, g::G, pk::G; roprg = gen_roprg()) where G <: Group
 
     # Need to abstract this into a function argument
@@ -350,15 +348,21 @@ function shuffle(𝐞::ElGamal{G}, g::G, pk::G; roprg = gen_roprg()) where G <: 
     return gen_shuffle(enc, 𝐞, 𝐫′) # I may also refactor it as shuffle. 
 end
 
+shuffle(𝐦::Vector{G}, g::G, pk::G; roprg = gen_roprg()) where G <: Group = shuffle(ElGamal(ones(𝐦), 𝐦), g, pk; roprg)
 
-shuffle(𝐞::ElGamal{G}, enc::Enc; roprg = gen_roprg()) where G <: Group = shuffle(𝐞, enc.g, enc.pk; roprg)
-
+shuffle(𝐞::Union{ElGamal{G}, Vector{G}}, enc::Enc; roprg = gen_roprg()) where G <: Group = shuffle(𝐞, enc.g, enc.pk; roprg)
 
 
 function shuffle(𝐞::ElGamal{G}, g::G, pk::G, verifier::Verifier; roprg = gen_roprg()) where G <: Group
     proposition, secret = shuffle(𝐞, g, pk; roprg)
-    return prove(proposition, secret, verifier; roprg)
+    #return prove(proposition, secret, verifier; roprg)
+    proof = prove(proposition, secret, verifier; roprg)
+    return Simulator(proposition, proof, verifier)
 end
 
+shuffle(𝐦::Vector{G}, g::G, pk::G, verifier::Verifier; roprg = gen_roprg()) where G <: Group = shuffle(ElGamal(ones(𝐦), 𝐦), g, pk, verifier; roprg)
 
-shuffle(𝐞::ElGamal{G}, enc::Enc, verifier::Verifier; roprg = gen_roprg()) where G <: Group = shuffle(𝐞, enc.g, enc.pk, verifier; roprg)
+shuffle(𝐞::Union{ElGamal{G}, Vector{G}}, enc::Enc, verifier::Verifier; roprg = gen_roprg()) where G <: Group = shuffle(𝐞, enc.g, enc.pk, verifier; roprg)
+
+#shuffle(𝐦::Vector{G}, enc::Enc, verifier::Verifier; roprg = gen_roprg()) where G <: Group = shuffle(ElGamal(ones(𝐦), 𝐦), enc, verifier; roprg)
+

@@ -126,13 +126,20 @@ Leaf(x::Unsigned) = Leaf(interpret(Vector{UInt8}, x))
     
 
 function Leaf(x::Integer, k::Integer) 
-    leaf = Leaf(x)
-    N = findfirst(x -> x != UInt8(0), leaf.x)
-    bytes = leaf.x[N:end]
-    pad = k - length(bytes)
+    
+    if x == 0
 
-    newleaf = Leaf(UInt8[zeros(UInt8, pad)...,bytes...])
-    return newleaf
+        return Leaf(zeros(UInt8, k))
+
+    else
+        leaf = Leaf(x)
+
+        N = findfirst(x -> x != UInt8(0), leaf.x)
+        bytes = leaf.x[N:end]
+        pad = k - length(bytes)
+
+        return newleaf = Leaf(UInt8[zeros(UInt8, pad)...,bytes...])
+    end
 end
 
 

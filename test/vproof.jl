@@ -28,10 +28,8 @@ proposition, secret = gen_shuffle(enc, 𝐞, 𝐫′) # In practice total of ran
 
 @test verify(proposition, secret)
 
-simulator = prove(proposition, secret, verifier)
-(; proof) = simulator
-
-@test verify(simulator)
+proof = prove(proposition, secret, verifier)
+@test verify(proposition, proof, verifier)
 
 ### Testing proof translation and verification with Verificatum notation written verifier
 vproof = VShuffleProof(proof)
@@ -41,5 +39,5 @@ vproof = VShuffleProof(proof)
 
 roprg = gen_roprg(UInt8[2])
 
-simulator2 = shuffle(𝐞, g, pk, verifier; roprg)
-@test verify(simulator2)
+simulator = shuffle(𝐞, g, pk, verifier; roprg)
+@test verify(simulator)

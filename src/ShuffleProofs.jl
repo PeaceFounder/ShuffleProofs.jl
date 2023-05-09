@@ -11,4 +11,8 @@ include("io.jl") # Some convinience methods
 
 include("verifier.jl") 
 
+include("decryption.jl") 
+
+include("braid.jl")
+
 end # module

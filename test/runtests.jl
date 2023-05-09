@@ -19,3 +19,12 @@ end
 @testset "Elliptic curve tests (under development)" begin
     include("ecverificatum/ecparser.jl")
 end
+
+@testset "Decryption proofs" begin
+    include("decryption.jl")
+end
+
+@testset "Braid proofs" begin
+    include("braid.jl")
+    include("braid_example.jl")
+end

@@ -71,20 +71,19 @@ function test_prover(g)
     # chances that at least one group element will point to 1 are large
     #roprg = gen_roprg(UInt8[7]) # 14, 27, 152
     roprg = gen_roprg(reinterpret(UInt8, Int[304])) # 14, 27, 152, 204, 689, 961
-    simulator = prove(proposition, secret, verifier; roprg)
-    @test verify(simulator)
+    proof = prove(proposition, secret, verifier; roprg)
+    @test verify(proposition, proof, verifier)
 
 
     roprg = gen_roprg(reinterpret(UInt8, Int[409])) # 14, 27, 152, 204, 689, 961
-    simulator2 = shuffle(𝐞, g, pk, verifier; roprg)
-    @test verify(simulator2)
+    simulator = shuffle(𝐞, g, pk, verifier; roprg)
+    @test verify(simulator)
 
     ### Testing proof translation and verification with Verificatum notation written verifier
 
     (; proof) = simulator
     vproof = VShuffleProof(proof)
-    @test verify(proposition, vproof, chg)
-
+    @test verify(simulator.proposition, vproof, chg)
 
     ### To make it easier I need to type vproof
     @test proof == PoSProof(vproof)

@@ -281,6 +281,7 @@ function VPermCommit(v::VInit{G}, 𝐮::Vector{G}) where G <: Group
     roprg = ROPRG(ρ, rohash, prghash)
 
     pk_tree = (g, pk)
+
     tree = Tree((g, 𝐡, 𝐮, pk_tree, 𝔀, 𝔀′))
     prg = roprg(encode(tree))
     
