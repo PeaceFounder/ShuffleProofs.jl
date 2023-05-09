@@ -149,7 +149,7 @@ The generality of the verifier can easily be extended to satisfy all kinds of va
   *  Currently, only proof of shuffle can be verified for the Verificatum protocol. Implementing verification of correct threshold decryption has a low priority.
   * The current Julia implementation for the proof of shuffle is likely around 10...100 slower than the Verificatum Java library, as little care has been taken to make code type stable and minimise the number of allocations. 
 
-# BraidINg
+# Braiding
 
 An alternative use of proof of shuffle is to form knot-like structures or braids where inputs are related to outputs only through privately known exponents. As an example, consider private exponents `y = [2, 3, 4]` and some generator `g`. A list of public keys is `Y = [g^2, g^3, g^4]`. 
 
