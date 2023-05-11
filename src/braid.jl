@@ -46,6 +46,9 @@ end
 
 function isconsistent(braid::Braid)
 
+    b = CryptoGroups.b(braid.shuffle.𝐞′)
+    b == braid.decryption.𝔀 || return false
+
     a = CryptoGroups.a(braid.shuffle.𝐞′)
     b′ = braid.decryption.𝔀′
     
