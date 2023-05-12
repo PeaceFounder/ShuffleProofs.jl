@@ -1,7 +1,7 @@
 name = "ShuffleProofs"
 uuid = "31a120cc-b3cb-4d07-bbdb-d498660ddfd8"
 authors = ["Janis Erdmanis <akels14@gmail.com>"]
-version = "0.2.0"
+version = "0.2.1"
 
 [deps]
 CryptoGroups = "bc997328-bedd-407e-bcd3-5758e064a52d"
