@@ -71,8 +71,8 @@ test_braid(g, y)
 
 ###### Testing on elliptic curve
 
-spec = CryptoGroups.curve("P-256")
-G = CryptoGroups.specialize(ECGroup, spec; name = :P_256)
+spec = CryptoGroups.curve("P_256")
+G = CryptoGroups.specialize(ECGroup, spec)
 g = G <| CryptoGroups.generator(spec)
 
 test_braid(g, y)
