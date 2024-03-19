@@ -13,7 +13,9 @@ end
 
 style(x, n) = "\33[1;$(n)m$x\33[0m"
 
-bitlength(::Type{T}) where T <: Integer = T.size * 8
+#bitlength(::Type{T}) where T <: Integer = T.size * 8
+
+bitlength(::Type{T}) where T <: Integer = sizeof(T) * 8
 
 
 function bitlength(p::Integer)

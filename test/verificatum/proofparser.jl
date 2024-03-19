@@ -108,12 +108,12 @@ A = prod(𝐮 .^ 𝐞)
 C = prod(𝐮) / prod(𝐡)
 D = 𝐁[N] * inv(𝐡[1])^prod(𝐞)
 
-@show A^𝓿 * A′ == g^k_A * prod(𝐡 .^ 𝐤_E)
-@show C^𝓿 * C′ == g^k_C
-@show D^𝓿 * D′ == g^k_D
+@test A^𝓿 * A′ == g^k_A * prod(𝐡 .^ 𝐤_E)
+@test C^𝓿 * C′ == g^k_C
+@test D^𝓿 * D′ == g^k_D
 
-@show 𝐁[1]^𝓿 * 𝐁′[1] == g^𝐤_B[1] * 𝐡[1]^𝐤_E[1]
+@test 𝐁[1]^𝓿 * 𝐁′[1] == g^𝐤_B[1] * 𝐡[1]^𝐤_E[1]
 
 for i in 2:N
-    @show 𝐁[i]^𝓿 * 𝐁′[i] == g^𝐤_B[i] * 𝐁[i - 1]^𝐤_E[i]
+    @test 𝐁[i]^𝓿 * 𝐁′[i] == g^𝐤_B[i] * 𝐁[i - 1]^𝐤_E[i]
 end
