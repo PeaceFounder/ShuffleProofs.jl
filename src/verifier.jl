@@ -12,7 +12,7 @@ using Base: @kwdef
     rohash::Hash = Hash("sha256")
     version::String = "3.0.4"
     sid::String = "SessionID"
-    auxsid::String = "default"
+    auxsid::String = "default" # 
 end
 
 function ProtocolSpec(protinfo::AbstractDict; auxsid = "default")

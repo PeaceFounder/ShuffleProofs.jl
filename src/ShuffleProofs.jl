@@ -15,4 +15,6 @@ include("decryption.jl")
 
 include("braid.jl")
 
+include("store.jl")
+
 end # module

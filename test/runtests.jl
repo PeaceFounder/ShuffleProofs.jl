@@ -28,3 +28,7 @@ end
     include("braid.jl")
     include("braid_example.jl")
 end
+
+@testset "Serilization tests" begin
+    include("store.jl")
+end
