@@ -4,9 +4,9 @@ import ShuffleProofs: decode, convert, unmarshal_publickey, interpret, Tree, enc
 import CryptoGroups: ElGamal, PGroup, RO, Hash, PRG, value, order, CryptoGroups#, bitlength #, outlen
 
 
-PROT_INFO = "$(@__DIR__)/../../ref/demo/protInfo.xml"
+PROT_INFO = "$(@__DIR__)/../validation_sample/verificatum/MODP/protInfo.xml"
 auxsid = "default"
-NIZKP = "$(@__DIR__)/../../ref/demo/dir/nizkp/$auxsid/"
+NIZKP = "$(@__DIR__)/../validation_sample/verificatum/MODP/dir/nizkp/$auxsid/"
 #AUXSID = "$(@__DIR__)/../ref/demo/dir/nizkp/default/auxsid"
 
 

@@ -2,7 +2,7 @@ using Test
 
 import ShuffleProofs: prove, verify, decrypt, ProtocolSpec
 
-SPEC = "$(@__DIR__)/../ref/demo/protInfo.xml"
+SPEC = "$(@__DIR__)/validation_sample/verificatum/MODP/protInfo.xml"
 verifier = ProtocolSpec(SPEC)
 
 (; g) = verifier

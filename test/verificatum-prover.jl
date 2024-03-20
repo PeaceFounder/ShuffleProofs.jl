@@ -4,7 +4,7 @@ import ShuffleProofs: prove, verify, Simulator, gen_shuffle, Verifier, PoSChalle
 
 import CryptoGroups: ElGamal, PGroup, Enc, Dec
 
-SPEC = "$(@__DIR__)/../ref/demo/protInfo.xml"
+SPEC = "$(@__DIR__)/validation_sample/verificatum/MODP/protInfo.xml"
 verifier = ProtocolSpec(SPEC)
 
 (; g) = verifier

@@ -3,11 +3,10 @@ import ShuffleProofs: decode, encode, Tree, unmarshal, marshal_publickey, unmars
 import CryptoGroups: ElGamal, PGroup, Dec
 
 
-
-CIPHERTEXT_FILE = "$(@__DIR__)/../../ref/demo/ciphertexts"
-CIPHERTEXTOUT_FILE = "$(@__DIR__)/../../ref/demo/ciphertextsout"
-PUBLIC_KEY = "$(@__DIR__)/../../ref/demo/publicKey"
-PRIVATE_KEY = "$(@__DIR__)/../../ref/privateKey" 
+CIPHERTEXT_FILE = "$(@__DIR__)/../validation_sample/verificatum/MODP/ciphertexts"
+CIPHERTEXTOUT_FILE = "$(@__DIR__)/../validation_sample/verificatum/MODP/ciphertextsout"
+PUBLIC_KEY = "$(@__DIR__)/../validation_sample/verificatum/publicKey"
+PRIVATE_KEY = "$(@__DIR__)/../validation_sample/verificatum/privateKey" 
 
 
 y, g = let

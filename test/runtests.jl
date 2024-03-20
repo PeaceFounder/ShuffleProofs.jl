@@ -1,23 +1,23 @@
 using Test
 
-@testset "Implementation of WikstromTererlius prover and verifier using Haines paper" begin
+@testset "Number conversations" begin
+    include("utils.jl")
+end
+
+@testset "WikstromTererlius prover and verifier for reencryption shuffle" begin
     include("proof.jl")
 end
 
-@testset "Some Verificatum proof parsing tests" begin
-    include("verificatum/runtests.jl")
+@testset "Verificatum schema" begin
+    include("verificatum_schema/runtests.jl")
 end
 
-@testset "Verificatum proof verification API" begin
-    include("verificatum.jl")
+@testset "Verificatum verifier" begin
+    include("verificatum-verifier.jl")
 end
 
 @testset "Verifiactum verifier compatible proof generation" begin
-    include("vproof.jl")
-end
-
-@testset "Elliptic curve tests (under development)" begin
-    include("ecverificatum/ecparser.jl")
+    include("verificatum-prover.jl")
 end
 
 @testset "Decryption proofs" begin

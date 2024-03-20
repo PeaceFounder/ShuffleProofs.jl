@@ -1,10 +1,5 @@
 using Test
 
-
-@testset "Number conversations" begin
-    include("utils.jl")
-end
-
 @testset "Binary tree parser tests" begin
     include("parser.jl")
 end
@@ -29,4 +24,7 @@ end
     include("proofparser.jl")
 end
 
+@testset "Elliptic curve tests (under development)" begin
+    include("ecparser.jl")
+end
 

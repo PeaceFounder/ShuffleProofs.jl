@@ -5,7 +5,7 @@ import ShuffleProofs: Simulator, VInit, VPoSCommit, PoSChallenge, verify, load_v
 import ShuffleProofs: interpret # For additional verification
 import CryptoGroups: value
 
-DEMO_DIR = "$(@__DIR__)/../ref/demo/"
+DEMO_DIR = "$(@__DIR__)/validation_sample/verificatum/MODP"
 
 simulator = load_verificatum_simulator(DEMO_DIR)
 

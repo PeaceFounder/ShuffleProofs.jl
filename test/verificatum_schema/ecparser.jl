@@ -15,7 +15,7 @@ tree′ = marshal(g)
 
 ### Encoding and decoding public key
 
-BASE_DIR = "$(@__DIR__)/../../ref/P256/"
+BASE_DIR = "$(@__DIR__)/../validation_sample/verificatum/P256/"
 #auxsid = "default"
 #NIZKP = "$(@__DIR__)/../../ref/demo/dir/nizkp/$auxsid/"
 
