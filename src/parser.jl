@@ -171,10 +171,10 @@ end
 
 ############################ COMPOSITE TYPE PARSING ############################
 
-using CryptoGroups: Hash, PGroup, ECGroup, Group, ElGamal, value, specialize, a, b, spec, generator, <|, name, ECPoint, field, gx, gy
+using CryptoGroups: PGroup, ECGroup, Group, ElGamal, value, specialize, a, b, spec, generator, <|, name, ECPoint, field, gx, gy
 
 
-(h::Hash)(t::Tree) = h(convert(Vector{UInt8}, t))  ### need to relocate
+(h::HashSpec)(t::Tree) = h(convert(Vector{UInt8}, t))  ### need to relocate
 
 # Need something smarter in the end
 bitlength(::Type{G}) where G <: PGroup = bitlength(modulus(G)) 

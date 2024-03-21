@@ -1,5 +1,4 @@
 using CryptoGroups: Group, Hash, PRG, RO, PGroup, ROPRG
-using XMLDict: parse_xml
 
 using Base: @kwdef
 
@@ -8,40 +7,32 @@ using Base: @kwdef
     nr::Int32 = Int32(100)
     nv::Int32 = Int32(256)
     ne::Int32 = Int32(256)
-    prghash::Hash = Hash("sha256")
-    rohash::Hash = Hash("sha256")
+    prghash::HashSpec = Hash("sha256")
+    rohash::HashSpec = Hash("sha256")
     version::String = "3.0.4"
     sid::String = "SessionID"
     auxsid::String = "default"
 end
 
-function ProtocolSpec(protinfo::AbstractDict; auxsid = "default")
+function ProtocolSpec(path::AbstractString; auxsid = "default")
 
-    s_H = protinfo["rohash"]  
-    s_PRG = protinfo["prg"]
-    s_Gq = protinfo["pgroup"]
+    xml = read(path) |> String
 
-    prghash = Hash(map_hash_name(protinfo["prg"]))
-    rohash = Hash(map_hash_name(protinfo["rohash"]))
+    rohash = HashSpec(match(r"<rohash>(.*?)</rohash>", xml)[1] |> map_hash_name)
+    prghash = HashSpec(match(r"<prg>(.*?)</prg>", xml)[1] |> map_hash_name)
+    s_Gq = match(r"<pgroup>(.*?)</pgroup>", xml)[1]
 
-    nr = parse(Int32, protinfo["statdist"])
-    nv = parse(Int32, protinfo["vbitlenro"])
-    ne = parse(Int32, protinfo["ebitlenro"])
-    
+    nr = parse(Int32, match(r"<statdist>(.*?)</statdist>", xml)[1])
+    nv = parse(Int32, match(r"<vbitlenro>(.*?)</vbitlenro>", xml)[1])
+    ne = parse(Int32, match(r"<ebitlenro>(.*?)</ebitlenro>", xml)[1])
+
     g = unmarshal(decode(split(s_Gq, "::")[2]))
 
-    version = String(protinfo["version"])
-    sid = String(protinfo["sid"])
+    version = match(r"<version>(.*?)</version>", xml)[1] |> String
+    sid = match(r"<sid>(.*?)</sid>", xml)[1] |> String
+
 
     return ProtocolSpec(; g, nr, nv, ne, prghash, rohash, version, sid, auxsid)
-end
-
-function ProtocolSpec(PROT_INFO::AbstractString; auxsid = "default")
-
-    xml = String(read(PROT_INFO))
-    protinfo = parse_xml(xml)
-
-    return ProtocolSpec(protinfo; auxsid)
 end
 
 
@@ -234,7 +225,7 @@ end
 
 leaf(x::String) = encode(Leaf(x))
 
-function gen_verificatum_basis(::Type{G}, prghash::Hash, rohash::Hash, N::Integer; nr::Integer = 0, ρ = UInt8[], d = [ρ..., leaf("generators")...]) where G <: Group
+function gen_verificatum_basis(::Type{G}, prghash::HashSpec, rohash::HashSpec, N::Integer; nr::Integer = 0, ρ = UInt8[], d = [ρ..., leaf("generators")...]) where G <: Group
 
     roprg = ROPRG(d, rohash, prghash)
     prg = roprg(UInt8[]) # d is a better argument than x

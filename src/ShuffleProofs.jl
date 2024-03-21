@@ -1,5 +1,8 @@
 module ShuffleProofs
 
+using CryptoGroups: CryptoGroups
+const HashSpec = CryptoGroups.Hash
+
 #using Infiltrator
 
 include("utils.jl") # Common functions
