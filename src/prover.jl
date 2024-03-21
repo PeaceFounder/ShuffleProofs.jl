@@ -21,7 +21,6 @@
 # power(g, sk) -> Proposition
 # power(g, sk, verifier) -> Simulator
 
-
 using CryptoGroups: Group, ElGamal, Enc, Dec, order, modulus
 
 
@@ -39,6 +38,8 @@ struct Simulator #{T<:Proposition}
     verifier::Verifier
 end
 
+Base.:(==)(x::Simulator, y::Simulator) = x.proposition == y.proposition && x.proof == y.proof && x.verifier == y.verifier
+
 struct Shuffle{G <: Group} <: Proposition
     g::G
     pk::G
@@ -52,6 +53,8 @@ struct Shuffle{G <: Group} <: Proposition
 
     Shuffle(g::G, pk::G, 𝐞::ElGamal{G}, 𝐞′::ElGamal{G}) where G <: Group = Shuffle{G}(g, pk, 𝐞, 𝐞′)
 end
+
+Base.:(==)(x::Shuffle{G}, y::Shuffle{G}) where G <: Group = x.g == y.g && x.pk == y.pk && x.𝐞 == y.𝐞 && x.𝐞′ == y.𝐞′
 
 struct ShuffleSecret
     𝛙::Vector{<:Integer}

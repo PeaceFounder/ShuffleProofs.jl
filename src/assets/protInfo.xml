@@ -1,0 +1,102 @@
+<!-- ATTENTION! WE STRONGLY ADVICE AGAINST EDITING THIS FILE!
+     
+     This is a protocol information file. It contains all the parameters 
+     of a protocol session as agreed by all parties.
+     
+     Each party must hold an identical copy of this file. WE RECOMMEND 
+     YOU TO NOT EDIT THIS FILE UNLESS YOU KNOW EXACTLY WHAT YOU ARE 
+     DOING.
+     
+     Many XML features are disabled and throw errors, so parsing is more 
+     restrictive than the schema implies. -->
+
+<protocol>
+
+   <!-- Version of Verificatum Software for which this info is intended. -->
+   <version>{{VERSION}}</version>
+
+   <!-- Session identifier of this protocol execution. This must be 
+        globally unique and satisfy the regular expression [A-Za-z][A-Za-z0-
+        9]{1,1023}. -->
+   <sid>{{SID}}</sid>
+
+   <!-- Name of this protocol execution. This is a short descriptive name 
+        that is NOT necessarily unique, but satisfies the regular 
+        expression [A-Za-z][A-Za-z0-9_ ]{1,255}. -->
+   <name>{{NAME}}</name>
+
+   <!-- Description of this protocol execution. This is merely a longer 
+        description than the name of the protocol execution. It must 
+        satisfy the regular expression |[A-Za-z][A-Za-z0-9:;?!.()\[\] ]
+        {0,4000}. -->
+   <descr>{{DESCR}}</descr>
+
+   <!-- Number of parties taking part in the protocol execution. This must 
+        be a positive integer that is at most 25. -->
+   <nopart>1</nopart>
+
+   <!-- Statistical distance from uniform of objects sampled in protocols 
+        or in proofs of security. This must be a non-negative integer at 
+        most 256. -->
+   <statdist>{{STATDIST}}</statdist>
+
+   <!-- Threshold number of parties needed to violate the privacy of the 
+        protocol, i.e., this is the number of parties needed to decrypt. 
+        This must be positive, but at most equal to the number of parties. 
+        -->
+   <thres>1</thres>
+
+   <!-- Group over which the protocol is executed. An instance of a 
+        subclass of com.verificatum.arithm.PGroup. -->
+   <pgroup>{{PGROUP}}</pgroup>
+
+   <!-- Width of El Gamal keys. If equal to one the standard El Gamal 
+        cryptosystem is used, but if it is greater than one, then the 
+        natural generalization over a product group of the given width is 
+        used. This corresponds to letting each party holding multiple 
+        standard public keys. -->
+   <keywidth>1</keywidth>
+
+   <!-- Bit length of challenges in non-interactive random-oracle proofs. 
+        -->
+   <vbitlenro>{{VBITLENRO}}</vbitlenro>
+
+   <!-- Bit length of each component in random vectors used for batching in 
+        non-interactive random-oracle proofs. -->
+   <ebitlenro>{{EBITLENRO}}</ebitlenro>
+
+   <!-- Pseudo random generator used to derive random vectors for 
+        batchingfrom jointly generated seeds. This can be "SHA-256", "SHA-
+        384", or "SHA-512", in which case com.verificatum.crypto.
+        PRGHeuristic is instantiated based on this hashfunction, or it can 
+        be an instance of com.verificatum.crypto.PRG. WARNING! This field 
+        is not validated syntactically. -->
+   <prg>{{PRG}}</prg>
+
+   <!-- Hashfunction used to implement random oracles. It can be one of the 
+        strings "SHA-256", "SHA-384", or "SHA-512", in which case com.
+        verificatum.crypto.HashfunctionHeuristic is instantiated, or an 
+        instance of com.verificatum.crypto.Hashfunction. Random oracles 
+        with various output lengths are then implemented, using the given 
+        hashfunction, in com.verificatum.crypto.RandomOracle.
+        WARNING! Do not change the default unless you know exactly what you 
+        are doing. This field is not validated syntactically. -->
+   <rohash>{{ROHASH}}</rohash>
+
+   <!-- Determines if the proofs of correctness of an execution are 
+        interactive or non-interactive. Legal valus are "interactive" or 
+        "noninteractive". -->
+   <corr>noninteractive</corr>
+
+   <!-- Default width of ciphertexts processed by the mix-net. A different 
+        width can still be forced for a given session by using the "-width" 
+        option. -->
+   <width>1</width>
+
+   <!-- Maximal number of ciphertexts for which precomputation is 
+        performed. Pre-computation can still be forced for a different 
+        number of ciphertexts for a given session using the "-maxciph" 
+        option during pre-computation. -->
+   <maxciph>0</maxciph>
+
+</protocol>

@@ -148,15 +148,21 @@ function Leaf(x::AbstractString)
     return Leaf(bytes)
 end
 
-Tree(x::Any) = Leaf(x)
+Tree(x::Any) = Leaf(x) 
+Tree(x::BigInt; L=bitlength(x)) = Leaf(x, div(L + 1, 8, RoundUp)) 
 Tree(x::Node) = x
 Tree(x::Leaf) = x
-Tree(x::Tuple) = Node(x)
+Tree(x::Tuple; L=nothing) = Node(x; L)
 
-function Node(x::Tuple)
+
+function Node(x::Tuple; L=nothing)
     node = Node()
     for i in x
-        r = Tree(i)
+        if isnothing(L)
+            r = Tree(i)
+        else
+            r = Tree(i; L) # This would make issues when i would be a string or a group element
+        end
         push!(node, r)
     end
     return node
@@ -281,9 +287,6 @@ function _unmarshal_ecgroup(x::Leaf)
 end
 
 
-#function convert(::Type{ElGamal{G}}, tree::Tree) where G <: PGroup
-#    𝐚, 𝐛 = convert(Tuple{Vector{BigInt}, Vector{BigInt}}, tree)
-
 function convert(::Type{ElGamal{G}}, tree::Tree) where G <: Group
     𝐚, 𝐛 = convert(Tuple{Vector{G}, Vector{G}}, tree)
     𝐞 = ElGamal{G}(𝐚, 𝐛)
@@ -295,3 +298,7 @@ function Tree(𝐞::ElGamal{<:Group})
     𝐛 = b(𝐞)
     tree = Tree((𝐚, 𝐛))
 end
+
+
+Tree(x::Vector{BigInt}; L = bitlength(maximum(x))) = Node([Leaf(i, L) for i in x])
+
