@@ -17,6 +17,8 @@ struct BraidSecret
     key::BigInt
 end
 
+using Infiltrator
+
 function braid(g::G, Y::Vector{G}; roprg = gen_roprg()) where G <: Group
     
     q = order(g)
@@ -26,7 +28,7 @@ function braid(g::G, Y::Vector{G}; roprg = gen_roprg()) where G <: Group
     X = g^x
 
     shuffle_proposition, shuffle_secret = shuffle(Y, X, g)
-
+    
     a = CryptoGroups.a(shuffle_proposition.𝐞′)
     b = CryptoGroups.b(shuffle_proposition.𝐞′)
 
@@ -38,11 +40,8 @@ function braid(g::G, Y::Vector{G}; roprg = gen_roprg()) where G <: Group
     braid_proposition = Braid(shuffle_proposition, decryption, Y′)
     braid_secret = BraidSecret(shuffle_secret, x)
 
-
     return braid_proposition, braid_secret
 end
-
-
 
 function isconsistent(braid::Braid)
 

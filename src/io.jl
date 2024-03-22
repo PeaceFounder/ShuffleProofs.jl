@@ -1,4 +1,4 @@
-using CryptoGroups: Group, PGroup, Hash
+using CryptoGroups: Group, PGroup
 
 Base.write(io::IO, tree::Tree) = write(io, encode(tree))
 Base.write(f::AbstractString, tree::Tree) = write(f, encode(tree))
@@ -101,7 +101,7 @@ function map_hash_name_back(x::AbstractString)
 end 
 
 
-map_hash_name_back(x::Hash) = map_hash_name_back(x.spec)
+map_hash_name_back(x::HashSpec) = map_hash_name_back(x.spec)
 
 
 function ro_prefix(protinfo::AbstractDict; auxsid="default")

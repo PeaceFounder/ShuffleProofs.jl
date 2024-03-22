@@ -8,7 +8,7 @@ end
 
 struct DecryptionProof{G <: Group} <: Proof
     τ::Vector{G}
-    r::BigInt
+    r::BigInt # I could prevent r being larger than the order
 end
 
 
@@ -84,9 +84,10 @@ function prove(proposition::Decryption{G}, secret::Integer, verifier::Verifier; 
 
     c = challenge(verifier, proposition, τ)
 
-    r = s + c * secret
+    r = s + c * secret 
 
-    return DecryptionProof(τ, r)
+    #return DecryptionProof(τ, r)
+    return DecryptionProof(τ, mod(r, q))
 end
 
 

@@ -235,7 +235,8 @@ function marshal(g::ECGroup)
 
     java_name = "com.verificatum.arithm.ECqPGroup"
 
-    @assert spec(g) == spec(name(g)) "wrong group name"
+    # generator is not a group
+    # @assert spec(g) == spec(name(g)) "wrong group name"
 
     v_name = normalize_ecgroup_name(name(g))
 

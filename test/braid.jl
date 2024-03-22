@@ -27,7 +27,29 @@ b′ = decryption.𝔀′
 
 Y′ = b′ ./ a
 
-sort(Y′) == sort(Y .^ x)
+@test sort(Y′) == sort(Y .^ x)
+
+### An alternative approach according as presented in poster (fixed)
+
+y = [g^4, g^2, g^3]
+
+s = 123
+h = g^s
+
+𝐞 = ElGamal(fill(h, length(y)), y)
+
+proposition, secret = shuffle(𝐞, h, g)
+
+(; 𝐞′) = proposition
+
+a = 𝐞′.a
+b = 𝐞′.b
+
+c = b.^s
+
+y′ = h .* c ./ a # This is where the error was lying in EVoteID 2023 poster
+
+@test sort(y′) == sort(y .^ s)
 
 ######### braid method test ########
 
