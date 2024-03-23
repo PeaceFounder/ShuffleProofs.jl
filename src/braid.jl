@@ -6,6 +6,8 @@ struct Braid{G<:Group} <: Proposition
     members::Vector{G} # output_members
 end
 
+Base.:(==)(x::Braid{G}, y::Braid{G}) where G <: Group = x.shuffle == y.shuffle && x.decryption == y.decryption && x.members == y.members
+
 input_generator(braid::Braid) = braid.decryption.g
 input_members(braid::Braid) = CryptoGroups.b(braid.shuffle.𝐞)
 output_generator(braid::Braid) = braid.decryption.pk
@@ -72,6 +74,8 @@ struct BraidProof{G<:Group} <: Proof
     shuffle::PoSProof{G}
     decryption::DecryptionProof{G}
 end
+
+Base.:(==)(x::BraidProof{G}, y::BraidProof{G}) where G <: Group = x.shuffle == y.shuffle && x.decryption == y.decryption
 
 
 function prove(proposition::Braid, secret::BraidSecret, verifier::Verifier)

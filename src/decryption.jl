@@ -5,12 +5,14 @@ struct Decryption{G<:Group} <: Proposition
     𝔀′::Vector{G} # decrypted
 end
 
+Base.:(==)(x::Decryption{G}, y::Decryption{G}) where G <: Group = x.g == y.g && x.pk == y.pk && x.𝔀 == y.𝔀 && x.𝔀′ == y.𝔀′
 
 struct DecryptionProof{G <: Group} <: Proof
     τ::Vector{G}
     r::BigInt # I could prevent r being larger than the order
 end
 
+Base.:(==)(x::DecryptionProof{G}, y::DecryptionProof{G}) where G <: Group = x.τ == y.τ && x.r == y.r
 
 Base.length(proposition) = length(proposition.𝔀)
 

@@ -1,7 +1,7 @@
 using Test
 using XMLDict
 import ShuffleProofs: decode, convert, unmarshal_publickey, interpret, Tree, encode, Leaf, Leaf, ro_prefix, map_hash_name, unmarshal, unmarshal_full_public_key, gen_verificatum_basis
-import CryptoGroups: ElGamal, PGroup, RO, Hash, PRG, value, order, CryptoGroups#, bitlength #, outlen
+import CryptoGroups: ElGamal, PGroup, RO, HashSpec, PRG, value, order, CryptoGroups#, bitlength #, outlen
 
 
 PROT_INFO = "$(@__DIR__)/../validation_sample/verificatum/MODP/protInfo.xml"
@@ -18,8 +18,8 @@ s_PRG = protinfo["prg"]
 s_Gq = protinfo["pgroup"]
 
 
-rohash = Hash(map_hash_name(protinfo["rohash"]))
-prghash = Hash(map_hash_name(protinfo["prg"]))
+rohash = HashSpec(map_hash_name(protinfo["rohash"]))
+prghash = HashSpec(map_hash_name(protinfo["prg"]))
 
 nr = parse(Int32, protinfo["statdist"])
 nv = parse(Int32, protinfo["vbitlenro"])

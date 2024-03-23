@@ -1,5 +1,8 @@
 using Test
 
+using CryptoGroups
+CryptoGroups.set_strict_mode(true)
+
 @testset "Number conversations" begin
     include("utils.jl")
 end

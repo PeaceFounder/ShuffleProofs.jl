@@ -1,10 +1,10 @@
 using Test
 
-import ShuffleProofs: prove, verify, decrypt, ProtocolSpec, shuffle, ShuffleProofs, braid
+import ShuffleProofs: prove, verify, decrypt, ProtocolSpec, shuffle, ShuffleProofs, braid, load
 import CryptoGroups: ElGamal, PGroup, Enc, Dec, CryptoGroups, ECGroup, <|
 
 SPEC = "$(@__DIR__)/validation_sample/verificatum/MODP/protInfo.xml"
-verifier = ProtocolSpec(SPEC)
+verifier = load(ProtocolSpec, SPEC)
 
 (; g) = verifier
 Y = [g^4, g^2, g^3]

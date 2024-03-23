@@ -166,8 +166,8 @@ using Random: RandomDevice
 
 function gen_roprg(ρ::AbstractVector{UInt8})
 
-    rohash = Hash("sha256")
-    prghash = Hash("sha256")
+    rohash = HashSpec("sha256")
+    prghash = HashSpec("sha256")
     roprg = ROPRG(ρ, rohash, prghash)
 
     return roprg
@@ -276,7 +276,6 @@ function verify(proposition::Shuffle, proof::PoSProof, verifier::Verifier)
     chg = PoSChallenge(v3)
     return verify(proposition, proof, chg)
 end
-
 
 
 function verify(proposition::Shuffle, proof::PoSProof, challenge::PoSChallenge; verbose=false)

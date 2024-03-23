@@ -1,9 +1,7 @@
 module ShuffleProofs
 
 using CryptoGroups: CryptoGroups
-const HashSpec = CryptoGroups.Hash
-
-#using Infiltrator
+CryptoGroups.set_strict_mode(true)
 
 include("utils.jl") # Common functions
 

@@ -106,6 +106,8 @@ function convert(::Type{Vector{T}}, x::Node) where T #<: Integer
     return T[convert(T, i) for i in x.x] 
 end
 
+
+
 function convert(cfact::Type{T}, x::Node) where T <: Tuple 
      return Tuple((convert(ci, xi) for (xi, ci) in zip(x.x, cfact.types)))
 end
@@ -171,7 +173,12 @@ end
 
 ############################ COMPOSITE TYPE PARSING ############################
 
-using CryptoGroups: PGroup, ECGroup, Group, ElGamal, value, specialize, a, b, spec, generator, <|, name, ECPoint, field, gx, gy
+using CryptoGroups: HashSpec, PGroup, ECGroup, Group, ElGamal, value, specialize, a, b, spec, generator, <|, name, ECPoint, field, gx, gy
+
+
+function convert(::Type{Vector{G}}, x::Node; allow_one=false) where G <: Group 
+    return G[convert(G, i; allow_one) for i in x.x] 
+end
 
 
 (h::HashSpec)(t::Tree) = h(convert(Vector{UInt8}, t))  ### need to relocate
@@ -184,15 +191,14 @@ bitlength(x::PGroup) = bitlength(modulus(x))
 bitlength(::Type{ECGroup{P}}) where P <: ECPoint = bitlength(modulus(field(P)))
 bitlength(g::G) where G <: ECGroup = bitlength(G)
 
-
 Tree(x::PGroup; L = bitlength(x)) = Leaf(value(x), div(L + 1, 8, RoundUp))
 
 # Probably I will need to replace 
-convert(::Type{G}, x::Leaf) where G <: PGroup = convert(G, convert(BigInt, x))
+convert(::Type{G}, x::Leaf; allow_one=false) where G <: PGroup = convert(G, convert(BigInt, x); allow_one)
 
 ### Note that only PrimeCurves are supported. 
-convert(::Type{G}, x::Node) where G <: ECGroup = G <| convert(Tuple{BigInt, BigInt}, x)
-convert(::Type{ECGroup{P}}, x::Node) where P <: ECPoint = ECGroup{P} <| convert(Tuple{BigInt, BigInt}, x)
+convert(::Type{G}, x::Node; allow_one=false) where G <: ECGroup = convert(G, convert(Tuple{BigInt, BigInt}, x); allow_one)
+convert(::Type{ECGroup{P}}, x::Node; allow_one=false) where P <: ECPoint = convert(ECGroup{P}, convert(Tuple{BigInt, BigInt}, x); allow_one)
 
 
 function Tree(g::G; L = bitlength(G)) where G <: ECGroup
@@ -288,8 +294,12 @@ function _unmarshal_ecgroup(x::Leaf)
 end
 
 
-function convert(::Type{ElGamal{G}}, tree::Tree) where G <: Group
-    𝐚, 𝐛 = convert(Tuple{Vector{G}, Vector{G}}, tree)
+function convert(::Type{ElGamal{G}}, tree::Tree; allow_one=false) where G <: Group
+
+    a_tree, b_tree = tree.x
+    𝐚 = convert(Vector{G}, a_tree; allow_one)
+    𝐛 = convert(Vector{G}, b_tree; allow_one)
+    #𝐚, 𝐛 = convert(Tuple{Vector{G}, Vector{G}}, tree)
     𝐞 = ElGamal{G}(𝐚, 𝐛)
     return 𝐞
 end

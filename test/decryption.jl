@@ -1,9 +1,9 @@
 using Test
 
-import ShuffleProofs: prove, verify, decrypt, ProtocolSpec
+import ShuffleProofs: prove, verify, decrypt, ProtocolSpec, load
 
 SPEC = "$(@__DIR__)/validation_sample/verificatum/MODP/protInfo.xml"
-verifier = ProtocolSpec(SPEC)
+verifier = load(ProtocolSpec, SPEC)
 
 (; g) = verifier
 𝐦 = [g^4, g^2, g^3]

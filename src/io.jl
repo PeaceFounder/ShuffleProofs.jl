@@ -124,7 +124,7 @@ function ro_prefix(protinfo::AbstractDict; auxsid="default")
     tree = Tree(data)
     binary = encode(tree)
 
-    rohash = Hash(map_hash_name(protinfo["rohash"]))
+    rohash = HashSpec(map_hash_name(protinfo["rohash"]))
 
     ρ = rohash(binary) ### Which hash function shall be used here?
 

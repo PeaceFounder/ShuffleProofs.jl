@@ -1,11 +1,11 @@
 using Test
 using ShuffleProofs: Tree, decode, interpret, unmarshal, gen_verificatum_basis
-using CryptoGroups: Hash, value, order, modulus
+using CryptoGroups: HashSpec, value, order, modulus
 
 ### Let's make the setup complete. From repo I ahve a following public parameters:
 nr = 100
-prghash = Hash("sha256")
-rohash = Hash("sha256")
+prghash = HashSpec("sha256")
+rohash = HashSpec("sha256")
 
 ρ = hex2bytes("15e6c97600bbe30125cbc08598dcde01a769c15c8afe08fe5b7f5542533159e9")
 

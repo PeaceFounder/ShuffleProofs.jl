@@ -1,11 +1,11 @@
 using Test
 
-import ShuffleProofs: prove, verify, Simulator, gen_shuffle, Verifier, PoSChallenge, Shuffle, shuffle, VShuffleProof, PoSProof, ProtocolSpec, gen_roprg
+import ShuffleProofs: prove, verify, Simulator, gen_shuffle, Verifier, PoSChallenge, Shuffle, shuffle, VShuffleProof, PoSProof, ProtocolSpec, gen_roprg, load
 
 import CryptoGroups: ElGamal, PGroup, Enc, Dec
 
 SPEC = "$(@__DIR__)/validation_sample/verificatum/MODP/protInfo.xml"
-verifier = ProtocolSpec(SPEC)
+verifier = load(ProtocolSpec, SPEC)
 
 (; g) = verifier
 sk = 123

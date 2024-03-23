@@ -1,4 +1,4 @@
-using CryptoGroups: Group, Hash, PRG, RO, PGroup, ROPRG
+using CryptoGroups: Group, HashSpec, PRG, RO, PGroup, ROPRG
 
 using Base: @kwdef
 
@@ -7,33 +7,16 @@ using Base: @kwdef
     nr::Int32 = Int32(100)
     nv::Int32 = Int32(256)
     ne::Int32 = Int32(256)
-    prghash::HashSpec = Hash("sha256")
-    rohash::HashSpec = Hash("sha256")
+    prghash::HashSpec = HashSpec("sha256")
+    rohash::HashSpec = HashSpec("sha256")
     version::String = "3.0.4"
     sid::String = "SessionID"
     auxsid::String = "default"
 end
 
-function ProtocolSpec(path::AbstractString; auxsid = "default")
+# function ProtocolSpec(path::AbstractString; auxsid = "default")
 
-    xml = read(path) |> String
-
-    rohash = HashSpec(match(r"<rohash>(.*?)</rohash>", xml)[1] |> map_hash_name)
-    prghash = HashSpec(match(r"<prg>(.*?)</prg>", xml)[1] |> map_hash_name)
-    s_Gq = match(r"<pgroup>(.*?)</pgroup>", xml)[1]
-
-    nr = parse(Int32, match(r"<statdist>(.*?)</statdist>", xml)[1])
-    nv = parse(Int32, match(r"<vbitlenro>(.*?)</vbitlenro>", xml)[1])
-    ne = parse(Int32, match(r"<ebitlenro>(.*?)</ebitlenro>", xml)[1])
-
-    g = unmarshal(decode(split(s_Gq, "::")[2]))
-
-    version = match(r"<version>(.*?)</version>", xml)[1] |> String
-    sid = match(r"<sid>(.*?)</sid>", xml)[1] |> String
-
-
-    return ProtocolSpec(; g, nr, nv, ne, prghash, rohash, version, sid, auxsid)
-end
+# end
 
 
 function marshal_s_Gq(g::PGroup)
@@ -155,64 +138,6 @@ function PoSProof(vproof::VShuffleProof)
     return proof
 end
 
-
-function load_verificatum_proposition(basedir::AbstractString, auxsid::AbstractString)
-
-    PUBLIC_KEY = "$basedir/publicKey"
-
-    tree = decode(read(PUBLIC_KEY))
-    pk, g = unmarshal_publickey(tree)
-
-    NIZKP = basedir * "/dir/nizkp/$auxsid/"
-
-    CIPHERTEXTS = "$NIZKP/Ciphertexts.bt"
-    SHUFFLED_CIPHERTEXTS = "$NIZKP/ShuffledCiphertexts.bt"
-
-    G = typeof(g)
-
-    L_tree = decode(read(CIPHERTEXTS))
-    L′_tree = decode(read(SHUFFLED_CIPHERTEXTS))
-
-    𝔀 = convert(ElGamal{G}, L_tree) ## Is there anything I can do so that I would get a concrete type here?
-    𝔀′ = convert(ElGamal{G}, L′_tree)
-
-    return Shuffle(g, pk, 𝔀, 𝔀′)
-end
-
-function load_verificatum_proof(proofs::AbstractString, g::Group)
-
-    PERMUTATION_COMMITMENT = "$proofs/PermutationCommitment01.bt"
-    PoS_COMMITMENT = "$proofs/PoSCommitment01.bt"
-    PoS_REPLY = "$proofs/PoSReply01.bt"
-
-    G = typeof(g)
-
-    μ_tree = decode(read(PERMUTATION_COMMITMENT))
-    μ = convert(Vector{G}, μ_tree)
-
-    τ_tree = decode(read(PoS_COMMITMENT))
-    τ = convert(Tuple{Vector{G}, G, Vector{G}, G, G, Tuple{G, G}}, τ_tree)
-
-    σ_tree = decode(read(PoS_REPLY))
-    σ = convert(Tuple{BigInt, Vector{BigInt}, BigInt, BigInt, Vector{BigInt}, BigInt}, σ_tree)
-
-    return VShuffleProof(μ, τ, σ)    
-end
-
-
-function load_verificatum_simulator(basedir::AbstractString; auxsid = "default")
-
-    spec = ProtocolSpec(basedir * "/protInfo.xml"; auxsid)
-
-    proposition = load_verificatum_proposition(basedir, auxsid)
-    
-    NIZKP = basedir * "/dir/nizkp/$auxsid/"
-    proof = load_verificatum_proof("$NIZKP/proofs/", proposition.g)
-    
-    simulator = Simulator(proposition, proof, spec)
-
-    return simulator
-end
 
 ### The simulator type will deal with loading the data. 
 

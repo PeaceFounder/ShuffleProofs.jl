@@ -1,7 +1,7 @@
 name = "ShuffleProofs"
 uuid = "31a120cc-b3cb-4d07-bbdb-d498660ddfd8"
 authors = ["Janis Erdmanis <janiserdmanis@protonmail.ch>"]
-version = "0.2.1"
+version = "0.3.0"
 
 [deps]
 CryptoGroups = "bc997328-bedd-407e-bcd3-5758e064a52d"
@@ -9,7 +9,7 @@ Infiltrator = "5903a43b-9cc3-4c30-8d17-598619ec4e9b"
 Random = "9a3f8284-a2c9-5f02-9a11-845980a1fd5c"
 
 [compat]
-CryptoGroups = "0.3"
+CryptoGroups = "0.4"
 julia = "1"
 
 [extras]

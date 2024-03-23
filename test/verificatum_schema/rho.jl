@@ -1,7 +1,7 @@
 using Test
-using ShuffleProofs: Leaf, Tree, Node, encode, decode, Hash, PRG
+using ShuffleProofs: Leaf, Tree, Node, encode, decode, HashSpec, PRG
 
-h = Hash("sha256")
+h = HashSpec("sha256")
 
 version = "3.0.4"
 sid = "SessionID"
