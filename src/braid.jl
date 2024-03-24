@@ -19,8 +19,6 @@ struct BraidSecret
     key::BigInt
 end
 
-using Infiltrator
-
 function braid(g::G, Y::Vector{G}; roprg = gen_roprg()) where G <: Group
     
     q = order(g)
