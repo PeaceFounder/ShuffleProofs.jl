@@ -294,8 +294,8 @@ function convert(::Type{ElGamal{G}}, tree::Tree; allow_one=false) where G <: Gro
     a_tree, b_tree = tree.x
     𝐚 = convert(Vector{G}, a_tree; allow_one)
     𝐛 = convert(Vector{G}, b_tree; allow_one)
-    #𝐚, 𝐛 = convert(Tuple{Vector{G}, Vector{G}}, tree)
     𝐞 = ElGamal{G}(𝐚, 𝐛)
+
     return 𝐞
 end
 

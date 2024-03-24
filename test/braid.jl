@@ -12,7 +12,6 @@ Y = [g^4, g^2, g^3]
 x = 123
 X = g^x
 
-#proposition, secret = shuffle(Y, g, X)
 proposition, secret = shuffle(Y, X, g) # changing roles
 
 a = CryptoGroups.a(proposition.𝐞′)

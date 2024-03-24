@@ -14,10 +14,6 @@ using Base: @kwdef
     auxsid::String = "default"
 end
 
-# function ProtocolSpec(path::AbstractString; auxsid = "default")
-
-# end
-
 
 function marshal_s_Gq(g::PGroup)
 

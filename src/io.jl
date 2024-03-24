@@ -104,31 +104,31 @@ end
 map_hash_name_back(x::HashSpec) = map_hash_name_back(x.spec)
 
 
-function ro_prefix(protinfo::AbstractDict; auxsid="default")
+# function ro_prefix(protinfo::AbstractDict; auxsid="default")
 
-    version = protinfo["version"]
-    sid = protinfo["sid"]
-
-
-    s_H = protinfo["rohash"]  
-    s_PRG = protinfo["prg"]
-    s_Gq = protinfo["pgroup"]
-
-    nr = parse(Int32, protinfo["statdist"])
-    nv = parse(Int32, protinfo["vbitlenro"])
-    ne = parse(Int32, protinfo["ebitlenro"])
+#     version = protinfo["version"]
+#     sid = protinfo["sid"]
 
 
-    data = (version, sid * "." * auxsid, nr, nv, ne, s_PRG, s_Gq, s_H)
+#     s_H = protinfo["rohash"]  
+#     s_PRG = protinfo["prg"]
+#     s_Gq = protinfo["pgroup"]
 
-    tree = Tree(data)
-    binary = encode(tree)
+#     nr = parse(Int32, protinfo["statdist"])
+#     nv = parse(Int32, protinfo["vbitlenro"])
+#     ne = parse(Int32, protinfo["ebitlenro"])
 
-    rohash = HashSpec(map_hash_name(protinfo["rohash"]))
 
-    ρ = rohash(binary) ### Which hash function shall be used here?
+#     data = (version, sid * "." * auxsid, nr, nv, ne, s_PRG, s_Gq, s_H)
 
-    return ρ
-end
+#     tree = Tree(data)
+#     binary = encode(tree)
+
+#     rohash = HashSpec(map_hash_name(protinfo["rohash"]))
+
+#     ρ = rohash(binary) ### Which hash function shall be used here?
+
+#     return ρ
+# end
 
 

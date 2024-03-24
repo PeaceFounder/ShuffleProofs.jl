@@ -1,5 +1,3 @@
-#import CryptoGroups: bitlength
-
 tobig(x) = parse(BigInt, bytes2hex(reverse(x)), base=16)
 
 function int2bytes(x::Integer)
@@ -12,8 +10,6 @@ function int2bytes(x::Integer)
 end
 
 style(x, n) = "\33[1;$(n)m$x\33[0m"
-
-#bitlength(::Type{T}) where T <: Integer = T.size * 8
 
 bitlength(::Type{T}) where T <: Integer = sizeof(T) * 8
 

@@ -1,33 +1,8 @@
-# verify(proposition, proof, verifier) -> Bool
-# verify(simulator) -> Bool
-
-# The proposition of course can be verified knowing the secret (secret key or randomization factors) alone:
-# verify(proposition, secret) -> Bool
-
-# The challnege is last step obtained executing finite state machine. Does not need to contain responses. 
-# verify(proposition, proof, challenge) -> Bool
-
-# prove(proposition, secret, verifier) -> Simulator
-
-# shuffle(𝔀, g, pk) -> Tuple{Proposition, Secret}
-# shuffle(𝔀, g, pk, verifier) -> Simulator
-
-
-# decrypt(A, g, sk) -> Proposition # secret key is the one which is possible to be used 
-# decrypt(A, g, sk, verifier) -> Simulator
-
-# Derives a public key for a given secret key
-# Proving knowldge of sk such that: x = g^sk
-# power(g, sk) -> Proposition
-# power(g, sk, verifier) -> Simulator
-
 using CryptoGroups: Group, ElGamal, Enc, Dec, order, modulus
-
 
 abstract type Proposition end
 abstract type Proof end
 abstract type Verifier end
-
 
 function step end
 function challenge end
@@ -365,6 +340,3 @@ end
 shuffle(𝐦::Vector{G}, g::G, pk::G, verifier::Verifier; roprg = gen_roprg()) where G <: Group = shuffle(ElGamal(ones(𝐦), 𝐦), g, pk, verifier; roprg)
 
 shuffle(𝐞::Union{ElGamal{G}, Vector{G}}, enc::Enc, verifier::Verifier; roprg = gen_roprg()) where G <: Group = shuffle(𝐞, enc.g, enc.pk, verifier; roprg)
-
-#shuffle(𝐦::Vector{G}, enc::Enc, verifier::Verifier; roprg = gen_roprg()) where G <: Group = shuffle(ElGamal(ones(𝐦), 𝐦), enc, verifier; roprg)
-

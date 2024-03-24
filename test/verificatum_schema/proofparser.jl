@@ -1,17 +1,47 @@
+module ParserTest
+
 using Test
 using XMLDict
-import ShuffleProofs: decode, convert, unmarshal_publickey, interpret, Tree, encode, Leaf, Leaf, ro_prefix, map_hash_name, unmarshal, unmarshal_full_public_key, gen_verificatum_basis
+import ShuffleProofs: decode, convert, unmarshal_publickey, interpret, Tree, encode, Leaf, Leaf, map_hash_name, unmarshal, unmarshal_full_public_key, gen_verificatum_basis
 import CryptoGroups: ElGamal, PGroup, RO, HashSpec, PRG, value, order, CryptoGroups#, bitlength #, outlen
+
+
+function ro_prefix(protinfo::AbstractDict; auxsid="default")
+
+    version = protinfo["version"]
+    sid = protinfo["sid"]
+
+
+    s_H = protinfo["rohash"]  
+    s_PRG = protinfo["prg"]
+    s_Gq = protinfo["pgroup"]
+
+    nr = parse(Int32, protinfo["statdist"])
+    nv = parse(Int32, protinfo["vbitlenro"])
+    ne = parse(Int32, protinfo["ebitlenro"])
+
+
+    data = (version, sid * "." * auxsid, nr, nv, ne, s_PRG, s_Gq, s_H)
+
+    tree = Tree(data)
+    binary = encode(tree)
+
+    rohash = HashSpec(map_hash_name(protinfo["rohash"]))
+
+    ρ = rohash(binary) ### Which hash function shall be used here?
+
+    return ρ
+end
 
 
 PROT_INFO = "$(@__DIR__)/../validation_sample/verificatum/MODP/protInfo.xml"
 auxsid = "default"
 NIZKP = "$(@__DIR__)/../validation_sample/verificatum/MODP/dir/nizkp/$auxsid/"
-#AUXSID = "$(@__DIR__)/../ref/demo/dir/nizkp/default/auxsid"
 
 
 xml = String(read(PROT_INFO))
 protinfo = parse_xml(xml)
+
 
 s_H = protinfo["rohash"]  
 s_PRG = protinfo["prg"]
@@ -116,4 +146,6 @@ D = 𝐁[N] * inv(𝐡[1])^prod(𝐞)
 
 for i in 2:N
     @test 𝐁[i]^𝓿 * 𝐁′[i] == g^𝐤_B[i] * 𝐁[i - 1]^𝐤_E[i]
+end
+
 end

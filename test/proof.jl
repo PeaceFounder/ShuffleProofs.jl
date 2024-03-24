@@ -23,8 +23,6 @@ PoSChallenge(verifier::HonestVerifier{PoSCommit}) = verifier.challenge
 step(verifier::HonestVerifier{Config}, proposition::Shuffle) = HonestVerifier{Init}(verifier)
 step(verifier::HonestVerifier{Init}, 𝐜) = HonestVerifier{PermCommit}(verifier)
 step(verifier::HonestVerifier{PermCommit}, 𝐜̂, t) = HonestVerifier{PoSCommit}(verifier)
-#step(verifier::HonestVerifier{PoSCommit}, s) = HonestVerifier{End}(verifier)
-
 
 challenge(verifier::HonestVerifier{Init}) = (verifier.challenge.𝐡, verifier.challenge.𝐡[1])
 challenge(verifier::HonestVerifier{PermCommit}) = verifier.challenge.𝐮
