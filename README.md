@@ -215,9 +215,9 @@ Y′ = output_members(simulator.proposition)
       * [x] Parser for proposition (group, public_key, cyphertexts)
       * [x] Parser for proofs
   * [ ] Benchmarks
-  * [ ] Storing the simulator in convinient directory structure
-  * [ ] Storing the simulator in Verificatum understandable way
-  * [ ] Decryption proofs
+  * [x] Storing the simulator in convinient directory structure
+  * [x] Storing the simulator in Verificatum understandable way
+  * [x] Decryption proofs
   * [ ] Documentation
     * [x] Put a first draft of README.md
     * [ ] Add some docstrings in the code
