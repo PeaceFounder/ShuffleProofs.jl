@@ -1,5 +1,6 @@
 using Test
-using ShuffleProofs: load, Shuffle, PoSProof, save, ProtocolSpec, braid
+using ShuffleProofs: load, Shuffle, PoSProof, save, ProtocolSpec, braid, digest
+using CryptoGroups: HashSpec
 
 BASE_DIR = joinpath(@__DIR__, "validation_sample")
 
@@ -35,3 +36,13 @@ save(braid_simulator, BRAID_DIR)
 loaded_braid_simulator = load(BRAID_DIR)
 
 @test loaded_braid_simulator == braid_simulator
+
+# Now the hasher
+
+hasher = HashSpec("sha256")
+@test digest(BRAID_DIR, hasher) == digest(braid_simulator, hasher)
+
+# Braid reference
+
+@test bytes2hex(digest(joinpath(BASE_DIR, "braid"), hasher)) == "01403b4deb097382deafa179e06962f7ea7f7d1e9d81a78c1a003712d49374ab"
+

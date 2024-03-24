@@ -1,3 +1,153 @@
+# A file tree which specifies what files are hashed
+
+const SHUFFLE_TREE = (
+    "protInfo.xml",
+    "publicKey.bt",
+    "Ciphertexts.bt",
+    "ShuffledCiphertexts.bt",
+    "nizkp/PermutationCommitment.bt",
+    "nizkp/PoSCommitment.bt",
+    "nizkp/PoSReply.bt"
+) 
+
+const DECRYPTION_TREE = (
+    "protInfo.xml",
+    "publicKey.bt",
+    "Ciphertexts.bt",
+    "Decryption.bt",
+    "nizkp/DecryptionCommitment.bt",
+    "nizkp/DecryptionReply.bt"
+)
+
+const BRAID_TREE = (
+    "protInfo.xml",
+
+    "shuffle/publicKey.bt",
+    "shuffle/Ciphertexts.bt",
+    "shuffle/ShuffledCiphertexts.bt",
+    "shuffle/nizkp/PermutationCommitment.bt",
+    "shuffle/nizkp/PoSCommitment.bt",
+    "shuffle/nizkp/PoSReply.bt",
+
+    "decryption/publicKey.bt",
+    "decryption/Ciphertexts.bt",
+    "decryption/Decryption.bt",
+    "decryption/nizkp/DecryptionCommitment.bt",
+    "decryption/nizkp/DecryptionReply.bt",
+
+    "BraidedMembers.bt"
+)
+
+abstract type Path end
+
+#Base.write(path::Path, data::Tree) = Base.write(path, encode(data))
+#Base.write(path::Path, data::String) = Base.write(path, Vector{UInt8}(data))
+
+_encode(x::Tree) = encode(x)
+_encode(x::AbstractString) = Vector{UInt8}(x)
+_encode(x::Vector{UInt8}) = x
+
+Base.write(path::Path, data) = Base.write(path, _encode(data))
+
+
+struct LocalPath <: Path
+    path::String
+end
+
+Base.joinpath(path::LocalPath, args...) = LocalPath(joinpath(path.path, args...))
+Base.write(path::LocalPath, data::Vector{UInt8}) = write(path.path, data)
+Base.read(path::LocalPath) = read(path.path)
+Base.mkdir(path::LocalPath) = mkdir(path.path)
+Base.mkpath(path::LocalPath) = mkpath(path.path)
+Base.isfile(path::LocalPath) = isfile(path.path)
+
+
+struct PathHasher <: Path
+    path::String
+    hasher::HashSpec
+    digests::Vector{Pair{String, Vector{UInt8}}}
+end
+
+PathHasher(hasher::HashSpec) = PathHasher("", hasher, [])
+
+Base.joinpath(path::PathHasher, args...) = PathHasher(joinpath(path.path, args...), path.hasher, path.digests)
+Base.write(path::PathHasher, data::Vector{UInt8}) = (push!(path.digests, path.path => path.hasher(data)); path)
+Base.mkdir(path::PathHasher) = nothing
+Base.mkpath(path::PathHasher) = nothing
+
+
+file_tree(::Type{<:Shuffle}, ::Simulator) = SHUFFLE_TREE
+file_tree(::Type{<:Decryption}, ::Simulator) = DECRYPTION_TREE
+file_tree(::Type{<:Braid}, ::Simulator) = BRAID_TREE
+
+file_tree(obj::Simulator) = file_tree(typeof(obj.proposition), obj::Simulator)
+file_tree(obj) = error("Tree specification for $(typeof(obj)) is not specified. Specify it by providing `treespec` argument manually to digest.")
+
+function digest(obj, hasher::HashSpec; treespec=file_tree(obj))
+
+    path_hasher = PathHasher(hasher)
+    save(obj, path_hasher)
+
+    @assert length(path_hasher.digests) == length(treespec) "`treespec` is not compatable with $(typeof(obj)) output."
+
+    digests = Vector{UInt8}[]
+
+    for i in treespec
+        
+        N = findfirst(x -> first(x) == i, path_hasher.digests)
+        @assert !isnothing(N) "$i is not written in $(typeof(obj)) output."
+        push!(digests, last(path_hasher.digests[N]))
+        
+    end
+
+    return hasher(vcat(digests...))
+end
+
+function get_simulator_type(dir::Path)
+    
+    xmlpath = joinpath(dir, "protInfo.xml")
+
+    if !isfile(xmlpath)
+        error("protInfo.xml not found in $dir")
+    end
+
+    xml = read(xmlpath) |> String
+    name = match(r"<name>(.*?)</name>", xml)[1] |> String
+
+    return name
+end
+
+get_simulator_type(path::String) = get_simulator_type(LocalPath(path))
+
+
+function digest(dir::AbstractString, hasher::HashSpec; name=nothing)
+
+    if isnothing(name)
+        name = get_simulator_type(dir)
+    end
+    
+    if name == "Shuffle"
+        treespec = SHUFFLE_TREE
+    elseif name == "Decryption"
+        treespec = DECRYPTION_TREE
+    elseif name == "Braid"
+        treespec = BRAID_TREE
+    else
+        error("No tree specification defined for $name")
+    end
+
+    digests = []
+
+    for path in treespec
+
+        bytes = read(joinpath(dir, path))
+        push!(digests, hasher(bytes))
+
+    end
+
+    return hasher(vcat(digests...))
+end
+
 
 function fill_xml_template(template_path::String, replacements)
     # Read the template content
@@ -36,7 +186,7 @@ function fill_protinfo_template(spec::ProtocolSpec; name="ShuffleProofs", descr=
     ])
 end
 
-function save(spec::ProtocolSpec, path::AbstractString; name="undefined")
+function save(spec::ProtocolSpec, path::Path; name="undefined")
 
     info = fill_protinfo_template(spec; name)
     write(path, info)
@@ -45,7 +195,7 @@ function save(spec::ProtocolSpec, path::AbstractString; name="undefined")
 end
 
 
-function load(::Type{ProtocolSpec}, path::AbstractString; auxsid = "default")
+function load(::Type{ProtocolSpec}, path::Path; auxsid = "default")
 
     xml = read(path) |> String
 
@@ -67,7 +217,7 @@ function load(::Type{ProtocolSpec}, path::AbstractString; auxsid = "default")
 end
 
 
-function save(proposition::Shuffle, dir::AbstractString) 
+function save(proposition::Shuffle, dir::Path) 
 
     (; g, pk, 𝐞, 𝐞′) = proposition
 
@@ -82,7 +232,7 @@ function save(proposition::Shuffle, dir::AbstractString)
 end
 
 
-function load(::Type{Shuffle}, basedir::AbstractString)
+function load(::Type{Shuffle}, basedir::Path)
 
     publickey_tree = decode(read(joinpath(basedir, "publicKey.bt")))
     pk, g = unmarshal_publickey(publickey_tree; relative=true)
@@ -99,7 +249,7 @@ function load(::Type{Shuffle}, basedir::AbstractString)
 end
 
 
-function save(proof::VShuffleProof, dir::AbstractString) 
+function save(proof::VShuffleProof, dir::Path) 
 
     (; μ, τ, σ) = proof
 
@@ -113,9 +263,9 @@ function save(proof::VShuffleProof, dir::AbstractString)
     return 
 end 
 
-save(proof::PoSProof, dir::AbstractString) = save(VShuffleProof(proof), dir)
+save(proof::PoSProof, dir::Path) = save(VShuffleProof(proof), dir)
 
-function load(::Type{PoSProof}, basedir::AbstractString, g::Group)
+function load(::Type{PoSProof}, basedir::Path, g::Group)
 
     G = typeof(g)
 
@@ -132,7 +282,7 @@ function load(::Type{PoSProof}, basedir::AbstractString, g::Group)
 end 
 
 
-function save(proposition::Decryption, dir::AbstractString) 
+function save(proposition::Decryption, dir::Path) 
     
     (; g, pk, 𝔀, 𝔀′) = proposition
 
@@ -145,7 +295,7 @@ function save(proposition::Decryption, dir::AbstractString)
     return
 end
 
-function load(::Type{Decryption}, basedir::AbstractString)
+function load(::Type{Decryption}, basedir::Path)
     
     publickey_tree = decode(read(joinpath(basedir, "publicKey.bt")))
     pk, g = unmarshal_publickey(publickey_tree; relative=true)
@@ -162,7 +312,7 @@ function load(::Type{Decryption}, basedir::AbstractString)
 end
 
 
-function save(proof::DecryptionProof, dir::AbstractString) 
+function save(proof::DecryptionProof, dir::Path) 
 
     (; τ, r) = proof
 
@@ -175,7 +325,7 @@ function save(proof::DecryptionProof, dir::AbstractString)
 end
 
 
-function load(::Type{DecryptionProof}, dir::AbstractString, g::Group)
+function load(::Type{DecryptionProof}, dir::Path, g::Group)
 
     G = typeof(g)
 
@@ -189,7 +339,7 @@ function load(::Type{DecryptionProof}, dir::AbstractString, g::Group)
 end
 
 
-function save(braid::Braid, dir::AbstractString) 
+function save(braid::Braid, dir::Path) 
 
     mkdir(joinpath(dir, "shuffle"))
     save(braid.shuffle, joinpath(dir, "shuffle"))
@@ -202,7 +352,7 @@ function save(braid::Braid, dir::AbstractString)
     return
 end
 
-function load(::Type{Braid}, dir::AbstractString)
+function load(::Type{Braid}, dir::Path)
 
     shuffle = load(Shuffle, joinpath(dir, "shuffle"))
     decryption = load(Decryption, joinpath(dir, "decryption"))
@@ -216,7 +366,7 @@ function load(::Type{Braid}, dir::AbstractString)
 end
 
 
-function save(braid::BraidProof, dir::AbstractString) 
+function save(braid::BraidProof, dir::Path) 
 
     mkpath(joinpath(dir, "shuffle", "nizkp"))
     save(braid.shuffle, joinpath(dir, "shuffle", "nizkp"))
@@ -227,7 +377,7 @@ function save(braid::BraidProof, dir::AbstractString)
     return
 end # 
 
-function load(::Type{BraidProof}, dir::AbstractString, g::Group)
+function load(::Type{BraidProof}, dir::Path, g::Group)
     
     shuffle = load(PoSProof, joinpath(dir, "shuffle", "nizkp"), g)
     decryption = load(DecryptionProof, joinpath(dir, "decryption", "nizkp"), g)
@@ -236,45 +386,39 @@ function load(::Type{BraidProof}, dir::AbstractString, g::Group)
 end
 
 
-save(simulator::Simulator, dir::AbstractString) = _save(typeof(simulator.proposition), simulator, dir)
+save(simulator::Simulator, dir::Path) = _save(typeof(simulator.proposition), simulator, dir)
 
 
-function _save(::Type{<:Shuffle}, simulator::Simulator, dir::AbstractString)
-
-    save(simulator.proposition, dir)
-
-    mkdir(joinpath(dir, "nizkp"))
-    save(simulator.proof, joinpath(dir, "nizkp"))
+function _save(::Type{<:Shuffle}, simulator::Simulator, dir::Path)
 
     save(simulator.verifier, joinpath(dir, "protInfo.xml"); name="Shuffle") 
-
-    return
-end
-
-
-function _save(::Type{<:Decryption}, simulator::Simulator, dir::AbstractString)
-
     save(simulator.proposition, dir)
-
     mkdir(joinpath(dir, "nizkp"))
     save(simulator.proof, joinpath(dir, "nizkp"))
 
+    return
+end
+
+function _save(::Type{<:Decryption}, simulator::Simulator, dir::Path)
+
     save(simulator.verifier, joinpath(dir, "protInfo.xml"); name="Decryption") 
+    save(simulator.proposition, dir)
+    mkdir(joinpath(dir, "nizkp"))
+    save(simulator.proof, joinpath(dir, "nizkp"))
 
     return
 end
 
+function _save(::Type{<:Braid}, simulator::Simulator, dir::Path)
 
-function _save(::Type{<:Braid}, simulator::Simulator, dir::AbstractString)
-
+    save(simulator.verifier, joinpath(dir, "protInfo.xml"); name="Braid")     
     save(simulator.proposition, dir)
     save(simulator.proof, dir)
-    save(simulator.verifier, joinpath(dir, "protInfo.xml"); name="Braid")     
     
     return
 end
 
-function load_shuffle_simulator(dir::AbstractString)
+function load_shuffle_simulator(dir::Path)
 
     verifier = load(ProtocolSpec, joinpath(dir, "protInfo.xml"))
     proposition = load(Shuffle, dir)
@@ -283,7 +427,7 @@ function load_shuffle_simulator(dir::AbstractString)
     return Simulator(proposition, proof, verifier)
 end
 
-function load_decryption_simulator(dir::AbstractString)
+function load_decryption_simulator(dir::Path)
 
     verifier = load(ProtocolSpec, joinpath(dir, "protInfo.xml"))
     proposition = load(Decryption, dir)
@@ -292,7 +436,7 @@ function load_decryption_simulator(dir::AbstractString)
     return Simulator(proposition, proof, verifier)
 end
 
-function load_braid_simulator(dir::AbstractString) 
+function load_braid_simulator(dir::Path) 
 
     verifier = load(ProtocolSpec, joinpath(dir, "protInfo.xml"))
     proposition = load(Braid, dir)
@@ -302,17 +446,10 @@ function load_braid_simulator(dir::AbstractString)
 end
 
 
-function load(dir::AbstractString; name=nothing)
+function load(dir::Path; name=nothing)
 
     if isnothing(name)
-        xmlpath = joinpath(dir, "protInfo.xml")
-
-        if !isfile(xmlpath)
-            error("protInfo.xml not found in $dir")
-        end
-
-        xml = read(xmlpath) |> String
-        name = match(r"<name>(.*?)</name>", xml)[1] |> String
+        name = get_simulator_type(dir)
     end
 
     if name == "Shuffle"
@@ -327,6 +464,10 @@ function load(dir::AbstractString; name=nothing)
 
 end
 
+save(obj, path::String; kwargs...) = save(obj, LocalPath(path); kwargs...)
+
+load(path::String; kwargs...) = load(LocalPath(path); kwargs...)
+load(::Type{T}, path::String, args...; kwargs...) where T = load(T, LocalPath(path), args...; kwargs...)
 
 ### Some verificatum proof of shuffle loading methods
 

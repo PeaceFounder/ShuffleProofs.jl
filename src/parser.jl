@@ -22,10 +22,7 @@ Node() = Node([])
 
 Base.push!(n::Node, y) = push!(n.x, y)
 
-
-
 toint(x) = reinterpret(UInt32, x[4:-1:1])[1] ### TOREMOVE
-
 
 function parseb(x)
     
@@ -105,8 +102,6 @@ end
 function convert(::Type{Vector{T}}, x::Node) where T #<: Integer 
     return T[convert(T, i) for i in x.x] 
 end
-
-
 
 function convert(cfact::Type{T}, x::Node) where T <: Tuple 
      return Tuple((convert(ci, xi) for (xi, ci) in zip(x.x, cfact.types)))

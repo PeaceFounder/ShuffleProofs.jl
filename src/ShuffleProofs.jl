@@ -1,7 +1,10 @@
 module ShuffleProofs
 
 using CryptoGroups: CryptoGroups
-CryptoGroups.set_strict_mode(true)
+
+function __init__()
+    CryptoGroups.set_strict_mode(true)
+end
 
 include("utils.jl") # Common functions
 
