@@ -14,6 +14,7 @@ using Base: @kwdef
     auxsid::String = "default"
 end
 
+Base.:(==)(x::ProtocolSpec{G}, y::ProtocolSpec{G}) where G <: Group = x.g == y.g && x.nr == y.nr && x.nv == y.nv && x.ne == y.ne && x.prghash == y.prghash && x.rohash == y.rohash && x.version == y.version && x.sid == y.sid && x.auxsid == y.auxsid
 
 function marshal_s_Gq(g::PGroup)
 
