@@ -3,8 +3,8 @@ module ParserTest
 using Test
 using XMLDict
 import ShuffleProofs: decode, convert, unmarshal_publickey, interpret, Tree, encode, Leaf, Leaf, map_hash_name, unmarshal, unmarshal_full_public_key, gen_verificatum_basis
-import CryptoGroups: ElGamal, PGroup, RO, HashSpec, PRG, value, order, CryptoGroups#, bitlength #, outlen
-
+import CryptoGroups: PGroup, RO, HashSpec, PRG, value, order, CryptoGroups#, bitlength #, outlen
+import CryptoGroups.ElGamal: ElGamalRow
 
 function ro_prefix(protinfo::AbstractDict; auxsid="default")
 
@@ -84,14 +84,17 @@ pk = unmarshal_full_public_key(g, pk_tree)
 L_tree = decode(read(CIPHERTEXTS))
 L′_tree = decode(read(SHUFFLED_CIPHERTEXTS))
 
-𝔀 = convert(ElGamal{G}, L_tree)
-𝔀′ = convert(ElGamal{G}, L′_tree)
+𝔀 = convert(Vector{ElGamalRow{G, 1}}, L_tree)
+𝔀′ = convert(Vector{ElGamalRow{G, 1}}, L′_tree)
 
 μ_tree = decode(read(PERMUTATION_COMMITMENT))
 𝐮 = convert(Vector{G}, μ_tree)
 
 τ_tree = decode(read(PoS_COMMITMENT))
-𝐁, A′, 𝐁′, C′, D′, F′ = convert(Tuple{Vector{G}, G, Vector{G}, G, G, Tuple{G, G}}, τ_tree)
+#𝐁, A′, 𝐁′, C′, D′, F′ = convert(Tuple{Vector{G}, G, Vector{G}, G, G, Tuple{G, G}}, τ_tree)
+#@infiltrate
+convert(ElGamalRow{G, 1}, τ_tree.x[6])
+𝐁, A′, 𝐁′, C′, D′, F′ = convert(Tuple{Vector{G}, G, Vector{G}, G, G, ElGamalRow{G, 1}}, τ_tree)
 
 σ_tree = decode(read(PoS_REPLY))
 k_A, 𝐤_B, k_C, k_D, 𝐤_E, k_F = convert(Tuple{BigInt, Vector{BigInt}, BigInt, BigInt, Vector{BigInt}, G}, σ_tree)

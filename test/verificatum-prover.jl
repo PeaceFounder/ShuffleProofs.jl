@@ -2,7 +2,8 @@ using Test
 
 import ShuffleProofs: prove, verify, Simulator, gen_shuffle, Verifier, PoSChallenge, Shuffle, shuffle, VShuffleProof, PoSProof, ProtocolSpec, gen_roprg, load
 
-import CryptoGroups: ElGamal, PGroup, Enc, Dec
+import CryptoGroups: PGroup
+import CryptoGroups.ElGamal: Enc, Dec, ElGamalRow
 
 SPEC = "$(@__DIR__)/validation_sample/verificatum/MODP/protInfo.xml"
 verifier = load(ProtocolSpec, SPEC)
@@ -15,13 +16,13 @@ pk = g^sk
 enc = Enc(pk, g)
 
 𝐦 = [g^4, g^2, g^3]
-𝐞 = enc(𝐦, [2, 3, 4])
+𝐞 = ElGamalRow.(enc(𝐦, [2, 3, 4]))
 
 N = length(𝐞)
 
 𝐡 = [g^i for i in 2:N+1]
 
-𝐫′ = [4, 2, 10] 
+𝐫′ = reshape([4, 2, 10], (1, 3))
 
 
 proposition, secret = gen_shuffle(enc, 𝐞, 𝐫′) # In practice total of random factors can't match as it reveals 

@@ -1,7 +1,8 @@
 using Test
 
 import ShuffleProofs: prove, verify, decrypt, ProtocolSpec, shuffle, ShuffleProofs, braid, load
-import CryptoGroups: ElGamal, PGroup, Enc, Dec, CryptoGroups, ECGroup, <|
+import CryptoGroups: PGroup, CryptoGroups, ECGroup, <|
+import CryptoGroups.ElGamal: Enc, Dec, ElGamalRow
 
 SPEC = "$(@__DIR__)/validation_sample/verificatum/MODP/protInfo.xml"
 verifier = load(ProtocolSpec, SPEC)
@@ -14,9 +15,11 @@ X = g^x
 
 proposition, secret = shuffle(Y, X, g) # changing roles
 
-a = CryptoGroups.a(proposition.𝐞′)
-b = CryptoGroups.b(proposition.𝐞′)
+a = [i[1].a for i in proposition.𝐞′]
+b = [i[1].b for i in proposition.𝐞′]
 
+#a = CryptoGroups.a(proposition.𝐞′)
+#b = CryptoGroups.b(proposition.𝐞′)
 
 decryption = decrypt(g, b, x)
 
@@ -35,14 +38,16 @@ y = [g^4, g^2, g^3]
 s = 123
 h = g^s
 
-𝐞 = ElGamal(fill(h, length(y)), y)
+#𝐞 = ElGamal(fill(h, length(y)), y)
+𝐞 = [ElGamalRow(h, yi) for yi in y]
+
 
 proposition, secret = shuffle(𝐞, h, g)
 
 (; 𝐞′) = proposition
 
-a = 𝐞′.a
-b = 𝐞′.b
+a = [i[1].a for i in 𝐞′]
+b = [i[1].b for i in 𝐞′]
 
 c = b.^s
 

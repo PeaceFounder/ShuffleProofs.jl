@@ -14,7 +14,7 @@ end
 
 Base.:(==)(x::DecryptionProof{G}, y::DecryptionProof{G}) where G <: Group = x.τ == y.τ && x.r == y.r
 
-Base.length(proposition) = length(proposition.𝔀)
+Base.length(proposition::Proposition) = length(proposition.𝔀)
 
 
 function decrypt(g::G, 𝔀::Vector{G}, key::Integer) where G <: Group
@@ -78,9 +78,8 @@ function prove(proposition::Decryption{G}, secret::Integer, verifier::Verifier; 
     (; g, pk, 𝔀, 𝔀′) = proposition
 
     q = order(G)
-    n = bitlength(q) 
 
-    s = rand(roprg(:r), n, 1)[1] # I could try to use the newly added method here. Also putting explicit BigInt could be good!
+    s = rand(roprg(:r), 2:q - 1, 1)[1] # I could try to use the newly added method here. Also putting explicit BigInt could be good!
 
     τ = decryption_commitment(g, 𝔀, s)
 
@@ -110,7 +109,7 @@ function verify(proposition::Decryption{G}, proof::DecryptionProof{G}, verifier:
     return true
 end
 
-
+# TODO: change API to decrypt(𝔀::Vector{G}, g::G, key::Integer, verifier::Verifier)
 function decrypt(g::G, 𝔀::Vector{G}, key::Integer, verifier::Verifier) where G <: Group
         
     proposition = decrypt(g, 𝔀, key)

@@ -242,8 +242,8 @@ function load(::Type{Shuffle}, basedir::Path)
     L_tree = decode(read(joinpath(basedir, "Ciphertexts.bt")))
     L′_tree = decode(read(joinpath(basedir, "ShuffledCiphertexts.bt")))
 
-    𝔀 = convert(ElGamal{G}, L_tree; allow_one=true)
-    𝔀′ = convert(ElGamal{G}, L′_tree; allow_one=true)
+    𝔀 = convert(Vector{ElGamalRow{G, 1}}, L_tree; allow_one=true)
+    𝔀′ = convert(Vector{ElGamalRow{G, 1}}, L′_tree; allow_one=true)
 
     return Shuffle(g, pk, 𝔀, 𝔀′)
 end
@@ -273,7 +273,7 @@ function load(::Type{PoSProof}, basedir::Path, g::Group)
     μ = convert(Vector{G}, μ_tree)
 
     τ_tree = decode(read(joinpath(basedir, "PoSCommitment.bt")))
-    τ = convert(Tuple{Vector{G}, G, Vector{G}, G, G, Tuple{G, G}}, τ_tree)
+    τ = convert(Tuple{Vector{G}, G, Vector{G}, G, G, ElGamalRow{G, 1}}, τ_tree)
 
     σ_tree = decode(read(joinpath(basedir, "PoSReply.bt")))
     σ = convert(Tuple{BigInt, Vector{BigInt}, BigInt, BigInt, Vector{BigInt}, BigInt}, σ_tree)
@@ -488,8 +488,11 @@ function load_verificatum_proposition(basedir::AbstractString, auxsid::AbstractS
     L_tree = decode(read(CIPHERTEXTS))
     L′_tree = decode(read(SHUFFLED_CIPHERTEXTS))
 
-    𝔀 = convert(ElGamal{G}, L_tree) ## Is there anything I can do so that I would get a concrete type here?
-    𝔀′ = convert(ElGamal{G}, L′_tree)
+    #𝔀 = convert(ElGamal{G}, L_tree) ## Is there anything I can do so that I would get a concrete type here?
+    #𝔀′ = convert(ElGamal{G}, L′_tree)
+
+    𝔀 = convert(Vector{ElGamalRow{G, 1}}, L_tree) ## Is there anything I can do so that I would get a concrete type here?
+    𝔀′ = convert(Vector{ElGamalRow{G, 1}}, L′_tree)
 
     return Shuffle(g, pk, 𝔀, 𝔀′)
 end
@@ -506,7 +509,8 @@ function load_verificatum_proof(proofs::AbstractString, g::Group)
     μ = convert(Vector{G}, μ_tree)
 
     τ_tree = decode(read(PoS_COMMITMENT))
-    τ = convert(Tuple{Vector{G}, G, Vector{G}, G, G, Tuple{G, G}}, τ_tree)
+    #τ = convert(Tuple{Vector{G}, G, Vector{G}, G, G, Tuple{G, G}}, τ_tree)
+    τ = convert(Tuple{Vector{G}, G, Vector{G}, G, G, ElGamalRow{G, 1}}, τ_tree)
 
     σ_tree = decode(read(PoS_REPLY))
     σ = convert(Tuple{BigInt, Vector{BigInt}, BigInt, BigInt, Vector{BigInt}, BigInt}, σ_tree)

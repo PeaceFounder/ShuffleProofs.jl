@@ -60,7 +60,8 @@ end
 
 struct VShuffleProof{G<:Group} <: Proof
     μ::Vector{G}
-    τ::Tuple{Vector{G}, G, Vector{G}, G, G, Tuple{G, G}}
+    #τ::Tuple{Vector{G}, G, Vector{G}, G, G, Tuple{G, G}}
+    τ::Tuple{Vector{G}, G, Vector{G}, G, G, ElGamalRow{G}}
     σ::Tuple{BigInt, Vector{BigInt}, BigInt, BigInt, Vector{BigInt}, BigInt}
 end
 
@@ -216,7 +217,8 @@ struct VPoSCommit{G<:Group} #<: Verifier
 end
 
 
-function VPoSCommit(v::VPermCommit{G}, τ::Tuple{Vector{G}, G, Vector{G}, G, G, Tuple{G, G}}) where G <: Group
+#function VPoSCommit(v::VPermCommit{G}, τ::Tuple{Vector{G}, G, Vector{G}, G, G, Tuple{G, G}}) where G <: Group
+function VPoSCommit(v::VPermCommit{G}, τ::Tuple{Vector{G}, G, Vector{G}, G, G, ElGamalRow{G, 1}}) where G <: Group
     (; 𝐡, ρ, 𝐞, spec, proposition, s) = v
     (; nv, rohash) = spec
 
@@ -227,7 +229,7 @@ function VPoSCommit(v::VPermCommit{G}, τ::Tuple{Vector{G}, G, Vector{G}, G, G, 
     return VPoSCommit(spec, proposition, ρ, 𝐡, 𝐞, 𝓿)
 end
 
-function VPoSCommit(v::VPermCommit{G}, 𝐜̂::Vector{G}, t::Tuple{G, G, G, Tuple{G, G}, Vector{G}}) where G <: Group
+function VPoSCommit(v::VPermCommit{G}, 𝐜̂::Vector{G}, t::Tuple{G, G, G, ElGamalRow{G, 1}, Vector{G}}) where G <: Group
     (t₁, t₂, t₃, t₄, 𝐭̂) = t 
     𝐁 = 𝐜̂
 

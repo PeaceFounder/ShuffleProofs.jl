@@ -289,20 +289,41 @@ function _unmarshal_ecgroup(x::Leaf)
 end
 
 
-function convert(::Type{ElGamal{G}}, tree::Tree; allow_one=false) where G <: Group
+function convert(::Type{Vector{ElGamalRow{G, 1}}}, tree::Node; allow_one=false) where G <: Group
 
     a_tree, b_tree = tree.x
     𝐚 = convert(Vector{G}, a_tree; allow_one)
     𝐛 = convert(Vector{G}, b_tree; allow_one)
-    𝐞 = ElGamal{G}(𝐚, 𝐛)
+    𝐞 = [ElGamalRow(ai, bi) for (ai, bi) in zip(𝐚, 𝐛)]
 
     return 𝐞
 end
 
-function Tree(𝐞::ElGamal{<:Group})
-    𝐚 = a(𝐞) 
-    𝐛 = b(𝐞)
+function convert(::Type{ElGamalRow{G, 1}}, tree::Node; allow_one=false) where G <: Group
+
+    a_tree, b_tree = tree.x
+
+    a = convert(G, a_tree; allow_one)
+    b = convert(G, b_tree; allow_one)
+    
+    return ElGamalRow(a, b)
+end
+
+function Tree(row::ElGamalRow{<:Group, 1})
+
+    (; a, b) = row[1]
+
+    return Tree((a, b))
+end
+
+function Tree(𝐞::Vector{<:ElGamalRow{<:Group, 1}})
+
+    𝐚 = [i[1].a for i in 𝐞]
+    𝐛 = [i[1].b for i in 𝐞]
+
     tree = Tree((𝐚, 𝐛))
+    
+    return tree
 end
 
 

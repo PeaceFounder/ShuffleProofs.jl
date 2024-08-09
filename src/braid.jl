@@ -9,7 +9,7 @@ end
 Base.:(==)(x::Braid{G}, y::Braid{G}) where G <: Group = x.shuffle == y.shuffle && x.decryption == y.decryption && x.members == y.members
 
 input_generator(braid::Braid) = braid.decryption.g
-input_members(braid::Braid) = CryptoGroups.b(braid.shuffle.𝐞)
+input_members(braid::Braid) = [i[1].b for i in braid.shuffle.𝐞] #CryptoGroups.b(braid.shuffle.𝐞)
 output_generator(braid::Braid) = braid.decryption.pk
 output_members(braid::Braid) = braid.members
 
@@ -19,18 +19,24 @@ struct BraidSecret
     key::BigInt
 end
 
-function braid(g::G, Y::Vector{G}; roprg = gen_roprg()) where G <: Group
+gen_x(roprg, g) = rand(roprg(:x), 2:order(g) - 1, 1)[1] % order(g) # Is a slight bias an issue?
+
+# TODO: change API to braid(Y::Vector{G}, g::G)
+function braid(g::G, Y::Vector{G}; roprg = gen_roprg(), x = gen_x(roprg, g)) where G <: Group
     
     q = order(g)
     n = bitlength(q)
 
-    x = rand(roprg(:x), n, 1)[1] % q # Is a slight bias an issue?
     X = g^x
 
     shuffle_proposition, shuffle_secret = shuffle(Y, X, g)
     
-    a = CryptoGroups.a(shuffle_proposition.𝐞′)
-    b = CryptoGroups.b(shuffle_proposition.𝐞′)
+
+    a = [i[1].a for i in shuffle_proposition.𝐞′]
+    b = [i[1].b for i in shuffle_proposition.𝐞′]
+
+    #a = CryptoGroups.a(shuffle_proposition.𝐞′)
+    #b = CryptoGroups.b(shuffle_proposition.𝐞′)
 
     decryption = decrypt(g, b, x)
 
@@ -45,10 +51,10 @@ end
 
 function isconsistent(braid::Braid)
 
-    b = CryptoGroups.b(braid.shuffle.𝐞′)
+    b = [i[1].b for i in braid.shuffle.𝐞′] #CryptoGroups.b(braid.shuffle.𝐞′)
     b == braid.decryption.𝔀 || return false
 
-    a = CryptoGroups.a(braid.shuffle.𝐞′)
+    a = [i[1].a for i in braid.shuffle.𝐞′] #CryptoGroups.a(braid.shuffle.𝐞′)
     b′ = braid.decryption.𝔀′
     
     braid.members == b′ ./ a || return false

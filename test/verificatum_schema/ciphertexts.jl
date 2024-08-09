@@ -1,6 +1,8 @@
 using Test
 import ShuffleProofs: decode, encode, Tree, unmarshal, marshal_publickey, unmarshal_publickey, unmarshal_privatekey
-import CryptoGroups: ElGamal, PGroup, Dec
+#import CryptoGroups: ElGamal, PGroup, Dec
+import CryptoGroups: PGroup
+import CryptoGroups.ElGamal: Dec, ElGamalRow
 
 
 CIPHERTEXT_FILE = "$(@__DIR__)/../validation_sample/verificatum/MODP/ciphertexts"
@@ -31,26 +33,27 @@ G = typeof(g)
 
 #𝓖 = group(g)
 
-
 𝐞 = let
     bytes = read(CIPHERTEXT_FILE)
     tree = decode(bytes)
     𝐚, 𝐛 = convert(Tuple{Vector{BigInt}, Vector{BigInt}}, tree)
-    ElGamal{G}(𝐚, 𝐛)
+    #ElGamal{G}(𝐚, 𝐛)
+    [ElGamalRow(G(ai), G(bi)) for (ai, bi) in zip(𝐚, 𝐛)]
 end
 
 𝐞′ = let
     bytes = read(CIPHERTEXTOUT_FILE)
     tree = decode(bytes)
-    convert(ElGamal{G}, tree)
+    #convert(ElGamal{G}, tree)
+    convert(Vector{ElGamalRow{G, 1}}, tree)
 end
 
 
 dec = Dec(sk)
 
 𝐦 = g .^ (2:11)
-@test dec(𝐞) == 𝐦
+@test getindex.(dec(𝐞), 1) == 𝐦
 
 
-𝐦′ = dec(𝐞′)
+𝐦′ = getindex.(dec(𝐞′), 1)
 @test sort(𝐦) == sort(𝐦′)

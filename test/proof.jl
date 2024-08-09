@@ -1,6 +1,7 @@
 using Test
 
-import CryptoGroups: ElGamal, PGroup, Enc, Dec, specialize, ECGroup, generator, <|
+import CryptoGroups: PGroup, specialize, ECGroup, generator, <|
+import CryptoGroups.ElGamal: ElGamalRow, Enc, Dec
 import CryptoGroups
 
 import ShuffleProofs: prove, verify, Simulator, gen_shuffle, Verifier, PoSChallenge, Shuffle, shuffle, VShuffleProof, PoSProof
@@ -46,11 +47,10 @@ function test_prover(g)
     𝐡 = [g^i for i in 2:N+1]
 
 
-    𝐫′ = [4, 2, 5] 
-    proposition, secret = gen_shuffle(enc, 𝐞, 𝐫′) # In practice total of random factors can't match as it reveals 
+    𝐫′ = reshape([4, 2, 5], (1, 3))
+    proposition, secret = gen_shuffle(enc, ElGamalRow.(𝐞), 𝐫′) # In practice total of random factors can't match as it reveals 
     @test verify(proposition, secret)
     @test verify(proposition, sk)
-
 
     (; 𝛙) = secret
     (; 𝐞, 𝐞′) = proposition
