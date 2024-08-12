@@ -1,7 +1,7 @@
 using Test
 
-import CryptoGroups: PGroup, specialize, ECGroup, generator, <|
-import CryptoGroups.ElGamal: ElGamalRow, Enc, Dec
+import CryptoGroups: PGroup, concretize_type, ECGroup, generator
+import SigmaProofs.ElGamal: ElGamalRow, Enc, Dec
 import CryptoGroups
 
 import ShuffleProofs: prove, verify, Simulator, gen_shuffle, Verifier, PoSChallenge, Shuffle, shuffle, VShuffleProof, PoSProof
@@ -90,21 +90,21 @@ end
 # It is hard to escape degeneracy with such a small group
 # p = 23
 # q = 11
-# G = specialize(PGroup, p, q)
+# G = concretize_type(PGroup, p, q)
 # g = G(3)
 
 # test_prover(g)
 
 
 spec = CryptoGroups.Specs.MODP_1024
-G = specialize(PGroup, spec)
-g = G <| generator(spec)
+G = concretize_type(PGroup, spec)
+g = G(generator(spec))
 
 test_prover(g)
 
 
 spec = CryptoGroups.Specs.Curve_P_256
-G = specialize(ECGroup, spec; name = :P_256)
-g = G <| generator(spec)
+G = concretize_type(ECGroup, spec; name = :P_256)
+g = G(generator(spec))
 
 test_prover(g)

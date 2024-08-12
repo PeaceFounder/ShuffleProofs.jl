@@ -5,10 +5,16 @@ version = "0.3.1"
 
 [deps]
 CryptoGroups = "bc997328-bedd-407e-bcd3-5758e064a52d"
+CryptoPRG = "d846c407-34c1-46cb-aa27-d51818cc05e2"
 Random = "9a3f8284-a2c9-5f02-9a11-845980a1fd5c"
+SigmaProofs = "f8559b4c-f045-44a2-8db2-503e40bb7416"
+
+[sources]
+SigmaProofs = {path = "SigmaProofs"}
 
 [compat]
 CryptoGroups = "0.4"
+CryptoPRG = "0.1.0"
 julia = "1"
 
 [extras]

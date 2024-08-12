@@ -3,8 +3,10 @@ module ParserTest
 using Test
 using XMLDict
 import ShuffleProofs: decode, convert, unmarshal_publickey, interpret, Tree, encode, Leaf, Leaf, map_hash_name, unmarshal, unmarshal_full_public_key, gen_verificatum_basis
-import CryptoGroups: PGroup, RO, HashSpec, PRG, value, order, CryptoGroups#, bitlength #, outlen
-import CryptoGroups.ElGamal: ElGamalRow
+import CryptoGroups: PGroup, value, order, CryptoGroups#, bitlength #, outlen
+import CryptoPRG: HashSpec
+import CryptoPRG.Verificatum: RO, PRG
+import SigmaProofs.ElGamal: ElGamalRow
 
 function ro_prefix(protinfo::AbstractDict; auxsid="default")
 

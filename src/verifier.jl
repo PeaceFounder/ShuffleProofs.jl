@@ -1,4 +1,5 @@
-using CryptoGroups: Group, HashSpec, PRG, RO, PGroup, ROPRG
+using CryptoPRG.Verificatum: HashSpec, PRG, RO, ROPRG
+using CryptoGroups: Group, PGroup, ECGroup
 
 using Base: @kwdef
 

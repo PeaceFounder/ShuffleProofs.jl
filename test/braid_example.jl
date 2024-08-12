@@ -1,8 +1,8 @@
-import CryptoGroups: curve, ECGroup, generator, specialize
+import CryptoGroups: curve, ECGroup, generator, concretize_type
 import ShuffleProofs: ProtocolSpec, braid, verify, output_generator, output_members
 
 _curve = curve("P_256")
-G = specialize(ECGroup, _curve)
+G = concretize_type(ECGroup, _curve)
 g = G(generator(_curve))
 
 y = [4, 2, 3]

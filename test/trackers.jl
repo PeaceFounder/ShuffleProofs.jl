@@ -3,11 +3,11 @@
 # extending shuffle proof with ElGamalRow that could contain multiple elgamal elements
 # The reuse of secret key x in decryption may expose it in ZKP. We need to be careful here!
 using Test
-import CryptoGroups: curve, ECGroup, generator, specialize
+import CryptoGroups: curve, ECGroup, generator, concretize_type
 import ShuffleProofs: ProtocolSpec, braid, verify, decrypt
 
 _curve = curve("P_192")
-G = specialize(ECGroup, _curve)
+G = concretize_type(ECGroup, _curve)
 g = G(generator(_curve))
 verifier = ProtocolSpec(;g)
 

@@ -1,8 +1,8 @@
 using Test
 
 import ShuffleProofs: prove, verify, decrypt, ProtocolSpec, shuffle, ShuffleProofs, braid, load
-import CryptoGroups: PGroup, CryptoGroups, ECGroup, <|
-import CryptoGroups.ElGamal: Enc, Dec, ElGamalRow
+import CryptoGroups: PGroup, CryptoGroups, ECGroup
+import SigmaProofs.ElGamal: Enc, Dec, ElGamalRow
 
 SPEC = "$(@__DIR__)/validation_sample/verificatum/MODP/protInfo.xml"
 verifier = load(ProtocolSpec, SPEC)
@@ -98,7 +98,7 @@ test_braid(g, y)
 ###### Testing on elliptic curve
 
 spec = CryptoGroups.curve("P_256")
-G = CryptoGroups.specialize(ECGroup, spec)
-g = G <| CryptoGroups.generator(spec)
+G = CryptoGroups.concretize_type(ECGroup, spec)
+g = G(CryptoGroups.generator(spec))
 
 test_braid(g, y)

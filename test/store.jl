@@ -1,6 +1,6 @@
 using Test
 using ShuffleProofs: load, Shuffle, PoSProof, save, ProtocolSpec, braid, digest
-using CryptoGroups: HashSpec
+using CryptoPRG: HashSpec
 
 BASE_DIR = joinpath(@__DIR__, "validation_sample")
 

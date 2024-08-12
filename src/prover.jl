@@ -1,5 +1,5 @@
-using CryptoGroups: Group, ElGamal, order, modulus
-using CryptoGroups.ElGamal: Enc, Dec, ElGamalRow
+using CryptoGroups: Group, order, modulus
+using SigmaProofs.ElGamal: Enc, Dec, ElGamalRow
 
 abstract type Proposition end
 abstract type Proof end

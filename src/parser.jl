@@ -168,7 +168,11 @@ end
 
 ############################ COMPOSITE TYPE PARSING ############################
 
-using CryptoGroups: HashSpec, PGroup, ECGroup, Group, ElGamal, value, specialize, a, b, spec, generator, <|, name, ECPoint, field, gx, gy
+#using CryptoGroups: HashSpec, PGroup, ECGroup, Group, ElGamal, value, concretize_type, a, b, spec, generator, <|, name, ECPoint, field, gx, gy
+
+using CryptoGroups.Curves: a, b, field, gx, gy
+using CryptoGroups: PGroup, ECGroup, Group, value, concretize_type, spec, generator, name, ECPoint
+using CryptoPRG.Verificatum: HashSpec
 
 
 function convert(::Type{Vector{G}}, x::Node; allow_one=false) where G <: Group 
@@ -269,7 +273,7 @@ function _unmarshal_pgroup(x::Node)
     
     G = PGroup(p, q)
 
-    x = G <| g
+    x = G(g)
     
     return x
 end
@@ -282,8 +286,8 @@ function _unmarshal_ecgroup(x::Leaf)
     name = spec_name(group_spec_str)
 
     group_spec = spec(name)
-    G = specialize(ECGroup, group_spec; name)
-    g = G <| generator(group_spec)
+    G = concretize_type(ECGroup, group_spec; name)
+    g = G(generator(group_spec))
 
     return g
 end

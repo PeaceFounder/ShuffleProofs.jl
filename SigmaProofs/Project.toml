@@ -1,0 +1,21 @@
+name = "SigmaProofs"
+uuid = "f8559b4c-f045-44a2-8db2-503e40bb7416"
+authors = ["Janis Erdmanis <janiserdmanis@protonmail.ch>"]
+version = "0.1.0"
+
+[deps]
+CryptoGroups = "bc997328-bedd-407e-bcd3-5758e064a52d"
+CryptoPRG = "d846c407-34c1-46cb-aa27-d51818cc05e2"
+CryptoUtils = "04afed74-ac16-11e9-37b6-1352e3e05830"
+
+[compat]
+CryptoGroups = "0.4.1"
+CryptoPRG = "0.1.0"
+CryptoUtils = "0.1.1"
+Test = "1.11.0"
+
+[extras]
+Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
+
+[targets]
+test = ["Test"]
