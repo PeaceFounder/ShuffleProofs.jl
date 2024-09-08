@@ -1,6 +1,6 @@
 using Test
 import CryptoGroups
-import CryptoGroups: PGroup, concretize_type, generator, PGroup, ECGroup
+import CryptoGroups: @PGroup, concretize_type, generator, ECGroup, @ECGroup
 import SigmaProofs.ElGamal: Enc, Dec
 
 function elgamal_test(g)
@@ -54,12 +54,7 @@ end
 
 
 let
-    q = 11
-    p = 2*q + 1
-
-    G = PGroup(p, q)
-    g = G(3)
-
+    g = @PGroup{p = 23, q = 11}(3)
     elgamal_test(g)
 end
 
@@ -69,26 +64,19 @@ import CryptoGroups: concretize_type, generator, PGroup, ECGroup, Specs
 
 
 let
-    spec = Specs.MODP_1024
-    G = concretize_type(PGroup, spec)
-    g = G(generator(spec))
-
+    g = @PGroup{RFC5114_1024}()
     elgamal_test(g)
 end
 
 
 let
-    spec = Specs.Curve_P_256
-
-    G = concretize_type(ECGroup, spec; name = :P_192)
-    g = G(generator(spec))
-
+    g = @ECGroup{P_192}()
     elgamal_test(g)
 end
 
 
 let
-    spec = Specs.Curve_B_163_PB
+    spec = CryptoGroups.Specs.Curve_B_163_PB
     G = concretize_type(ECGroup, spec; name = :B_163_PB)
     g = G(generator(spec))
 

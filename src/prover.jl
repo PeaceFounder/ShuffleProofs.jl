@@ -1,3 +1,4 @@
+using CryptoGroups.Utils: @check
 using CryptoGroups: Group, order, modulus
 using SigmaProofs.ElGamal: Enc, Dec, ElGamalRow
 
@@ -23,7 +24,7 @@ struct Shuffle{G <: Group} <: Proposition
     𝐞′::Vector{<:ElGamalRow{G}} # ElGamalRow?
 
     function Shuffle{G}(g::G, pk::G, 𝐞::Vector{<:ElGamalRow{G, N}}, 𝐞′::Vector{<:ElGamalRow{G, N}}) where {G <: Group, N}
-        @assert length(𝐞) == length(𝐞′)
+        @check length(𝐞) == length(𝐞′)
         new(g, pk, 𝐞, 𝐞′)
     end
 
@@ -74,7 +75,7 @@ function verify(proposition::Shuffle, sk::Integer)
     
     (; 𝐞, 𝐞′, g, pk) = proposition
 
-    @assert g^sk == pk
+    @check g^sk == pk
     
     dec = Dec(sk)
     
@@ -163,7 +164,7 @@ function prove(proposition::Shuffle{G}, secret::ShuffleSecret, verifier::Verifie
     𝐡, h = challenge(v1) 
 
     # Would make more sense for length(proposition) == length(secret)
-    @assert length(𝛙) == length(𝐞)
+    @check length(𝛙) == length(𝐞)
 
     N = length(𝛙)
     q = order(g)
@@ -228,12 +229,12 @@ function prove(proposition::Shuffle{G}, secret::ShuffleSecret, verifier::Verifie
     𝐬′ = mod.(𝛚̂′ .+ c .* 𝐮′, q) ### What to do if 𝐬′ is 0?
 
     # It would be bad if any s point to 0
-    @assert s₁ != 0 
-    @assert s₂ != 0
-    @assert s₃ != 0
-    @assert s₄ != 0
-    @assert !(0 in 𝐬̂)
-    @assert !(0 in 𝐬′)
+    @check s₁ != 0 
+    @check s₂ != 0
+    @check s₃ != 0
+    @check s₄ != 0
+    @check !(0 in 𝐬̂)
+    @check !(0 in 𝐬′)
     
     s = (s₁, s₂, s₃, s₄, 𝐬̂, 𝐬′) # Do I need to ensure that `s` are without 0 elements
 

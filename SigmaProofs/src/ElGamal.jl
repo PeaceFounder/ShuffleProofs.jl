@@ -1,5 +1,6 @@
 module ElGamal
 
+using CryptoGroups.Utils: @check
 using CryptoGroups: Group
 import Base: *, ^
 
@@ -89,12 +90,12 @@ end
 
 
 function (enc::Enc{G})(m::AbstractVector{<:ElGamalRow{G}}, r::AbstractMatrix{<:Integer}) where G <: Group
-    @assert length(r[:, 1]) == length(m[1]) "Dimensions not equal"
+    @check length(r[:, 1]) == length(m[1]) "Dimensions not equal"
     return [enc(mi, tuple(ri...)) for (mi, ri) in zip(m, eachcol(r))]
 end
 
 function (enc::Enc{G})(m::AbstractVector{<:NTuple{N, G}}, r::AbstractMatrix{<:Integer}) where {N, G <: Group}
-    @assert length(r[:, 1]) == N "Dimensions not equal"
+    @check length(r[:, 1]) == N "Dimensions not equal"
     return [enc(mi, tuple(ri...)) for (mi, ri) in zip(m, eachcol(r))]
 end
 

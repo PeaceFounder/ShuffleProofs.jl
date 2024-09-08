@@ -1,5 +1,7 @@
 # ShuffleProofs.jl
 
+[![codecov](https://codecov.io/gh/PeaceFounder/ShuffleProofs.jl/graph/badge.svg?token=4VCLLS1YEF)](https://codecov.io/gh/PeaceFounder/ShuffleProofs.jl)
+
 Cryptography is often looked at as a tool to secure and make communications confidential. It only requires to have a digital signature algorithm (DSA), Diffie Hellman key exchange (computation) and a good block cypher to satisfy the security requirements of 99% (metaphorically) of current online marketplaces and internet banking. However, security with those tools comes with a price of privacy and the necessity to trust the other end to keep your transactions private. 
 
 A much more difficult case is present for systems that do require a high order of privacy and transparency, such as voting and auctions where an authority can not be blindly trusted, either with security or privacy. Complex multiparty protocols can be structured so that security and privacy do not lie in the hands of few. However, eliminating the effects of dishonest participants does require synchronous interactions between participants and thus is not scalable.  

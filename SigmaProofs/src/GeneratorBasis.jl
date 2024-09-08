@@ -1,8 +1,8 @@
 module GeneratorBasis
 
-using CryptoGroups: modulus, order, bitlength
+using CryptoGroups.Utils: @check
+using CryptoGroups: modulus, order, bitlength, Group, spec
 using CryptoGroups.Specs: MODP, ECP
-#using ..CryptoGroups.CSPRG: PRG, RO
 using CryptoPRG.Verificatum: PRG, RO
 using CryptoUtils: is_quadratic_residue, sqrt_mod_prime
 
@@ -19,6 +19,8 @@ function modp_generator_basis(prg::PRG, p::Integer, q::Integer, N::Integer; nr::
     
     return 𝐡
 end
+
+modp_generator_basis(prg::PRG, spec::MODP, N::Integer; nr::Integer = 0) = modp_generator_basis(prg, modulus(spec), order(spec), N; nr)
 
 function ecp_generator_basis(prg::PRG, (a, b)::Tuple{Integer, Integer}, p::Integer, q::Integer, N::Integer; nr::Integer = 0)
 
@@ -66,17 +68,23 @@ function ecp_generator_basis(prg::PRG, (a, b)::Tuple{Integer, Integer}, p::Integ
     return 𝐡
 end
 
-# ToDo: consider deprecating and redirect to generator_basis function
-function Base.rand(prg::PRG, spec::MODP, N::Integer; nr::Integer = 0) 
-
-    p = modulus(spec)
-    q = order(spec)
-
-    @assert !isnothing(q) "Order of the group must be known"
-
-    return modp_generator_basis(prg, p, q, N; nr)
+function ecp_generator_basis(prg::PRG, spec::ECP, N::Integer; nr::Integer = 0)
+    (; a, b) = spec
+    return ecp_generator_basis(prg, (a, b), modulus(spec), order(spec), N; nr)
 end
 
-Base.rand(prg::PRG, spec::ECP, N::Integer; nr::Integer = 0) = ecp_generator_basis(prg, (spec.a, spec.b), modulus(spec), order(spec), N; nr)
+
+# For pattern matching
+_generator_basis(prg::PRG, spec::MODP, N::Integer; nr) = modp_generator_basis(prg, spec, N; nr)
+_generator_basis(prg::PRG, spec::ECP, N::Integer; nr) = ecp_generator_basis(prg, spec, N; nr)
+
+function generator_basis(prg::PRG, ::Type{G}, N::Integer; nr::Integer = 0) where G <: Group
+    @check !isnothing(order(G)) "Order of the group must be known"
+    _spec = spec(G)
+    g_vec = _generator_basis(prg, _spec, N; nr)
+    return G.(g_vec)
+end
+
+export generator_basis
 
 end

@@ -241,7 +241,7 @@ function marshal(g::ECGroup)
     java_name = "com.verificatum.arithm.ECqPGroup"
 
     # generator is not a group
-    # @assert spec(g) == spec(name(g)) "wrong group name"
+    # @check spec(g) == spec(name(g)) "wrong group name"
 
     v_name = normalize_ecgroup_name(name(g))
 
@@ -271,8 +271,7 @@ function _unmarshal_pgroup(x::Node)
 
     (p, q, g, e) = convert(Tuple{BigInt, BigInt, BigInt, UInt32}, x)
     
-    G = PGroup(p, q)
-
+    G = concretize_type(PGroup, p, q)
     x = G(g)
     
     return x

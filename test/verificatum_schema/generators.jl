@@ -1,10 +1,8 @@
 using Test
 import ShuffleProofs: Leaf, marshal, unmarshal, decode, encode, Tree
-import CryptoGroups: Group, PGroup, concretize_type
+import CryptoGroups: @PGroup
 
-G = concretize_type(PGroup, BigInt(23), BigInt(11)) # bigInt necessary as unmarshaling happens to a BigInt. 
-
-g = G(3)
+g = @PGroup{p = 23, q = 11}(3)
 
 leaf = Tree(g)
 
@@ -18,13 +16,11 @@ x = "00000000020100000020636f6d2e766572696669636174756d2e61726974686d2e4d6f64504
 tree = decode(x)
 g = unmarshal(tree)
 
-
 @test encode(decode(x)) == hex2bytes(x) ### Belongs to original tests
 
 @test marshal(unmarshal(tree)) == tree 
 
 @test string(marshal(unmarshal(tree))) == x
-
 
 @test decode(encode(marshal(g))) == marshal(g)
 

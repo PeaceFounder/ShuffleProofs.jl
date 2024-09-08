@@ -1,3 +1,4 @@
+using CryptoGroups.Utils: @check
 # A file tree which specifies what files are hashed
 
 const SHUFFLE_TREE = (
@@ -88,14 +89,14 @@ function digest(obj, hasher::HashSpec; treespec=file_tree(obj))
     path_hasher = PathHasher(hasher)
     save(obj, path_hasher)
 
-    @assert length(path_hasher.digests) == length(treespec) "`treespec` is not compatable with $(typeof(obj)) output."
+    @check length(path_hasher.digests) == length(treespec) "`treespec` is not compatable with $(typeof(obj)) output."
 
     digests = Vector{UInt8}[]
 
     for i in treespec
         
         N = findfirst(x -> first(x) == i, path_hasher.digests)
-        @assert !isnothing(N) "$i is not written in $(typeof(obj)) output."
+        @check !isnothing(N) "$i is not written in $(typeof(obj)) output."
         push!(digests, last(path_hasher.digests[N]))
         
     end

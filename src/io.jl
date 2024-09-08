@@ -1,3 +1,4 @@
+using CryptoGroups.Utils: @check
 using CryptoGroups: Group, PGroup
 
 Base.write(io::IO, tree::Tree) = write(io, encode(tree))
@@ -5,14 +6,13 @@ Base.write(f::AbstractString, tree::Tree) = write(f, encode(tree))
 
 Base.string(tree::Tree) = bytes2hex(encode(tree))
 
-
 function unmarshal_full_public_key(g::Group, tree::Tree)
     
     G = typeof(g)
 
     g′, y = convert(Tuple{G, G}, tree)    
 
-    @assert g′ == g
+    @check g′ == g
 
     return y
 end
@@ -28,7 +28,7 @@ function unmarshal_publickey(tree::Tree; relative::Bool = false)
     g′, y = convert(Tuple{G, G}, tree.x[2]) 
 
     if !relative
-        @assert g′ == g "Generator does not match specification of the group. Perhaps intentioanl, if so pass `relative=true` as keyword argument."
+        @check g′ == g "Generator does not match specification of the group. Perhaps intentioanl, if so pass `relative=true` as keyword argument."
     end
 
     return y, g′
@@ -56,7 +56,7 @@ function marshal_privatekey(g::Group, s::BigInt)
 
     q = order(g)
 
-    @assert s < q "Secret key must be with in the order of the group"
+    @check s < q "Secret key must be with in the order of the group"
 
     sleaf = Leaf(s, bytelength(q))
 

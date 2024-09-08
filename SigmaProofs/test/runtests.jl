@@ -1,10 +1,15 @@
-using Test
+using SafeTestsets
 
-@testset "Testing ElGamal" begin
+@safetestset "Testing ElGamal" begin
     include("elgamal.jl")
 end
 
-@testset "Testing Generator Basis" begin
+@safetestset "Testing PGroup Generator Basis" begin
     include("gbasis.jl")
+end
+
+@safetestset "Testing ECGroup Generator Basis" begin
     include("gecbasis.jl")
 end
+
+

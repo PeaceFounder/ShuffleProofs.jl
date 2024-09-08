@@ -1,3 +1,4 @@
+using SigmaProofs.GeneratorBasis: generator_basis
 using CryptoPRG.Verificatum: HashSpec, PRG, RO, ROPRG
 using CryptoGroups: Group, PGroup, ECGroup
 
@@ -154,7 +155,9 @@ function gen_verificatum_basis(::Type{G}, prghash::HashSpec, rohash::HashSpec, N
     roprg = ROPRG(d, rohash, prghash)
     prg = roprg(UInt8[]) # d is a better argument than x
 
-    return rand(prg, G, N; nr)
+    # TODO
+    #return rand(prg, G, N; nr)
+    return generator_basis(prg, G, N; nr)
 end
 
 

@@ -1,11 +1,10 @@
 using Test
 
-import CryptoGroups: PGroup, concretize_type, ECGroup, generator
+import CryptoGroups: @PGroup, @ECGroup
 import SigmaProofs.ElGamal: ElGamalRow, Enc, Dec
 import CryptoGroups
 
 import ShuffleProofs: prove, verify, Simulator, gen_shuffle, Verifier, PoSChallenge, Shuffle, shuffle, VShuffleProof, PoSProof
-
 import ShuffleProofs: step, challenge, PoSChallenge, gen_roprg
 
 
@@ -95,16 +94,8 @@ end
 
 # test_prover(g)
 
-
-spec = CryptoGroups.Specs.MODP_1024
-G = concretize_type(PGroup, spec)
-g = G(generator(spec))
-
+g = @PGroup{RFC5114_1024}()
 test_prover(g)
 
-
-spec = CryptoGroups.Specs.Curve_P_256
-G = concretize_type(ECGroup, spec; name = :P_256)
-g = G(generator(spec))
-
+g = @ECGroup{P_192}()
 test_prover(g)

@@ -1,7 +1,8 @@
 module BasisTest
 
 using Test
-import CryptoGroups: PGroup, concretize_type, value, MODP
+import SigmaProofs.GeneratorBasis: modp_generator_basis
+import CryptoGroups.Specs: MODP
 import CryptoPRG.Verificatum: HashSpec, ROPRG
 
 tobig(x) = parse(BigInt, bytes2hex(reverse(x)), base=16)
@@ -32,8 +33,6 @@ prghash = HashSpec("sha256")
 
 ρ = hex2bytes("15e6c97600bbe30125cbc08598dcde01a769c15c8afe08fe5b7f5542533159e9")
 
-# Need to unmarchal this into numbers
-
 # group_spec = "00000000020100000020636f6d2e766572696669636174756d2e61726974686d2e4d6f645047726f757000000000040100000041009a91c3b704e382e0c772fa7cf0e5d6363edc53d156e841555702c5b6f906574204bf49a551b695bed292e0218337c0861ee649d2fe4039174514fe2c23c10f6701000000404d48e1db8271c17063b97d3e7872eb1b1f6e29e8ab7420aaab8162db7c832ba1025fa4d2a8db4adf69497010c19be0430f7324e97f201c8ba28a7f1611e087b3010000004100300763b0150525252e4989f51e33c4e6462091152ef2291e45699374a3aa8acea714ff30260338bddbb48fc7446b273aaada90e3ee8326f388b582ea8a073502010000000400000001"
 
 p = 8095455969267383450536091939011431888343052744233774808515030596297626946131583007491317242326621464546135030140184007406503191036604066436734360427237223
@@ -51,7 +50,7 @@ prg = roprg(UInt8[]) # d is a better argument than x
 
 sp = MODP(p; q)
 
-𝐡′ = rand(prg, sp, 10; nr)
+𝐡′ = modp_generator_basis(prg, sp, 10; nr)
 
 @test 𝐡 == 𝐡′
 
