@@ -6,6 +6,8 @@ function __init__()
     CryptoGroups.set_strict_mode(true)
 end
 
+include("../SigmaProofs/src/SigmaProofs.jl")
+
 include("utils.jl") # Common functions
 include("prover.jl") 
 include("parser.jl") 

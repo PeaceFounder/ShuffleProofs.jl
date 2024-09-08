@@ -1,4 +1,4 @@
-using SigmaProofs.GeneratorBasis: generator_basis
+using .SigmaProofs.GeneratorBasis: generator_basis
 using CryptoPRG.Verificatum: HashSpec, PRG, RO, ROPRG
 using CryptoGroups: Group, PGroup, ECGroup
 

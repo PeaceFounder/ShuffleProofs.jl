@@ -1,6 +1,6 @@
 using CryptoGroups.Utils: @check
 using CryptoGroups: Group, order, modulus
-using SigmaProofs.ElGamal: Enc, Dec, ElGamalRow
+using .SigmaProofs.ElGamal: Enc, Dec, ElGamalRow
 
 abstract type Proposition end
 abstract type Proof end

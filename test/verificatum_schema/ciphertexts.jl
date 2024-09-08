@@ -1,7 +1,7 @@
 using Test
 import ShuffleProofs: decode, encode, Tree, unmarshal, marshal_publickey, unmarshal_publickey, unmarshal_privatekey
 import CryptoGroups: PGroup
-import SigmaProofs.ElGamal: Dec, ElGamalRow
+import ShuffleProofs.SigmaProofs.ElGamal: Dec, ElGamalRow
 
 
 CIPHERTEXT_FILE = "$(@__DIR__)/../validation_sample/verificatum/MODP/ciphertexts"

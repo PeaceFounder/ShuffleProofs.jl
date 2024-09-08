@@ -3,7 +3,7 @@ using Test
 import ShuffleProofs: prove, verify, Simulator, gen_shuffle, Verifier, PoSChallenge, Shuffle, shuffle, VShuffleProof, PoSProof, ProtocolSpec, gen_roprg, load
 
 import CryptoGroups: PGroup
-import SigmaProofs.ElGamal: Enc, Dec, ElGamalRow
+import ShuffleProofs.SigmaProofs.ElGamal: Enc, Dec, ElGamalRow
 
 SPEC = "$(@__DIR__)/validation_sample/verificatum/MODP/protInfo.xml"
 verifier = load(ProtocolSpec, SPEC)

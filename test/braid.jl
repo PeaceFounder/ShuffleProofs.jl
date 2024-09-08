@@ -2,7 +2,7 @@ using Test
 
 import ShuffleProofs: prove, verify, decrypt, ProtocolSpec, shuffle, ShuffleProofs, braid, load
 import CryptoGroups: PGroup, CryptoGroups, @ECGroup
-import SigmaProofs.ElGamal: Enc, Dec, ElGamalRow
+import ShuffleProofs.SigmaProofs.ElGamal: Enc, Dec, ElGamalRow
 
 SPEC = "$(@__DIR__)/validation_sample/verificatum/MODP/protInfo.xml"
 verifier = load(ProtocolSpec, SPEC)

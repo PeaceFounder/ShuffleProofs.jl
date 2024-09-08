@@ -6,7 +6,7 @@ import ShuffleProofs: decode, convert, unmarshal_publickey, interpret, Tree, enc
 import CryptoGroups: PGroup, value, order, CryptoGroups#, bitlength #, outlen
 import CryptoPRG: HashSpec
 import CryptoPRG.Verificatum: RO, PRG
-import SigmaProofs.ElGamal: ElGamalRow
+import ShuffleProofs.SigmaProofs.ElGamal: ElGamalRow
 
 function ro_prefix(protinfo::AbstractDict; auxsid="default")
 

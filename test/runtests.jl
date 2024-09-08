@@ -3,6 +3,10 @@ using SafeTestsets
 using CryptoGroups
 CryptoGroups.set_strict_mode(true)
 
+# @safetestset "SigmaProofs tests" begin
+#     include("../test/runtests.jl")
+# end
+
 @safetestset "Number conversations" begin
     include("utils.jl")
 end

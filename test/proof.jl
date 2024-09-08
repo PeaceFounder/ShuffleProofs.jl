@@ -1,7 +1,7 @@
 using Test
 
 import CryptoGroups: @PGroup, @ECGroup
-import SigmaProofs.ElGamal: ElGamalRow, Enc, Dec
+import ShuffleProofs.SigmaProofs.ElGamal: ElGamalRow, Enc, Dec
 import CryptoGroups
 
 import ShuffleProofs: prove, verify, Simulator, gen_shuffle, Verifier, PoSChallenge, Shuffle, shuffle, VShuffleProof, PoSProof

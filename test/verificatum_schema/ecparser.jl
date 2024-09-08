@@ -1,7 +1,7 @@
 # Tesing internals for elliptic curve parsing with verificatum
 using Test
 
-import SigmaProofs.ElGamal: ElGamalRow
+import ShuffleProofs.SigmaProofs.ElGamal: ElGamalRow
 import ShuffleProofs: marshal_s_Gq, unmarshal, decode, marshal, unmarshal_publickey, marshal_publickey, marshal_privatekey, unmarshal_privatekey, load_verificatum_proposition, load_verificatum_proof, load_verificatum_simulator, ro_prefix, verify
 
 s_Gq = "com.verificatum.arithm.ECqPGroup(P-256)::00000000020100000020636f6d2e766572696669636174756d2e61726974686d2e4543715047726f75700100000005502d323536"
