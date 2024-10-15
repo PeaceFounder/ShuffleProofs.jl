@@ -1,11 +1,14 @@
-# This version shows how verifiability for proof of shuffle is added
-
+using CryptoGroups
 using ShuffleProofs
-import ShuffleProofs: PrimeGenerator, Enc, Dec, shuffle, ElGamal, ProtocolSpec, verify, Shuffle
+using SigmaProofs.ElGamal: Enc, Dec, ElGamalRow
+using SigmaProofs.Verificatum: ProtocolSpec
+import SigmaProofs.DecryptionProofs: Decryption, decrypt
+import ShuffleProofs: shuffle, verify, Shuffle
 
 sk = 123 # Only authorithy who do decryption would know
 
-g = PrimeGenerator(3, 23)
+g = @ECGroup{P_192}()
+
 options = [g, g^2, g^3] 
 pk = g^sk
 
@@ -17,7 +20,7 @@ bbord = (;) # A representation of a buletinboard
 
 bbord = let
     enc = Enc(pk, g)
-    ciphertexts_in = ElGamal([enc(options[rand(1:3)], rand(1:10)) for i in 1:10])
+    ciphertexts_in = [enc(options[rand(1:3)], rand(1:10)) |> ElGamalRow for i in 1:10]
     (; bbord..., ciphertexts_in)
 end
 
@@ -27,26 +30,31 @@ bbord = let
     enc = Enc(pk, g)
     simulator = shuffle(bbord.ciphertexts_in, enc, verifier) # now returns simulator as verifier is added
     ciphertexts_out = simulator.proposition.𝐞′
-    (; bbord..., ciphertexts_out, simulator.proof)
+    shuffle_proof = simulator.proof
+    (; bbord..., ciphertexts_out, shuffle_proof)
 end
 
 ####### Step 3. ########
 
 bbord = let
-    dec = Dec(sk)
-    votes = dec(bbord.ciphertexts_out)
-    (; bbord..., votes)
+    simulator = decrypt(g, bbord.ciphertexts_out, sk, verifier)
+    votes = simulator.proposition.plaintexts
+    dec_proof = simulator.proof
+    (; bbord..., votes, dec_proof)
 end
 
 ######### As last step we can tally the votes ############
 
 # Before counting we perform an audit that reencryption have happened honestly
-proposition = Shuffle(g, pk, bbord.ciphertexts_in, bbord.ciphertexts_out)
-@assert verify(proposition, bbord.proof, verifier)
+proposition_shuffle = Shuffle(g, pk, bbord.ciphertexts_in, bbord.ciphertexts_out)
+@assert verify(proposition_shuffle, bbord.shuffle_proof, verifier)
+
+proposition_dec = Decryption(g, pk, bbord.ciphertexts_out, bbord.votes)
+@assert verify(proposition_dec, bbord.dec_proof, verifier)
 
 for (i, o) in enumerate(options)
     s = 0
-    for v in bbord.votes
+    for (v,) in bbord.votes
         if v == o
             s += 1
         end

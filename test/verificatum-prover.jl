@@ -1,35 +1,34 @@
 using Test
 
-import ShuffleProofs: prove, verify, Simulator, gen_shuffle, Verifier, PoSChallenge, Shuffle, shuffle, VShuffleProof, PoSProof, ProtocolSpec, gen_roprg, load
+# Why does this file have such a name?
 
-import CryptoGroups: PGroup
+import ShuffleProofs: prove, verify, Simulator, Verifier, PoSChallenge, Shuffle, shuffle, VShuffleProof, PoSProof, ProtocolSpec, gen_roprg, load
+
+using CryptoGroups
 import ShuffleProofs.SigmaProofs.ElGamal: Enc, Dec, ElGamalRow
 
-SPEC = "$(@__DIR__)/validation_sample/verificatum/MODP/protInfo.xml"
-verifier = load(ProtocolSpec, SPEC)
+g = @ECGroup{P_192}()
 
-(; g) = verifier
+verifier = ProtocolSpec(; g)
+
 sk = 123
 pk = g^sk
-
 
 enc = Enc(pk, g)
 
 𝐦 = [g^4, g^2, g^3]
-𝐞 = ElGamalRow.(enc(𝐦, [2, 3, 4]))
+𝐞 = enc(𝐦, [2, 3, 4]) .|> ElGamalRow # Necessary because it returns ElGamalElement
 
-N = length(𝐞)
+𝐫′ = [4, 2, 10]
+e_enc = enc(𝐞, 𝐫′)
 
-𝐡 = [g^i for i in 2:N+1]
+proposition = shuffle(𝐞, g, pk; 𝐫′) 
+𝛙 = sortperm(proposition)
+permute!(proposition, 𝛙)
 
-𝐫′ = reshape([4, 2, 10], (1, 3))
+@test verify(proposition, 𝐫′, 𝛙)
 
-
-proposition, secret = gen_shuffle(enc, 𝐞, 𝐫′) # In practice total of random factors can't match as it reveals 
-
-@test verify(proposition, secret)
-
-proof = prove(proposition, secret, verifier)
+proof = prove(proposition, verifier, 𝐫′, 𝛙)
 @test verify(proposition, proof, verifier)
 
 ### Testing proof translation and verification with Verificatum notation written verifier
@@ -42,3 +41,25 @@ roprg = gen_roprg(UInt8[2])
 
 simulator = shuffle(𝐞, g, pk, verifier; roprg)
 @test verify(simulator)
+
+### Testing width
+
+𝐦 = [
+    (g^2, g^4),
+    (g^4, g^5),
+    (g^7, g^3)
+]
+
+𝐫 = [
+    2 5;
+    4 6;
+    9 8;
+]
+
+𝐞 = enc(𝐦, 𝐫)
+
+simulator = shuffle(𝐞, g, pk, verifier)
+@test verify(simulator)
+
+dec = Dec(sk)
+@test sort(𝐦) == sort(dec(simulator.proposition.𝐞′))

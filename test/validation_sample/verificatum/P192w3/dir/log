@@ -1,0 +1,69 @@
+
+-----------------------------------------------------------
+ Copyright Douglas Wikstrom 2008-2019
+ Licensed under AGPL as defined in:
+ https://www.gnu.org/licenses/agpl-3.0.en.html
+-----------------------------------------------------------
+-----------------------------------------------------------
+Party01
+-----------------------------------------------------------
+241015 02:00:45 Starting hint server.
+241015 02:00:45 Starting http server.
+241015 02:00:45 Synchronizing with the other servers. Please wait.
+241015 02:00:45 Generate keys for secret communication.
+241015 02:00:45 | Generate and read plain keys.
+241015 02:00:45 | | Generate key-pair.
+241015 02:00:45 | | Exchange public keys with all parties.
+241015 02:00:45 | | | Publish public key.
+241015 02:00:45 | | Writing keys to file.
+241015 02:00:45 | Generate independent generator.
+241015 02:00:45 | | Execute Pedersen 1 times with rotating dealer.
+241015 02:00:45 | | | Deal a secret using Pedersen VSS.
+241015 02:00:45 | | | | Generate checking elements.
+241015 02:00:45 | | | | Compute encrypted shares for all parties.
+241015 02:00:45 | | | | Publish checking elements and encrypted shares.
+241015 02:00:45 | | | | Exchange verdicts.
+241015 02:00:45 | | | | | Publish verdict (true).
+241015 02:00:45 | | | | Sharing completed.
+241015 02:00:45 | | Write independent generator to file.
+241015 02:00:45 Shuffle 10 ciphertexts.
+241015 02:00:45 | Derive independent generators using RO.
+241015 02:00:45 | Generate reencryption exponents.
+241015 02:00:45 | Compute reencryption factors.
+241015 02:00:46 | Perform local pre-computation.
+241015 02:00:46 | Compute permutation commitment.
+241015 02:00:46 | Compute output list.
+241015 02:00:46 | Publish output list.
+241015 02:00:46 | Prove correctness of shuffle.
+241015 02:00:46 | | Publish our permutation commitment.
+241015 02:00:46 | | Generate batching vector.
+241015 02:00:46 | | | Derive 256 bits using random oracle.
+241015 02:00:46 | | Compute commitment.
+241015 02:00:47 | | Publish our commitment.
+241015 02:00:47 | | Generate challenge.
+241015 02:00:47 | | | Derive 256 bits using random oracle.
+241015 02:00:47 | | Compute reply.
+241015 02:00:47 | | Publish reply.
+241015 02:00:47 Waiting for mutual shutdown acknowledgements.
+241015 02:00:47 | Publish acknowledgement.
+241015 02:00:47 | Publish acknowledgement.
+241015 02:00:47 Allow download of our acknowledgment for another 1 seconds.
+241015 02:00:48 Stopping hint server.
+241015 02:00:48 Stopping http server.
+-----------------------------------------------------------
+Completed shuffling.
+
+Running time:                                          (ms)
+- Execution         0h  0m  3s                         3150
+- Network           0h  0m  0s                           59
+- Effective         0h  0m  3s                         3091
+- Idle              0h  0m  0s                            0
+- Computation       0h  0m  3s                         3091
+
+Communication:                                      (bytes)
+- Sent                  0.0 B                             0
+- Received              0.0 B                             0
+- Total                 0.0 B                             0
+
+Proof size:            15.4 KB                        15363
+

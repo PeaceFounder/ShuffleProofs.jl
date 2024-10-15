@@ -1,31 +1,18 @@
 using CryptoGroups.Utils: @check
-using CryptoGroups: Group, order, modulus
-using .SigmaProofs.ElGamal: Enc, Dec, ElGamalRow
+using CryptoGroups: Group, order
+using SigmaProofs.ElGamal: Enc, Dec, ElGamalRow
+using SigmaProofs: SigmaProofs, Proposition, Proof, Verifier, Simulator
+import SigmaProofs.ElGamal: width
 
-abstract type Proposition end
-abstract type Proof end
-abstract type Verifier end
-
-function step end
-function challenge end
-
-struct Simulator #{T<:Proposition} 
-    proposition::Proposition # Proposition type is the one which selects a type of prover being used
-    proof::Proof
-    verifier::Verifier
-end
-
-Base.:(==)(x::Simulator, y::Simulator) = x.proposition == y.proposition && x.proof == y.proof && x.verifier == y.verifier
-
-struct Shuffle{G <: Group} <: Proposition
+struct Shuffle{G <: Group, N} <: Proposition
     g::G
     pk::G
-    𝐞::Vector{<:ElGamalRow{G}} # ElGamalRow?
-    𝐞′::Vector{<:ElGamalRow{G}} # ElGamalRow?
+    𝐞::Vector{ElGamalRow{G, N}} 
+    𝐞′::Vector{ElGamalRow{G, N}} 
 
-    function Shuffle{G}(g::G, pk::G, 𝐞::Vector{<:ElGamalRow{G, N}}, 𝐞′::Vector{<:ElGamalRow{G, N}}) where {G <: Group, N}
+    function Shuffle{G}(g::G, pk::G, 𝐞::Vector{ElGamalRow{G, N}}, 𝐞′::Vector{ElGamalRow{G, N}}) where {G <: Group, N}
         @check length(𝐞) == length(𝐞′)
-        new(g, pk, 𝐞, 𝐞′)
+        new{G, N}(g, pk, 𝐞, 𝐞′)
     end
 
     Shuffle(g::G, pk::G, 𝐞::Vector{<:ElGamalRow{G}}, 𝐞′::Vector{<:ElGamalRow{G}}) where G <: Group = Shuffle{G}(g, pk, 𝐞, 𝐞′)
@@ -33,35 +20,36 @@ end
 
 Base.:(==)(x::Shuffle{G}, y::Shuffle{G}) where G <: Group = x.g == y.g && x.pk == y.pk && x.𝐞 == y.𝐞 && x.𝐞′ == y.𝐞′
 
-struct ShuffleSecret
-    𝛙::Vector{<:Integer}
-    𝐫′::Matrix{<:Integer}
-end
 
-# When having a ElGamalRow what structure would this proof have?
-struct PoSProof{G <: Group} <: Proof
+Base.permute!(shuffle::Shuffle, perm::AbstractVector{<:Integer}) = permute!(shuffle.𝐞′, perm)
+Base.sortperm(shuffle::Shuffle) = sortperm(shuffle.𝐞′)
+
+width(::Type{<:Shuffle{<:Group, N}}) where N = N
+
+Base.length(proposition::Shuffle) = length(proposition.𝐞)
+
+struct PoSProof{G <: Group, N} <: Proof
     𝐜::Vector{G}
     𝐜̂::Vector{G}
-    #t::Tuple{G, G, G, Tuple{G, G}, Vector{G}}
-    t::Tuple{G, G, G, ElGamalRow{G}, Vector{G}}
-    s::Tuple{BigInt, BigInt, BigInt, BigInt, Vector{BigInt}, Vector{BigInt}}
+    t::Tuple{G, G, G, ElGamalRow{G, N}, Vector{G}}
+    s::Tuple{BigInt, BigInt, BigInt, NTuple{N, BigInt}, Vector{BigInt}, Vector{BigInt}}
 end
 
 import Base: ==
 
 ==(x::PoSProof, y::PoSProof) = x.𝐜 == y.𝐜 && x.𝐜̂ == y.𝐜̂ && x.t == y.t && x.s == y.s
 
-struct PoSChallenge
+width(::Type{PoSProof{<:Group, N}}) where N = N
+
+struct PoSChallenge 
     𝐡::Vector{<:Group} # Independent set of generators
     𝐮::Vector{BigInt} # PoS commitment challenge
-    c::BigInt # Last bit of a challenge
+    c::BigInt # reencryption challenge
 end
 
-### 
-function verify(proposition::Shuffle, secret::ShuffleSecret)
+function verify(proposition::Shuffle, 𝐫′::Matrix{<:Integer}, 𝛙::Vector{<:Integer})
     
     (; 𝐞, 𝐞′, g, pk) = proposition
-    (; 𝛙, 𝐫′) = secret
 
     enc = Enc(pk, g)
 
@@ -70,6 +58,7 @@ function verify(proposition::Shuffle, secret::ShuffleSecret)
     return enc(𝐞, r)[𝛙] == 𝐞′
 end
 
+verify(proposition::Shuffle, 𝐫′::Vector{<:Integer}, 𝛙::Vector{<:Integer}) = verify(proposition, reshape(𝐫′, (1, length(𝐫′))), 𝛙)
 
 function verify(proposition::Shuffle, sk::Integer)
     
@@ -82,22 +71,6 @@ function verify(proposition::Shuffle, sk::Integer)
     return sort(dec(𝐞)) == sort(dec(𝐞′))
 end
 
-
-function gen_shuffle(enc::Enc, e::AbstractVector{<:ElGamalRow{<:Group}}, r::Matrix{<:Integer}) 
-
-    e_enc = enc(e, r)
-    ψ = sortperm(e_enc)
-
-    sort!(e_enc)
-
-    (; g, pk) = enc
-
-    proposition = Shuffle(g, pk, e, e_enc)
-    secret = ShuffleSecret(ψ, r)
-    
-    return proposition, secret
-end
-
 function gen_commitment(g::G, 𝐡::Vector{G}, b::Vector, r::Integer) where G <: Group
 
     com = g^r * prod(𝐡 .^ b)
@@ -105,7 +78,6 @@ function gen_commitment(g::G, 𝐡::Vector{G}, b::Vector, r::Integer) where G <:
     return com
 end
 
-# Need to ensure 𝐫 to be a vector here
 function gen_perm_commitment(g::G, 𝐡::Vector{G}, 𝛙::Vector, 𝐫::Vector) where G <: Group
 
     N = length(𝛙)
@@ -140,7 +112,6 @@ end
 ∏(𝐱) = prod(𝐱)
 ∏(f, 𝐱) = prod(f, 𝐱)
 
-
 using Random: RandomDevice
 
 function gen_roprg(ρ::AbstractVector{UInt8})
@@ -154,32 +125,35 @@ end
 
 gen_roprg() = gen_roprg(rand(RandomDevice(), UInt8, 32))
 
+prove(proposition::Shuffle{G}, verifier::Verifier, 𝐫′::Vector{<:Integer}, 𝛙::Vector{<:Integer}; roprg = gen_roprg()) where G <: Group = prove(proposition, verifier, reshape(𝐫′, (length(𝐫′), 1)), 𝛙; roprg)
 
-function prove(proposition::Shuffle{G}, secret::ShuffleSecret, verifier::Verifier; roprg = gen_roprg()) where G <: Group
+function prove(proposition::Shuffle{G}, verifier::Verifier, 𝐫′::Matrix{<:Integer}, 𝛙::Vector{<:Integer}; roprg = gen_roprg()) where G <: Group
 
-    (; 𝛙, 𝐫′) = secret
+    @check length(𝛙) == length(proposition)
+    @check size(𝐫′) == (length(proposition), width(proposition)) "Dimensions for randomization factors does not match"
+
     (; g, pk, 𝐞, 𝐞′) = proposition
     
-    v1 = step(verifier, proposition) # So I could keep a proposition in the coresponding state machine in the end
-    𝐡, h = challenge(v1) 
-
-    # Would make more sense for length(proposition) == length(secret)
-    @check length(𝛙) == length(𝐞)
+    𝐡 = generator_basis(verifier, G, length(proposition))
+    h = first(𝐡)
 
     N = length(𝛙)
     q = order(g)
-    #n = bitlength(q)
 
     𝐫 = rand(roprg(:𝐫), 2:q - 1, N) # n is part of the sampler here
     𝐫̂ = rand(roprg(:𝐫̂), 2:q - 1, N)
-    𝛚 = rand(roprg(:𝛚), 2:q - 1, 4) 
+
+    ω₁ = rand(roprg(:ω₁), 2:q - 1) 
+    ω₂ = rand(roprg(:ω₂), 2:q - 1) 
+    ω₃ = rand(roprg(:ω₃), 2:q - 1) 
+    𝛚₄ = rand(roprg(:𝛚₄), 2:q - 1, width(proposition)) 
+
     𝛚̂ = rand(roprg(:𝛚̂), 2:q - 1, N)
     𝛚̂′ = rand(roprg(:𝛚̂′), 2:q - 1, N)
 
     𝐜 = gen_perm_commitment(g, 𝐡, 𝛙, 𝐫)
 
-    v2 = step(v1, 𝐜)
-    𝐮 = challenge(v2)
+    𝐮 = challenge_perm(verifier, proposition, 𝐜)
 
     𝐮′ = 𝐮[𝛙]
 
@@ -194,19 +168,15 @@ function prove(proposition::Shuffle{G}, secret::ShuffleSecret, verifier::Verifie
     r̄ = ∑(𝐫, q) 
     r̂ = ∑(𝐫̂ .* 𝐯, q)
     r̃ = ∑(𝐫 .* 𝐮, q)
-    
-    𝐫′ = reshape(𝐫′, length(𝐫′)) # Need to figure out generalization here
-    r′ = ∑(𝐫′ .* 𝐮, q) # a vector of width 𝔀
 
-    t₁ = g^𝛚[1] 
-    t₂ = g^𝛚[2]
-    t₃ = g^𝛚[3] * ∏(𝐡 .^ 𝛚̂′) 
+    r′ = [∑(𝐫′_col .* 𝐮, q) for 𝐫′_col in eachcol(𝐫′)] # a vector of width 𝔀
 
-    # This is going to be simplified when t₄ will be made ElGamalRow
-    #𝐞′ = [i[1] for i in 𝐞′] 
+    t₁ = g^ω₁
+    t₂ = g^ω₂
+    t₃ = g^ω₃ * ∏(𝐡 .^ 𝛚̂′) 
+
     enc = Enc(pk, g)
-    t₄ = enc(-𝛚[4]) * ∏(𝐞′ .^ 𝛚̂′) # a vector of width 𝔀
-#    t₄ = (t₄.a, t₄.b)
+    t₄ = enc(.-𝛚₄) * ∏(𝐞′ .^ 𝛚̂′) 
 
     𝐭̂ = Vector{G}(undef, N)
     𝐭̂[1] = g^𝛚̂[1] * h^𝛚̂′[1]
@@ -214,49 +184,45 @@ function prove(proposition::Shuffle{G}, secret::ShuffleSecret, verifier::Verifie
         𝐭̂[i] = g^𝛚̂[i] * 𝐜̂[i-1]^𝛚̂′[i]
     end
 
-    y = (𝐞, 𝐞′, 𝐜, 𝐜̂, pk) # seems redundant
     t = (t₁, t₂, t₃, t₄, 𝐭̂) 
 
-    v3 = step(v2, 𝐜̂, t)
-    c = challenge(v3)
+    c = challenge_reenc(verifier, proposition, 𝐜, 𝐜̂, t)
 
-    s₁ = mod(𝛚[1] + c * r̄, q)
-    s₂ = mod(𝛚[2] + c * r̂, q)
-    s₃ = mod(𝛚[3] + c * r̃, q)
-    s₄ = mod(𝛚[4] + c * r′, q) # A vector of width 𝔀; Can ω[4] be the same here?
+    s₁ = mod(ω₁ + c * r̄, q)
+    s₂ = mod(ω₂ + c * r̂, q)
+    s₃ = mod(ω₃ + c * r̃, q)
+    𝐬₄ = mod.(𝛚₄ + c * r′, q) 
     
-    𝐬̂ = mod.(𝛚̂ .+ c .* 𝐫̂, q) ### What can I do if I have a 0 as one of the elements?
-    𝐬′ = mod.(𝛚̂′ .+ c .* 𝐮′, q) ### What to do if 𝐬′ is 0?
+    𝐬̂ = mod.(𝛚̂ .+ c .* 𝐫̂, q) 
+    𝐬′ = mod.(𝛚̂′ .+ c .* 𝐮′, q) 
 
     # It would be bad if any s point to 0
     @check s₁ != 0 
     @check s₂ != 0
     @check s₃ != 0
-    @check s₄ != 0
+    @check !(0 in 𝐬₄) 
     @check !(0 in 𝐬̂)
     @check !(0 in 𝐬′)
     
-    s = (s₁, s₂, s₃, s₄, 𝐬̂, 𝐬′) # Do I need to ensure that `s` are without 0 elements
+    s = (s₁, s₂, s₃, tuple(𝐬₄...), 𝐬̂, 𝐬′) 
 
     proof = PoSProof(𝐜, 𝐜̂, t, s)
 
-    #simulator = Simulator(proposition, proof, verifier) 
-    #return simulator
     return proof
 end
 
 
-function verify(proposition::Shuffle, proof::PoSProof, verifier::Verifier)
+function verify(proposition::Shuffle{G}, proof::PoSProof{G}, verifier::Verifier) where G <: Group
+
+
+    𝐡 = generator_basis(verifier, G, length(proposition))
     
-    v1 = step(verifier, proposition)
+    𝐮 = challenge_perm(verifier, proposition, proof.𝐜)
 
-    (; 𝐜) = proof
-    v2 = step(v1, 𝐜)
+    c = challenge_reenc(verifier, proposition, proof.𝐜, proof.𝐜̂, proof.t)
 
-    (; 𝐜̂, t) = proof
-    v3 = step(v2, 𝐜̂, t)
+    chg = PoSChallenge(𝐡, 𝐮, c)
 
-    chg = PoSChallenge(v3)
     return verify(proposition, proof, chg)
 end
 
@@ -288,7 +254,7 @@ function verify(proposition::Shuffle, proof::PoSProof, challenge::PoSChallenge; 
     t₃′ = c̃^(-c) * g^s₃ * ∏(𝐡 .^ 𝐬′) # 𝐬′ is 0!
 
     enc = Enc(pk, g)
-    t₄′ = e′^(-c) * enc(-s₄) * ∏(𝐞′ .^ 𝐬′)
+    t₄′ = e′^(-c) * enc(.-s₄) * ∏(𝐞′ .^ 𝐬′)
 
     𝐭̂′ = Vector(undef, N)
 
@@ -314,51 +280,41 @@ function verify(proposition::Shuffle, proof::PoSProof, challenge::PoSChallenge; 
     return isvalid(report)
 end
 
+function shuffle(𝐞::AbstractVector{<:ElGamalRow{G, N}}, g::G, pk::G; 𝐫′ = gen_r(𝐞)) where {N, G <: Group}
 
-verify(simulator::Simulator) = verify(simulator.proposition, simulator.proof, simulator.verifier)
-
-
-function shuffle(𝐞::AbstractVector{<:ElGamalRow{G, N}}, g::G, pk::G; roprg = gen_roprg()) where {N, G <: Group}
-
-    𝐫′ = rand(roprg(:𝐫′), 2:order(g) - 1, (N, length(𝐞))) 
     enc = Enc(pk, g)
-    
-    return gen_shuffle(enc, 𝐞, 𝐫′)
+
+    e_enc = enc(𝐞, 𝐫′)
+
+    return Shuffle(g, pk, 𝐞, e_enc)
 end
 
 
-# function shuffle(𝐞::ElGamal{G}, g::G, pk::G; roprg = gen_roprg()) where G <: Group
-
-#     # Need to abstract this into a function argument
-#     q = order(g)
-#     N = length(𝐞)
-
-#     #n = bitlength(q)
-
-#     𝐫′ = rand(roprg(:𝐫′), 2:q - 1, N)
-
-#     enc = Enc(pk, g)
-    
-#     return gen_shuffle(enc, 𝐞, 𝐫′) # I may also refactor it as shuffle. 
-# end
-
-#shuffle(𝐦::Vector{G}, g::G, pk::G; roprg = gen_roprg()) where G <: Group = shuffle(ElGamal(ones(𝐦), 𝐦), g, pk; roprg)
+gen_r(𝐞::Vector{G}; roprg = gen_roprg()) where G <: Group = rand(roprg(:𝐫′), 2:order(G)-1, length(𝐞))
+gen_r(𝐞::Vector{<:ElGamalRow{G, N}}; roprg = gen_roprg()) where {G <: Group, N} = rand(roprg(:𝐫′), 2:order(G)-1, (length(𝐞), N))
 
 # A convert method could be cleaner
-shuffle(𝐦::Vector{G}, g::G, pk::G; roprg = gen_roprg()) where G <: Group = shuffle([ElGamalRow(one(mi), mi) for mi in 𝐦], g, pk; roprg)
+shuffle(𝐦::Vector{G}, g::G, pk::G; 𝐫′ = gen_r(𝐞)) where G <: Group = shuffle([ElGamalRow(one(mi), mi) for mi in 𝐦], g, pk; 𝐫′)
 
-#shuffle(𝐞::Union{ElGamal{G}, Vector{G}}, enc::Enc; roprg = gen_roprg()) where G <: Group = shuffle(𝐞, enc.g, enc.pk; roprg)
-
-shuffle(𝐞::Union{Vector{<:ElGamalRow{G}}, Vector{G}}, enc::Enc; roprg = gen_roprg()) where G <: Group = shuffle(𝐞, enc.g, enc.pk; roprg)
+shuffle(𝐞::Union{Vector{<:ElGamalRow{G}}, Vector{G}}, enc::Enc; 𝐫′ = gen_r(𝐞)) where G <: Group = shuffle(𝐞, enc.g, enc.pk; 𝐫′)
 
 
-function shuffle(𝐞::Vector{<:ElGamalRow{G}}, g::G, pk::G, verifier::Verifier; roprg = gen_roprg()) where G <: Group
-    proposition, secret = shuffle(𝐞, g, pk; roprg)
-    #return prove(proposition, secret, verifier; roprg)
-    proof = prove(proposition, secret, verifier; roprg)
+function shuffle(𝐞::Vector{<:ElGamalRow{G}}, g::G, pk::G, verifier::Verifier; roprg = gen_roprg(), ψ = nothing) where G <: Group
+
+    𝐫′ = gen_r(𝐞; roprg)
+
+    proposition = shuffle(𝐞, g, pk; 𝐫′)
+
+    if isnothing(ψ)
+        ψ = sortperm(proposition)
+    end
+    permute!(proposition, ψ)
+
+    proof = prove(proposition, verifier, 𝐫′, ψ; roprg)
+
     return Simulator(proposition, proof, verifier)
 end
 
-shuffle(𝐦::Vector{G}, g::G, pk::G, verifier::Verifier; roprg = gen_roprg()) where G <: Group = shuffle([ElGamalRow(one(mi), mi) for mi in 𝐦], g, pk, verifier; roprg)
+shuffle(𝐦::Vector{G}, g::G, pk::G, verifier::Verifier; roprg = gen_roprg(), ψ = nothing) where G <: Group = shuffle([ElGamalRow(one(mi), mi) for mi in 𝐦], g, pk, verifier; roprg, ψ)
 
-shuffle(𝐞::Union{Vector{<:ElGamalRow{G}}, Vector{G}}, enc::Enc, verifier::Verifier; roprg = gen_roprg()) where G <: Group = shuffle(𝐞, enc.g, enc.pk, verifier; roprg)
+shuffle(𝐞::Union{Vector{<:ElGamalRow{G}}, Vector{G}}, enc::Enc, verifier::Verifier; roprg = gen_roprg(), ψ = nothing) where G <: Group = shuffle(𝐞, enc.g, enc.pk, verifier; roprg, ψ)

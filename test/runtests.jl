@@ -3,32 +3,23 @@ using SafeTestsets
 using CryptoGroups
 CryptoGroups.set_strict_mode(true)
 
-# @safetestset "SigmaProofs tests" begin
-#     include("../test/runtests.jl")
-# end
-
-@safetestset "Number conversations" begin
-    include("utils.jl")
-end
-
-@safetestset "WikstromTererlius prover and verifier for reencryption shuffle" begin
+@safetestset "HonestVerifier prover and verifier for reencryption shuffle" begin
     include("proof.jl")
 end
 
-@safetestset "Verificatum schema" begin
-    include("verificatum_schema/runtests.jl")
+@safetestset "Bare Verificatum Proof Parsing and Verifying with PGroup" begin
+    include("verificatum_schema/proofparser.jl")
 end
 
-@safetestset "Verificatum verifier" begin
+@safetestset "Verificatum Verifier tests" begin
+    include("verificatum_schema/ecparser.jl")
+    include("verificatum_schema/ciphertexts.jl")
+    include("verificatum_schema/ciphertexts_w3.jl")
     include("verificatum-verifier.jl")
 end
 
 @safetestset "Verifiactum verifier compatible proof generation" begin
     include("verificatum-prover.jl")
-end
-
-@safetestset "Decryption proofs" begin
-    include("decryption.jl")
 end
 
 @safetestset "Braid proofs" begin
@@ -37,5 +28,9 @@ end
 end
 
 @safetestset "Serilization tests" begin
-    include("store.jl")
+    include("serializer.jl")
+end
+
+@safetestset "Testing examples" begin
+    include("../examples/voting-PoS.jl")
 end

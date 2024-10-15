@@ -1,32 +1,28 @@
 using Test
 
 import CryptoGroups: @PGroup, @ECGroup
-import ShuffleProofs.SigmaProofs.ElGamal: ElGamalRow, Enc, Dec
+import SigmaProofs.ElGamal: ElGamalRow, Enc, Dec
 import CryptoGroups
 
-import ShuffleProofs: prove, verify, Simulator, gen_shuffle, Verifier, PoSChallenge, Shuffle, shuffle, VShuffleProof, PoSProof
-import ShuffleProofs: step, challenge, PoSChallenge, gen_roprg
+import SigmaProofs: generator_basis
 
+import ShuffleProofs: prove, verify, Simulator, Verifier, PoSChallenge, Shuffle, shuffle, VShuffleProof, PoSProof
+import ShuffleProofs: PoSChallenge, gen_roprg, challenge_perm, challenge_reenc
 
-@enum VState Config Init PermCommit PoSCommit
 
 ### 
-struct HonestVerifier{T} <: Verifier
+struct HonestVerifier <: Verifier
     challenge::PoSChallenge
 end
 
-HonestVerifier(challenge::PoSChallenge) = HonestVerifier{Config}(challenge)
-HonestVerifier{T}(verifier::HonestVerifier) where T = HonestVerifier{T}(verifier.challenge)
+PoSChallenge(verifier::HonestVerifier) = verifier.challenge
 
-PoSChallenge(verifier::HonestVerifier{PoSCommit}) = verifier.challenge
 
-step(verifier::HonestVerifier{Config}, proposition::Shuffle) = HonestVerifier{Init}(verifier)
-step(verifier::HonestVerifier{Init}, 𝐜) = HonestVerifier{PermCommit}(verifier)
-step(verifier::HonestVerifier{PermCommit}, 𝐜̂, t) = HonestVerifier{PoSCommit}(verifier)
+generator_basis(verifier::HonestVerifier, G, n) = verifier.challenge.𝐡
 
-challenge(verifier::HonestVerifier{Init}) = (verifier.challenge.𝐡, verifier.challenge.𝐡[1])
-challenge(verifier::HonestVerifier{PermCommit}) = verifier.challenge.𝐮
-challenge(verifier::HonestVerifier{PoSCommit}) = verifier.challenge.c
+challenge_perm(verifier::HonestVerifier, proposition, 𝐜) = verifier.challenge.𝐮
+
+challenge_reenc(verifier::HonestVerifier, proposition, 𝐜, 𝐜̂, t) = verifier.challenge.c
 
 
 function test_prover(g)
@@ -39,22 +35,24 @@ function test_prover(g)
 
 
     𝐦 = [g^4, g^2, g^3]
-    𝐞 = enc(𝐦, [2, 3, 7])
+    𝐞 = enc(𝐦, [2, 3, 7]) .|> ElGamalRow
 
     N = length(𝐞)
 
     𝐡 = [g^i for i in 2:N+1]
 
+    𝐫′ = [4, 2, 5] #, (1, 3))
+    
+    proposition = shuffle(𝐞, g, pk; 𝐫′)
+    
+    𝛙 = sortperm(proposition)
+    permute!(proposition, 𝛙)
 
-    𝐫′ = reshape([4, 2, 5], (1, 3))
-    proposition, secret = gen_shuffle(enc, ElGamalRow.(𝐞), 𝐫′) # In practice total of random factors can't match as it reveals 
-    @test verify(proposition, secret)
+    @test verify(proposition, 𝐫′, 𝛙)
     @test verify(proposition, sk)
 
-    (; 𝛙) = secret
     (; 𝐞, 𝐞′) = proposition
-    @test dec(𝐞)[𝛙] == dec(𝐞′)
-
+    @test dec(𝐞)[𝛙] == dec(𝐞′) # checks that the correct permuation is used
 
     𝐡 = [g^i for i in 2:N+1]
     𝐮 = [3, 4, 5]
@@ -66,9 +64,8 @@ function test_prover(g)
 
     # Since the group is small
     # chances that at least one group element will point to 1 are large
-    #roprg = gen_roprg(UInt8[7]) # 14, 27, 152
     roprg = gen_roprg(reinterpret(UInt8, Int[38])) # 14, 27, 152, 204, 689, 961
-    proof = prove(proposition, secret, verifier; roprg)
+    proof = prove(proposition, verifier, 𝐫′, 𝛙; roprg)
     @test verify(proposition, proof, verifier)
 
     roprg = gen_roprg(reinterpret(UInt8, Int[409])) # 14, 27, 152, 204, 689, 961

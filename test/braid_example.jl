@@ -7,7 +7,7 @@ y = [4, 2, 3]
 Y = g .^ y
 
 verifier = ProtocolSpec(;g)
-simulator = braid(g, Y, verifier)
+simulator = braid(Y, g, verifier)
 
 @assert verify(simulator)
 

@@ -6,15 +6,18 @@ function __init__()
     CryptoGroups.set_strict_mode(true)
 end
 
-include("../SigmaProofs/src/SigmaProofs.jl")
+import SigmaProofs: prove, verify, proof_type
 
-include("utils.jl") # Common functions
+include("utils.jl")
 include("prover.jl") 
-include("parser.jl") 
-include("io.jl") # Some convinience methods
 include("verifier.jl") 
-include("decryption.jl") 
+
+SigmaProofs.proof_type(::Type{Shuffle{G, N}}) where {G <: Group, N} = PoSProof{G, N} 
+SigmaProofs.proof_type(::Type{Shuffle}) = PoSProof #
+
+Base.isvalid(::Type{VShuffleProof{G, N}}, proposition::Shuffle{G, N}) where {G <: Group, N} = true
+
 include("braid.jl")
-include("store.jl")
+include("serializer.jl")
 
 end # module

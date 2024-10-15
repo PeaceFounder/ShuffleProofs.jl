@@ -1,21 +1,35 @@
+# A test sample can be generated with setting a GROUP as environment variable in bash which can be created with an internal method `String(SigmaProofs.Verificatum.marshal_s_Gq(g).x)` and then running a follwing set of commands:
+
+# Generating demo data
+# vmnd -pkey "$GROUP" publicKey
+# vmnd -ciphs -width 3 publicKey 10 ciphertexts
+
+# Doing the shuffle
+# vmni -prot -sid "SessionID" -name "Ellection" -nopart 1 -thres 1 -width 3 -pgroup "$GROUP" stub.xml
+# vmni -party -name "Santa Claus" stub.xml privInfo.xml protInfo.xml
+# vmn -setpk privInfo.xml protInfo.xml publicKey
+# vmn -shuffle privInfo.xml protInfo.xml ciphertexts ciphertextsout
+
+# Verification can be done via
+# time vmnv -shuffle protInfo.xml dir/nizkp/default
+
 using Test
-import ShuffleProofs: decode, encode, Tree, unmarshal, marshal_publickey, unmarshal_publickey, unmarshal_privatekey
+import SigmaProofs.Parser: decode, encode, Tree, unmarshal, marshal_publickey, unmarshal_publickey, unmarshal_privatekey
 import CryptoGroups: PGroup
-import ShuffleProofs.SigmaProofs.ElGamal: Dec, ElGamalRow
+import SigmaProofs.ElGamal: Dec, ElGamalRow
+import ShuffleProofs: load_verificatum_simulator, verify, PoSProof
 
-
-CIPHERTEXT_FILE = "$(@__DIR__)/../validation_sample/verificatum/MODP/ciphertexts"
-CIPHERTEXTOUT_FILE = "$(@__DIR__)/../validation_sample/verificatum/MODP/ciphertextsout"
+BASE_DIR = "$(@__DIR__)/../validation_sample/verificatum/MODP/"
+CIPHERTEXT_FILE = "$BASE_DIR/ciphertexts"
+CIPHERTEXTOUT_FILE = "$BASE_DIR/ciphertextsout"
 PUBLIC_KEY = "$(@__DIR__)/../validation_sample/verificatum/publicKey"
 PRIVATE_KEY = "$(@__DIR__)/../validation_sample/verificatum/privateKey" 
-
 
 y, g = let
     bytes = read(PUBLIC_KEY)
     tree = decode(bytes)
     unmarshal_publickey(tree)
 end
-
 
 sk, g′ = let
     bytes = read(PRIVATE_KEY)
@@ -30,29 +44,24 @@ end
 
 G = typeof(g)
 
-#𝓖 = group(g)
-
 𝐞 = let
     bytes = read(CIPHERTEXT_FILE)
     tree = decode(bytes)
     𝐚, 𝐛 = convert(Tuple{Vector{BigInt}, Vector{BigInt}}, tree)
-    #ElGamal{G}(𝐚, 𝐛)
     [ElGamalRow(G(ai), G(bi)) for (ai, bi) in zip(𝐚, 𝐛)]
 end
 
 𝐞′ = let
     bytes = read(CIPHERTEXTOUT_FILE)
     tree = decode(bytes)
-    #convert(ElGamal{G}, tree)
     convert(Vector{ElGamalRow{G, 1}}, tree)
 end
 
-
 dec = Dec(sk)
 
-𝐦 = g .^ (2:11)
-@test getindex.(dec(𝐞), 1) == 𝐦
+@test sort(dec(𝐞)) == sort(dec(𝐞′))
 
+simulator = load_verificatum_simulator(BASE_DIR)
+@test verify(simulator)
 
-𝐦′ = getindex.(dec(𝐞′), 1)
-@test sort(𝐦) == sort(𝐦′)
+@test verify(simulator.proposition, PoSProof(simulator.proof), simulator.verifier)

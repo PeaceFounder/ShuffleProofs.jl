@@ -1,76 +1,55 @@
 using Test
 
-import ShuffleProofs: prove, verify, decrypt, ProtocolSpec, shuffle, ShuffleProofs, braid, load
+import ShuffleProofs: prove, verify, ProtocolSpec, shuffle, ShuffleProofs, braid, load
 import CryptoGroups: PGroup, CryptoGroups, @ECGroup
-import ShuffleProofs.SigmaProofs.ElGamal: Enc, Dec, ElGamalRow
+import SigmaProofs.ElGamal: Enc, Dec, ElGamalRow
+import SigmaProofs.DecryptionProofs: decrypt, decryptinv
 
-SPEC = "$(@__DIR__)/validation_sample/verificatum/MODP/protInfo.xml"
-verifier = load(ProtocolSpec, SPEC)
+verifier = ProtocolSpec(; g = @ECGroup{P_192}())
 
 (; g) = verifier
-Y = [g^4, g^2, g^3]
-
-x = 123
-X = g^x
-
-proposition, secret = shuffle(Y, X, g) # changing roles
-
-a = [i[1].a for i in proposition.𝐞′]
-b = [i[1].b for i in proposition.𝐞′]
-
-#a = CryptoGroups.a(proposition.𝐞′)
-#b = CryptoGroups.b(proposition.𝐞′)
-
-decryption = decrypt(g, b, x)
-
-b′ = decryption.𝔀′
-
-#Y′ = b.^x ./ a
-
-Y′ = b′ ./ a
-
-@test sort(Y′) == sort(Y .^ x)
-
-### An alternative approach according as presented in poster (fixed)
 
 y = [g^4, g^2, g^3]
 
 s = 123
 h = g^s
 
-#𝐞 = ElGamal(fill(h, length(y)), y)
-𝐞 = [ElGamalRow(h, yi) for yi in y]
+𝐞 = [ElGamalRow(yi, one(g)) for yi in y]
 
+proposition = shuffle(𝐞, g, h)
 
-proposition, secret = shuffle(𝐞, h, g)
+decryption = decrypt(g, proposition.𝐞′, s)
+@test sort([inv(i) for (i,) in decryption.plaintexts]) == sort(y .^ s)
 
-(; 𝐞′) = proposition
+# Alternative using decryptinv
+decryptioninv = decryptinv(g, proposition.𝐞′, s)
+@test sort([i for (i,) in decryptioninv.trackers]) == sort(y .^ s)
 
-a = [i[1].a for i in 𝐞′]
-b = [i[1].b for i in 𝐞′]
-
-c = b.^s
-
-y′ = h .* c ./ a # This is where the error was lying in EVoteID 2023 poster
-
-@test sort(y′) == sort(y .^ s)
 
 ######### braid method test ########
 
 (; g) = verifier
 Y = [g^4, g^2, g^3]
+𝐫′ = [2, 4, 5] #, (1, 3))
+x = 23 # exponentiation factor
 
-proposition, secret = braid(g, Y)
+proposition = braid(Y, g; x, 𝐫′)
+
+𝛙 = collect(1:3)
+𝛙 = sortperm(proposition)
+permute!(proposition, 𝛙)
 
 @test ShuffleProofs.input_generator(proposition) == g
 @test ShuffleProofs.input_members(proposition) == Y
-@test ShuffleProofs.output_generator(proposition) == g^secret.key
+@test ShuffleProofs.output_generator(proposition) == g^x
 
 Y′ = ShuffleProofs.output_members(proposition)
-@test sort(Y′) == sort(Y .^ secret.key)
+@test Y′ == (Y .^ x)[𝛙]
 
-@test verify(proposition, secret)
+@test verify(proposition.shuffle, 𝐫′, 𝛙)
+@test verify(proposition.decryption, x)
 
+@test verify(proposition, 𝐫′, 𝛙, x)
 
 function test_braid(g, y)
 
@@ -78,7 +57,7 @@ function test_braid(g, y)
 
     Y = g .^ y
 
-    simulator = braid(g, Y, verifier)
+    simulator = braid(Y, g, verifier)
     @test verify(simulator)
 
     X = ShuffleProofs.output_generator(proposition)

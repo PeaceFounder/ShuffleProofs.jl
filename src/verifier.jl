@@ -1,70 +1,14 @@
-using .SigmaProofs.GeneratorBasis: generator_basis
+using SigmaProofs.Verificatum: generator_basis, ProtocolSpec, ro_prefix
 using CryptoPRG.Verificatum: HashSpec, PRG, RO, ROPRG
 using CryptoGroups: Group, PGroup, ECGroup
-
-using Base: @kwdef
-
-@kwdef struct ProtocolSpec{G<:Group} <: Verifier
-    g::G
-    nr::Int32 = Int32(100)
-    nv::Int32 = Int32(256)
-    ne::Int32 = Int32(256)
-    prghash::HashSpec = HashSpec("sha256")
-    rohash::HashSpec = HashSpec("sha256")
-    version::String = "3.0.4"
-    sid::String = "SessionID"
-    auxsid::String = "default"
-end
-
-Base.:(==)(x::ProtocolSpec{G}, y::ProtocolSpec{G}) where G <: Group = x.g == y.g && x.nr == y.nr && x.nv == y.nv && x.ne == y.ne && x.prghash == y.prghash && x.rohash == y.rohash && x.version == y.version && x.sid == y.sid && x.auxsid == y.auxsid
-
-function marshal_s_Gq(g::PGroup)
-
-    M = bitlength(order(g))
-
-    tree = marshal(g)
-    str = "ModPGroup(safe-prime modulus=2*order+1. order bit-length = $M)::" * string(tree)
-    
-    return Leaf(str)
-end
+using SigmaProofs.ElGamal: width
+using SigmaProofs.Parser: Tree, Leaf, interpret, encode
 
 
-function marshal_s_Gq(g::ECGroup)
-    
-    curve_name = normalize_ecgroup_name(name(g))
-    tree = marshal(g)
-
-    str = "com.verificatum.arithm.ECqPGroup($curve_name)::" * string(tree)
-
-    return Leaf(str)
-end
-
-
-function ro_prefix(spec::ProtocolSpec)
-
-    (; version, sid, auxsid, rohash, prghash, g, nr, nv, ne) = spec
-
-    s_PRG = map_hash_name_back(prghash)
-    s_H = map_hash_name_back(rohash)
-    
-    s_Gq = marshal_s_Gq(g)
-
-    data = (version, sid * "." * auxsid, nr, nv, ne, s_PRG, s_Gq, s_H)
-
-    tree = Tree(data)
-    binary = encode(tree)
-
-    ρ = rohash(binary)
-
-    return ρ
-end
-
-
-struct VShuffleProof{G<:Group} <: Proof
+struct VShuffleProof{G<:Group, N} <: Proof
     μ::Vector{G}
-    #τ::Tuple{Vector{G}, G, Vector{G}, G, G, Tuple{G, G}}
-    τ::Tuple{Vector{G}, G, Vector{G}, G, G, ElGamalRow{G}}
-    σ::Tuple{BigInt, Vector{BigInt}, BigInt, BigInt, Vector{BigInt}, BigInt}
+    τ::Tuple{Vector{G}, G, Vector{G}, G, G, ElGamalRow{G, N}}
+    σ::Tuple{BigInt, Vector{BigInt}, BigInt, BigInt, Vector{BigInt}, NTuple{N, BigInt}}
 end
 
 ==(x::VShuffleProof{G}, y::VShuffleProof{G}) where G <: Group = x.μ == y.μ && x.τ == y.τ && x.σ == y.σ
@@ -139,101 +83,87 @@ function PoSProof(vproof::VShuffleProof)
 end
 
 
-### The simulator type will deal with loading the data. 
-
-struct VInit{G<:Group} #<: Verifier
-    spec::ProtocolSpec{G}
-    proposition::Shuffle{G} # ADD G!
-    ρ::Vector{UInt8} 
-    𝐡::Vector{G}
-end
-
 leaf(x::String) = encode(Leaf(x))
 
-function gen_verificatum_basis(::Type{G}, prghash::HashSpec, rohash::HashSpec, N::Integer; nr::Integer = 0, ρ = UInt8[], d = [ρ..., leaf("generators")...]) where G <: Group
 
-    roprg = ROPRG(d, rohash, prghash)
-    prg = roprg(UInt8[]) # d is a better argument than x
+function seed(spec, proposition, 𝐮;
+              ρ = ro_prefix(spec),
+              𝐡 = generator_basis(spec, typeof(proposition.g), length(proposition.𝐞); ρ)
+              )
 
-    # TODO
-    #return rand(prg, G, N; nr)
-    return generator_basis(prg, G, N; nr)
-end
-
-
-
-function VInit(spec::ProtocolSpec{G}, proposition::Shuffle) where G <: Group
-
-    ρ = ro_prefix(spec) ### I can add another method there
-
-    𝔀 = proposition.𝐞
-    N = length(𝔀)
-
-    (; g, nr, rohash, prghash)  = spec
-
-    𝐡 = gen_verificatum_basis(G, prghash, rohash, N; nr, ρ)
-
-    return VInit(spec, proposition, ρ, 𝐡)
-end
-
-
-struct VPermCommit{G<:Group} #<: Verifier
-    spec::ProtocolSpec{G}
-    proposition::Shuffle{G} 
-    ρ::Vector{UInt8} 
-    𝐡::Vector{G} 
-    s::Vector{UInt8}  
-    𝐞::Vector{BigInt} 
-end
-
-
-function VPermCommit(v::VInit{G}, 𝐮::Vector{G}) where G <: Group
-    (; 𝐡, ρ, spec, proposition) = v
-    (; ne, prghash, rohash) = spec
     𝔀, 𝔀′ = proposition.𝐞, proposition.𝐞′
     (; g, pk) = proposition
 
-    N = length(𝔀)
+    (; ne, prghash, rohash) = spec
 
     roprg = ROPRG(ρ, rohash, prghash)
 
-    pk_tree = (g, pk)
+    N = width(proposition)
+    g_ = N == 1 ? g : ntuple(n -> g, N)
+    pk_ = N == 1 ? pk : ntuple(n -> pk, N)
+    pk_tree = (g_, pk_) 
 
-    tree = Tree((g, 𝐡, 𝐮, pk_tree, 𝔀, 𝔀′))
+    tree = Tree((g, 𝐡, 𝐮, pk_tree, 𝔀, 𝔀′)) 
+
     prg = roprg(encode(tree))
-    
+
     (; s) = prg
+
+    return s
+end
+
+function challenge_perm(spec::ProtocolSpec, proposition, 𝐮;
+                        s = seed(spec, proposition, 𝐮)
+                        )
+
+    prg = PRG(spec.prghash, s)
+
+    (; ne) = spec
+    N = length(proposition.𝐞)
 
     𝐭 = rand(prg, BigInt, N; n = ne)
     𝐞 = mod.(𝐭, BigInt(2)^ne)
 
-    return VPermCommit(spec, proposition, ρ, 𝐡, s, 𝐞)
+    return 𝐞
+end
+
+function verify(proposition::Shuffle{G}, proof::PoSProof{G}, verifier::ProtocolSpec{G}) where G <: Group
+
+
+    ρ = ro_prefix(verifier)
+    𝐡 = generator_basis(verifier, G, length(proposition.𝐞); ρ)
+    s = seed(verifier, proposition, proof.𝐜; ρ, 𝐡)
+
+    𝐮 = challenge_perm(verifier, proposition, proof.𝐜; s)
+
+    c = challenge_reenc(verifier, proposition, proof.𝐜, proof.𝐜̂, proof.t; ρ, s)
+
+    chg = PoSChallenge(𝐡, 𝐮, c)
+    
+    return verify(proposition, proof, chg)
 end
 
 
-struct VPoSCommit{G<:Group} #<: Verifier
-    spec::ProtocolSpec{G}
-    proposition::Shuffle{G} # ADD G!
-    ρ::Vector{UInt8} 
-    𝐡::Vector{G}
-    𝐞::Vector{BigInt}
-    𝓿::BigInt
-end
+function challenge_reenc(spec::ProtocolSpec{G}, proposition::Shuffle{G}, 𝐮, τ::Tuple{Vector{G}, G, Vector{G}, G, G, ElGamalRow{G, N}};     
+                         ρ = ro_prefix(spec),
+                         s = seed(spec, proposition, 𝐮; ρ)
+                         ) where {G <: Group, N}
 
-
-#function VPoSCommit(v::VPermCommit{G}, τ::Tuple{Vector{G}, G, Vector{G}, G, G, Tuple{G, G}}) where G <: Group
-function VPoSCommit(v::VPermCommit{G}, τ::Tuple{Vector{G}, G, Vector{G}, G, G, ElGamalRow{G, 1}}) where G <: Group
-    (; 𝐡, ρ, 𝐞, spec, proposition, s) = v
     (; nv, rohash) = spec
 
     ro_challenge = RO(rohash, nv)
     tree_challenge = Tree((Leaf(s), τ))
     𝓿 = interpret(BigInt, ro_challenge([ρ..., encode(tree_challenge)...]))
 
-    return VPoSCommit(spec, proposition, ρ, 𝐡, 𝐞, 𝓿)
+    return 𝓿
 end
 
-function VPoSCommit(v::VPermCommit{G}, 𝐜̂::Vector{G}, t::Tuple{G, G, G, ElGamalRow{G, 1}, Vector{G}}) where G <: Group
+
+function challenge_reenc(spec::ProtocolSpec{G}, proposition::Shuffle{G}, 𝐜, 𝐜̂::Vector{G}, t::Tuple{G, G, G, ElGamalRow{G, N}, Vector{G}};
+                         ρ = ro_prefix(spec),
+                         s = seed(spec, proposition, 𝐜; ρ)
+                         ) where {G <: Group, N}
+
     (t₁, t₂, t₃, t₄, 𝐭̂) = t 
     𝐁 = 𝐜̂
 
@@ -245,16 +175,14 @@ function VPoSCommit(v::VPermCommit{G}, 𝐜̂::Vector{G}, t::Tuple{G, G, G, ElGa
 
     τ = (𝐁, A′, 𝐁′, C′, D′, F′)
 
-    return VPoSCommit(v, τ)
+    return challenge_reenc(spec, proposition, 𝐜, τ; ρ, s)
 end
 
 
-PoSChallenge(verifier::VPoSCommit) = PoSChallenge(verifier.𝐡, verifier.𝐞, verifier.𝓿)
-
-
 function verify(proposition::Shuffle, proof::VShuffleProof, challenge::PoSChallenge; verbose=false)
-    
+
     𝐡, 𝐞, 𝓿 = challenge.𝐡, challenge.𝐮, challenge.c
+
     𝔀, 𝔀′ = proposition.𝐞, proposition.𝐞′
     (; g, pk) = proposition
 
@@ -285,7 +213,7 @@ function verify(proposition::Shuffle, proof::VShuffleProof, challenge::PoSChalle
     ]
 
     enc = Enc(pk, g)
-    report &= "F", F^𝓿 * F′ == enc(-k_F) * ∏(𝔀′ .^ 𝐤_E) 
+    report &= "F", F^𝓿 * F′ == enc(.-k_F) * ∏(𝔀′ .^ 𝐤_E) 
 
     if verbose || isvalid(report) == false
         println(report)
@@ -295,27 +223,15 @@ function verify(proposition::Shuffle, proof::VShuffleProof, challenge::PoSChalle
 end
 
 
-function verify(proposition::Shuffle, proof::VShuffleProof, verifier::ProtocolSpec)
+function verify(proposition::Shuffle{G}, vproof::VShuffleProof{G}, verifier::Verifier) where G <: Group
 
-    v1 = VInit(verifier, proposition)
+    𝐡 = generator_basis(verifier, G, length(proposition))
     
-    (; μ) = proof
-    v2 = VPermCommit(v1, μ)
+    𝐮 = challenge_perm(verifier, proposition, vproof.μ)
 
-    (; τ) = proof
-    v3 = VPoSCommit(v2, τ)
+    c = challenge_reenc(verifier, proposition, vproof.μ, vproof.τ)
 
-    v4 = PoSChallenge(v3)
+    chg = PoSChallenge(𝐡, 𝐮, c)
 
-    return verify(proposition, proof, v4) 
+    return verify(proposition, vproof, chg)
 end
-
-
-
-step(spec::ProtocolSpec, proposition::Proposition) = VInit(spec, proposition)
-step(v::VInit{G}, 𝐜::Vector{G}) where G <: Group = VPermCommit(v, 𝐜)
-step(v::VPermCommit, 𝐜̂, t) = VPoSCommit(v, 𝐜̂, t)
-
-challenge(v::VInit) = (v.𝐡, v.𝐡[1])
-challenge(v::VPermCommit) = v.𝐞
-challenge(v::VPoSCommit) = v.𝓿
