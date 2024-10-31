@@ -171,7 +171,8 @@ The verifier architecture is designed to be extensible, allowing users to implem
 ## Using OpenSSL
 
 OpenSSL's elliptic curve implementation is 10-20x faster than the one in CryptoGroups. We can leverage this performance advantage through the [OpenSSLGroups.jl](https://github.com/PeaceFounder/OpenSSLGroups.jl) package to accelerate ShuffleProofs operations:
-```
+
+```julia
 using CryptoGroups
 using OpenSSLGroups
 import SigmaProofs.ElGamal: Enc
@@ -196,6 +197,8 @@ e_enc = enc(𝐞, 𝐫′)
 simulator = shuffle(𝐞, g, pk, verifier)
 verify(simulator)
 ```
+
+Early benchmarks suggest that `verify` performance increases by a factor of four on `Prime192v1` and by a factor of eight with `Prime256v1` compared to the `CryptoGroups` implementation. This is a bit disappointing, as exponentiation performance increased by a factor of 10...20. This seems to be explained by subpar performance for multiplication operations with the `OpenSSL` implementation, which happens to be about five times slower than with `CryptoGroups` implementation. 
 
 ## References
 

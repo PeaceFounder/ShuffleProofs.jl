@@ -1,3 +1,4 @@
+using CryptoGroups.Specs: GroupSpec, ECP, EC2N
 using SigmaProofs.Parser: Tree
 
 import Base: &
@@ -54,15 +55,3 @@ function Base.println(io::IO, report::Report)
 end
 
 Base.isvalid(report::Report) = report.state
-
-
-# Returns the depth of the tree
-function depth(tree::Tree)
-
-    if tree isa Leaf
-        return 0
-    else
-        return 1 + depth(tree[1])
-    end
-
-end

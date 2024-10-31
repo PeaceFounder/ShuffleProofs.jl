@@ -1,8 +1,7 @@
 using SigmaProofs.Serializer: Path, LocalPath, DEFAULT_VERIFIER
-using SigmaProofs.Parser: decode, unmarshal_publickey, marshal_publickey
+using SigmaProofs.Parser: decode, unmarshal_publickey, marshal_publickey, width_elgamal_vec, width_elgamal_row
 import SigmaProofs.Serializer: load, save, treespec
 using CryptoGroups.Fields: bitlength # 
-
 using CryptoGroups.Utils: @check
 
 treespec(::Type{<:Shuffle}) = (
@@ -43,6 +42,7 @@ function save(obj::Simulator{<:Braid}, path::Path)
     return
 end
 
+# perhaps there is a shorter way here
 function load(::Type{Simulator{Braid}}, path::Path; verifier_type = DEFAULT_VERIFIER) 
 
     proposition = load(Braid, path)
@@ -51,6 +51,16 @@ function load(::Type{Simulator{Braid}}, path::Path; verifier_type = DEFAULT_VERI
 
     return Simulator(proposition, proof, verifier)
 end
+
+function load(::Type{Simulator{Braid{G}}}, path::Path; verifier_type = DEFAULT_VERIFIER{G}) where G <: Group
+
+    proposition = load(Braid{G}, path)
+    proof = load(proof_type(proposition), path)
+    verifier = load(verifier_type, joinpath(path, treespec(verifier_type)))
+
+    return Simulator(proposition, proof, verifier)
+end
+
 
 function save(proposition::Shuffle, dir::Path) 
 
@@ -66,21 +76,30 @@ function save(proposition::Shuffle, dir::Path)
     return
 end
 
-function load(::Type{Shuffle}, basedir::Path)
+function load(::Type{Shuffle}, basedir::Path; G::Union{Nothing, Type{<:Group}} = nothing)
 
     publickey_tree = decode(read(joinpath(basedir, "publicKey.bt")))
     pk, g = unmarshal_publickey(publickey_tree; relative=true)
 
-    G = typeof(g)
+    if isnothing(G)
+        G = typeof(g)
+    else
+        pk = convert(G, pk)
+        g = convert(G, g)
+    end
 
     L_tree = decode(read(joinpath(basedir, "Ciphertexts.bt")))
     L′_tree = decode(read(joinpath(basedir, "ShuffledCiphertexts.bt")))
 
-    𝔀 = convert(Vector{ElGamalRow{G, 1}}, L_tree; allow_one=true)
-    𝔀′ = convert(Vector{ElGamalRow{G, 1}}, L′_tree; allow_one=true)
+    N = width_elgamal_vec(G, L_tree)
+
+    𝔀 = convert(Vector{ElGamalRow{G, N}}, L_tree; allow_one=true)
+    𝔀′ = convert(Vector{ElGamalRow{G, N}}, L′_tree; allow_one=true)
 
     return Shuffle(g, pk, 𝔀, 𝔀′)
 end
+
+load(::Type{Shuffle{G}}, basedir::Path) where G <: Group = load(Shuffle, basedir; G)
 
 function save(proof::VShuffleProof, dir::Path) 
 
@@ -131,11 +150,16 @@ function load(::Type{Braid}, dir::Path)
     shuffle = load(Shuffle, joinpath(dir, "shuffle"))
     decryption = load(DecryptionInv, joinpath(dir, "decryption"))
 
-    G = typeof(shuffle.g)
-
     return Braid(shuffle, decryption) #, members)
 end
 
+function load(::Type{Braid{G}}, dir::Path) where G <: Group
+
+    shuffle = load(Shuffle{G}, joinpath(dir, "shuffle"))
+    decryption = load(DecryptionInv{G}, joinpath(dir, "decryption"))
+
+    return Braid(shuffle, decryption) #, members)
+end
 
 function save(braid::BraidProof, dir::Path) 
 
@@ -203,24 +227,26 @@ function load_braid_simulator(dir::Path)
     return Simulator(proposition, proof, verifier)
 end
 
-width_elgamal_vec(::Type{<:PGroup}, tree::Tree) = depth(tree) == 2 ? 1 : length(tree[1])
-width_elgamal_vec(::Type{<:ECGroup}, tree::Tree) = depth(tree) == 3 ? 1 : length(tree[1])
-
 ### Some verificatum proof of shuffle loading methods
 
-function load_verificatum_proposition(basedir::AbstractString, auxsid::AbstractString)
+function load_verificatum_proposition(basedir::AbstractString, auxsid::AbstractString; G::Union{Type{<:Group}, Nothing} = nothing)
 
     PUBLIC_KEY = "$basedir/publicKey"
 
     tree = decode(read(PUBLIC_KEY))
     pk, g = unmarshal_publickey(tree)
 
+    if isnothing(G)
+        G = typeof(g)
+    else
+        pk = convert(G, pk)
+        g = convert(G, g)
+    end
+
     NIZKP = basedir * "/dir/nizkp/$auxsid/"
 
     CIPHERTEXTS = "$NIZKP/Ciphertexts.bt"
     SHUFFLED_CIPHERTEXTS = "$NIZKP/ShuffledCiphertexts.bt"
-
-    G = typeof(g)
 
     L_tree = decode(read(CIPHERTEXTS))
     L′_tree = decode(read(SHUFFLED_CIPHERTEXTS))
@@ -233,8 +259,6 @@ function load_verificatum_proposition(basedir::AbstractString, auxsid::AbstractS
     return Shuffle(g, pk, 𝔀, 𝔀′)
 end
 
-width_elgamal_row(::Type{<:PGroup}, tree::Tree) = depth(tree) == 1 ? 1 : length(tree[1])
-width_elgamal_row(::Type{<:ECGroup}, tree::Tree) = depth(tree) == 2 ? 1 : length(tree[1])
 
 function load_verificatum_proof(proofs::AbstractString, g::Group)
 
@@ -258,11 +282,11 @@ function load_verificatum_proof(proofs::AbstractString, g::Group)
 end
 
 
-function load_verificatum_simulator(basedir::AbstractString; auxsid = "default")
+function load_verificatum_simulator(basedir::AbstractString; auxsid = "default", G::Union{Type{<:Group}, Nothing} = nothing)
 
-    spec = load(ProtocolSpec, joinpath(basedir, "protInfo.xml"); auxsid)
+    spec = load(isnothing(G) ? ProtocolSpec : ProtocolSpec{G}, joinpath(basedir, "protInfo.xml"); auxsid)
 
-    proposition = load_verificatum_proposition(basedir, auxsid)
+    proposition = load_verificatum_proposition(basedir, auxsid; G)
     
     NIZKP = basedir * "/dir/nizkp/$auxsid/"
     proof = load_verificatum_proof("$NIZKP/proofs/", proposition.g)
