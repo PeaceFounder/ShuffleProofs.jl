@@ -5,7 +5,7 @@ using Test
 import ShuffleProofs: prove, verify, Simulator, Verifier, PoSChallenge, Shuffle, shuffle, VShuffleProof, PoSProof, ProtocolSpec, gen_roprg, load
 
 using CryptoGroups
-import ShuffleProofs.SigmaProofs.ElGamal: Enc, Dec, ElGamalRow
+import SigmaProofs.ElGamal: Enc, Dec, ElGamalRow 
 
 g = @ECGroup{P_192}()
 

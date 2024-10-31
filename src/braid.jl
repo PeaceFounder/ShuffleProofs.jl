@@ -14,7 +14,7 @@ Base.:(==)(x::Braid{G}, y::Braid{G}) where G <: Group = x.shuffle == y.shuffle &
 function Base.permute!(braid::Braid, perm::AbstractVector{<:Integer})
 
     # Mutations are not that simple here as struct may hold a pointer to the same reference hence permutation needs to be skipped here
-    if !(braid.decryption.cyphertexts === braid.shuffle.𝐞′)
+    if !(braid.decryption.ciphertexts === braid.shuffle.𝐞′)
         permute!(braid.shuffle, perm)
     end
 
@@ -44,7 +44,7 @@ function braid(Y::Vector{G}, g::G; roprg = gen_roprg(), x = gen_x(g; roprg), �
     return braid_proposition 
 end
 
-isconsistent(braid::Braid) = braid.shuffle.𝐞′ == braid.decryption.cyphertexts
+isconsistent(braid::Braid) = braid.shuffle.𝐞′ == braid.decryption.ciphertexts
 
 function verify(braid::Braid, 𝐫′::Vector{<:Integer}, 𝛙::Vector{<:Integer}, x::Integer)
 
