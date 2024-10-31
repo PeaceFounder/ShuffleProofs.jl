@@ -50,7 +50,7 @@ hasher = HashSpec("sha256")
 
 
 @test treespec(Simulator{Shuffle}) == (
-    "ProtInfo.xml", 
+    "protInfo.xml", 
 
     # proposition
     "publicKey.bt", 
@@ -64,7 +64,7 @@ hasher = HashSpec("sha256")
 )
 
 @test treespec(Simulator{Braid}) == (
-    "ProtInfo.xml", 
+    "protInfo.xml", 
 
     # proposition
     "shuffle/publicKey.bt", 

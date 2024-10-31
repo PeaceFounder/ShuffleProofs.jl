@@ -16,10 +16,11 @@ Unlike traditional cryptographic tools that focus solely on confidentiality and 
   - Reorganised, flat directory structure for proof serializations
 
 - **Cryptographic Infrastructure**
-  - Abstract and extensible cryptographic group support:
-    - Elliptic curves (with planned OpenSSL optimization)
-    - Modular prime groups
-  - Secure random number generation for proof components
+  - Extensible group support for arbitrary cyclic groups
+  - Native elliptic curves over prime fields (P-192, P-256, secp256k1)
+  - High-performance OpenSSL curve integration via [OpenSSLGroups.jl](https://github.com/PeaceFounder/OpenSSLGroups.jl)
+  - Modular prime groups with flexible parameter selection
+  - Secure hash based random number generation for proof components via [CryptoPRG.jl](https://github.com/PeaceFounder/CryptoPRG.jl)
   - Flexible verifier interface for custom implementations
 
 - **Verificatum Compatibility**
@@ -27,11 +28,11 @@ Unlike traditional cryptographic tools that focus solely on confidentiality and 
   - Proof generation matching Verificatum verifier specification
   - Compliant with Verificatum file format specifications
 
-- **Developer Experience**
+- **Developer-Friendly Design**
   - Clean implementation following [Haenni et al.](https://link.springer.com/chapter/10.1007/978-3-319-70278-0_23#citeas) pseudocode
   - Comprehensive test suite with high coverage
   - Type-safe implementation leveraging Julia's type system
-  - Readiness to integrate with Julia's high-performance computing ecosystem
+  - Readiness to integrate with Julia’s high-performance computing ecosystem via threading, distributed parallelism, or even GPUs.
   - Modular architecture supporting extension and customization
 
 The package implements state-of-the-art protocols according to the Verificatum verifier specification, with which Verificatum-generated proofs pass. The prover is implemented according to Haenni et al. pseudocode, which is mapped to the Verificatum verifier specification, so the created shuffle proofs are Verificatum verifier compatible. The Verificatum specification has been deployed in national-scale electronic voting systems in Estonia, Norway, and Switzerland, making this implementation suitable for aspiring production environments.
@@ -166,6 +167,35 @@ challenge_reenc(verifier::HonestVerifier, proposition, 𝐜, 𝐜̂, t) = verifi
 ```
 
 The verifier architecture is designed to be extensible, allowing users to implement custom verification strategies. This is particularly useful for specialized applications or research purposes where the standard verification process needs to be modified. 
+
+## Using OpenSSL
+
+OpenSSL's elliptic curve implementation is 10-20x faster than the one in CryptoGroups. We can leverage this performance advantage through the [OpenSSLGroups.jl](https://github.com/PeaceFounder/OpenSSLGroups.jl) package to accelerate ShuffleProofs operations:
+```
+using CryptoGroups
+using OpenSSLGroups
+import SigmaProofs.ElGamal: Enc
+import SigmaProofs.Verificatum: ProtocolSpec
+import ShuffleProofs: shuffle, verify
+
+g = @ECGroup{OpenSSLGroups.Prime256v1}()
+
+verifier = ProtocolSpec(; g)
+
+sk = 123
+pk = g^sk
+
+enc = Enc(pk, g)
+
+𝐦 = [g^4, g^2, g^3] .|> tuple
+𝐞 = enc(𝐦, [2, 3, 4]) 
+
+𝐫′ = [4, 2, 10]
+e_enc = enc(𝐞, 𝐫′)
+
+simulator = shuffle(𝐞, g, pk, verifier)
+verify(simulator)
+```
 
 ## References
 
