@@ -225,11 +225,13 @@ end
 
 function verify(proposition::Shuffle{G}, vproof::VShuffleProof{G}, verifier::Verifier) where G <: Group
 
-    𝐡 = generator_basis(verifier, G, length(proposition))
+    ρ = ro_prefix(verifier)
+    𝐡 = generator_basis(verifier, G, length(proposition.𝐞); ρ)
+    s = seed(verifier, proposition, vproof.μ; ρ, 𝐡)
     
-    𝐮 = challenge_perm(verifier, proposition, vproof.μ)
+    𝐮 = challenge_perm(verifier, proposition, vproof.μ; s)
 
-    c = challenge_reenc(verifier, proposition, vproof.μ, vproof.τ)
+    c = challenge_reenc(verifier, proposition, vproof.μ, vproof.τ; ρ, s)
 
     chg = PoSChallenge(𝐡, 𝐮, c)
 

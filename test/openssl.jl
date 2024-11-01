@@ -73,9 +73,9 @@ simulator = load_verificatum_simulator("$(@__DIR__)/validation_sample/verificatu
 @test verify(simulator)
 
 # Only about 8 times faster than CryptoGroups implementation here. 
-# simulator_ord = load_verificatum_simulator("$(@__DIR__)/validation_sample/verificatum/P256/")
-# @time verify(simulator_ord)
-# @time verify(simulator)
+#simulator_ord = load_verificatum_simulator("$(@__DIR__)/validation_sample/verificatum/P256/")
+#@btime verify(simulator_ord)
+#@btime verify(simulator)
 
 ### For extended width 
 

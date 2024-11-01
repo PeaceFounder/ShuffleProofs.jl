@@ -175,30 +175,28 @@ OpenSSL's elliptic curve implementation is 10-20x faster than the one in CryptoG
 ```julia
 using CryptoGroups
 using OpenSSLGroups
-import SigmaProofs.ElGamal: Enc
-import SigmaProofs.Verificatum: ProtocolSpec
-import ShuffleProofs: shuffle, verify
+using ShuffleProofs: shuffle, verify
+using SigmaProofs.ElGamal: Enc
+using SigmaProofs.Verificatum: ProtocolSpec
 
+# Set up ElGamal encryption with OpenSSL curve
 g = @ECGroup{OpenSSLGroups.Prime256v1}()
-
-verifier = ProtocolSpec(; g)
-
 sk = 123
 pk = g^sk
 
+# Create encryption helper
 enc = Enc(pk, g)
 
-𝐦 = [g^4, g^2, g^3] .|> tuple
-𝐞 = enc(𝐦, [2, 3, 4]) 
+# Example encryption and shuffle proof
+plaintexts = [g^4, g^2, g^3] .|> tuple
+ciphertexts = enc(plaintexts, [2, 3, 4]) 
 
-𝐫′ = [4, 2, 10]
-e_enc = enc(𝐞, 𝐫′)
-
-simulator = shuffle(𝐞, g, pk, verifier)
-verify(simulator)
+verifier = ProtocolSpec(; g)
+simulator = shuffle(ciphertexts, g, pk, verifier)
+@assert verify(simulator)
 ```
 
-Early benchmarks suggest that `verify` performance increases by a factor of four on `Prime192v1` and by a factor of eight with `Prime256v1` compared to the `CryptoGroups` implementation. This is a bit disappointing, as exponentiation performance increased by a factor of 10...20. This seems to be explained by subpar performance for multiplication operations with the `OpenSSL` implementation, which happens to be about five times slower than with `CryptoGroups` implementation. 
+Early benchmarks suggest that with OpenSSL `Prime256v1` implementation `verify` is **30x faster** compared to the `CryptoGroups` implementation. Half of the time is spent computing Jacoby symbol for `generator_basis` and one third of the time is spent into `Parser` module which can be improved in the future to increase performance for another 5x. 
 
 ## References
 
