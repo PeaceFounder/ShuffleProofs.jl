@@ -69,17 +69,21 @@ openssl_braid_simulator = load(Simulator{Braid{typeof(g)}}, BRAID_DIR)
 
 ### Testing proof loading
 
-simulator = load_verificatum_simulator("$(@__DIR__)/validation_sample/verificatum/P256/"; G = @ECGroup{OpenSSLGroups.Prime256v1})
+BASE_DIR = "$(@__DIR__)/validation_sample/verificatum/P256/"
+
+@btime simulator = load_verificatum_simulator(BASE_DIR; G = @ECGroup{OpenSSLGroups.Prime256v1})
+
+#@btime simulator = load_verificatum_simulator("$(@__DIR__)/validation_sample/verificatum/P256/"; G = @ECGroup{OpenSSLGroups.Prime256v1})
 @test verify(simulator)
 
-# Only about 8 times faster than CryptoGroups implementation here. 
-#simulator_ord = load_verificatum_simulator("$(@__DIR__)/validation_sample/verificatum/P256/")
+# About 25 times faster than CryptoGroups implementation here. 
+@btime simulator_ord = load_verificatum_simulator("$(@__DIR__)/validation_sample/verificatum/P256/")
 #@btime verify(simulator_ord)
 #@btime verify(simulator)
 
 ### For extended width 
 
-simulator = load_verificatum_simulator("$(@__DIR__)/validation_sample/verificatum/P192w3/"; G = @ECGroup{OpenSSLGroups.Prime192v1})
-@test verify(simulator) # only about 5 times faster
+# simulator = load_verificatum_simulator("$(@__DIR__)/validation_sample/verificatum/P192w3/"; G = @ECGroup{OpenSSLGroups.Prime192v1})
+# @test verify(simulator) # only about 5 times faster
 
 

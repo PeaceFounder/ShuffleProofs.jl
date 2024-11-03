@@ -1,7 +1,7 @@
 name = "ShuffleProofs"
 uuid = "31a120cc-b3cb-4d07-bbdb-d498660ddfd8"
 authors = ["Janis Erdmanis <janiserdmanis@protonmail.ch>"]
-version = "0.4.1"
+version = "0.4.2"
 
 [deps]
 CryptoGroups = "bc997328-bedd-407e-bcd3-5758e064a52d"
@@ -11,10 +11,10 @@ Random = "9a3f8284-a2c9-5f02-9a11-845980a1fd5c"
 SigmaProofs = "f8559b4c-f045-44a2-8db2-503e40bb7416"
 
 [compat]
-CryptoGroups = "0.5"
-CryptoPRG = "0.1"
+CryptoGroups = "0.6"
+CryptoPRG = "0.2"
 CryptoUtils = "0.1.1"
-SigmaProofs = "0.1"
+SigmaProofs = "0.2"
 julia = "1"
 
 [extras]

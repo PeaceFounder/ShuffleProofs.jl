@@ -2,7 +2,7 @@ using SigmaProofs.Verificatum: generator_basis, ProtocolSpec, ro_prefix
 using CryptoPRG.Verificatum: HashSpec, PRG, RO, ROPRG
 using CryptoGroups: Group, PGroup, ECGroup
 using SigmaProofs.ElGamal: width
-using SigmaProofs.Parser: Tree, Leaf, interpret, encode
+using SigmaProofs.Parser: Tree, Leaf, interpret, encode, encode!
 
 
 struct VShuffleProof{G<:Group, N} <: Proof
@@ -105,7 +105,12 @@ function seed(spec, proposition, 𝐮;
 
     tree = Tree((g, 𝐡, 𝐮, pk_tree, 𝔀, 𝔀′)) 
 
-    prg = roprg(encode(tree))
+    # We may need a reliable way for getting buffer size here
+    buffer = IOBuffer(; sizehint=1000000) 
+    encode!(buffer, tree)
+    bytes = take!(buffer)
+
+    prg = roprg(bytes)
 
     (; s) = prg
 
@@ -145,19 +150,27 @@ end
 
 
 function challenge_reenc(spec::ProtocolSpec{G}, proposition::Shuffle{G}, 𝐮, τ::Tuple{Vector{G}, G, Vector{G}, G, G, ElGamalRow{G, N}};     
-                         ρ = ro_prefix(spec),
-                         s = seed(spec, proposition, 𝐮; ρ)
-                         ) where {G <: Group, N}
-
+                        ρ = ro_prefix(spec),
+                        s = seed(spec, proposition, 𝐮; ρ)
+                        ) where {G <: Group, N}
     (; nv, rohash) = spec
-
     ro_challenge = RO(rohash, nv)
+    
+    # Create an IOBuffer to build the challenge input incrementally
+    io = IOBuffer()
+    
+    # Write prefix bytes
+    write(io, ρ)
+    
+    # Write tree directly to buffer without intermediate allocation
     tree_challenge = Tree((Leaf(s), τ))
-    𝓿 = interpret(BigInt, ro_challenge([ρ..., encode(tree_challenge)...]))
-
+    encode!(io, tree_challenge)
+    
+    # Get final bytes and compute challenge
+    challenge_bytes = take!(io)
+    𝓿 = interpret(BigInt, ro_challenge(challenge_bytes))
     return 𝓿
 end
-
 
 function challenge_reenc(spec::ProtocolSpec{G}, proposition::Shuffle{G}, 𝐜, 𝐜̂::Vector{G}, t::Tuple{G, G, G, ElGamalRow{G, N}, Vector{G}};
                          ρ = ro_prefix(spec),
@@ -177,7 +190,6 @@ function challenge_reenc(spec::ProtocolSpec{G}, proposition::Shuffle{G}, 𝐜, �
 
     return challenge_reenc(spec, proposition, 𝐜, τ; ρ, s)
 end
-
 
 function verify(proposition::Shuffle, proof::VShuffleProof, challenge::PoSChallenge; verbose=false)
 

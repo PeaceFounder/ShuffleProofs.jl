@@ -18,7 +18,7 @@ Unlike traditional cryptographic tools that focus solely on confidentiality and 
 - **Cryptographic Infrastructure**
   - Extensible group support for arbitrary cyclic groups
   - Native elliptic curves over prime fields (P-192, P-256, secp256k1)
-  - High-performance OpenSSL curve integration via [OpenSSLGroups.jl](https://github.com/PeaceFounder/OpenSSLGroups.jl)
+  - Optional high-performance OpenSSL curve integration via [OpenSSLGroups.jl](https://github.com/PeaceFounder/OpenSSLGroups.jl)
   - Modular prime groups with flexible parameter selection
   - Secure hash based random number generation for proof components via [CryptoPRG.jl](https://github.com/PeaceFounder/CryptoPRG.jl)
   - Flexible verifier interface for custom implementations
@@ -196,7 +196,11 @@ simulator = shuffle(ciphertexts, g, pk, verifier)
 @assert verify(simulator)
 ```
 
-Early benchmarks suggest that with OpenSSL `Prime256v1` implementation `verify` is **30x faster** compared to the `CryptoGroups` implementation. Half of the time is spent computing Jacoby symbol for `generator_basis` and one third of the time is spent into `Parser` module which can be improved in the future to increase performance for another 5x. 
+Early benchmarks suggest that with OpenSSL `Prime256v1` implementation, verification is about **25 times faster** than with `CryptoGroups` curve implementation. 
+
+![](test/benchmarks/VerifierProfile.png)
+
+Performance profiling reveals three major computational bottlenecks in the code: generator basis computation via `generator_basis` consumes 40% of execution time (left), verification of proof through group operations takes another 40% (right), and challenge generation via `challenge_perm` and `challenge_reenc` accounts for the remaining 20% (middle). While the generator basis computation and proof verification stages can be readily parallelised using either multithreading or multiprocessing, the challenge generation stage presents parallelisation roadblocks. Within this challenge generation phase, approximately 1/3rd of processing time is spent computing hashes from byte vectors using Nettle (highlighted in the profile view with yellow pencil fill). Hence, the specification would need to introduce block-wise hashing to parallelise this part.
 
 ## References
 
