@@ -115,11 +115,10 @@ Braiding allows for anonymous group signatures. Here's how to use it:
 ```julia
 using CryptoGroups
 using ShuffleProofs
+using SigmaProofs.Verificatum: ProtocolSpec
 
 # Setup
-_curve = curve("P-256")
-G = specialize(ECGroup, _curve, name = :P_256)
-g = G(generator(_curve))
+g = @ECGroup{P_256}()
 
 # Create member keys
 y = [4, 2, 3]
