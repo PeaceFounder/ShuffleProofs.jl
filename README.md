@@ -133,8 +133,8 @@ simulator = braid(Y, g, verifier)
 @assert verify(simulator)
 
 # Get outputs
-h = output_generator(simulator.proposition)
-Y′ = output_members(simulator.proposition)
+h = ShuffleProofs.output_generator(simulator.proposition)
+Y′ = ShuffleProofs.output_members(simulator.proposition)
 
 # Verify membership preservation
 @assert sort(h .^ y) == sort(Y′)

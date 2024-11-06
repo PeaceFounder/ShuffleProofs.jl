@@ -20,4 +20,6 @@ Base.isvalid(::Type{VShuffleProof{G, N}}, proposition::Shuffle{G, N}) where {G <
 include("braid.jl")
 include("serializer.jl")
 
+export prove, verify, shuffle, braid
+
 end # module
