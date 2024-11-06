@@ -86,7 +86,7 @@ end
 leaf(x::String) = encode(Leaf(x))
 
 
-function seed(spec, proposition, 𝐮;
+function seed(spec::ProtocolSpec, proposition::Shuffle, 𝐮;
               ρ = ro_prefix(spec),
               𝐡 = generator_basis(spec, typeof(proposition.g), length(proposition.𝐞); ρ)
               )
@@ -191,7 +191,7 @@ function challenge_reenc(spec::ProtocolSpec{G}, proposition::Shuffle{G}, 𝐜, �
     return challenge_reenc(spec, proposition, 𝐜, τ; ρ, s)
 end
 
-function verify(proposition::Shuffle, proof::VShuffleProof, challenge::PoSChallenge; verbose=false)
+function verify(proposition::Shuffle{G}, proof::VShuffleProof{G}, challenge::PoSChallenge{G}; verbose=false) where G <: Group
 
     𝐡, 𝐞, 𝓿 = challenge.𝐡, challenge.𝐮, challenge.c
 
@@ -209,7 +209,7 @@ function verify(proposition::Shuffle, proof::VShuffleProof, challenge::PoSChalle
     A = prod(𝐮 .^ 𝐞)
     
     C = prod(𝐮) / prod(𝐡)
-    D = 𝐁[N] * inv(𝐡[1])^prod(𝐞)
+    D = 𝐁[N] * inv(𝐡[1])^modprod(𝐞, order(G))
     
     F = ∏(𝔀 .^ 𝐞)
 

@@ -55,3 +55,28 @@ function Base.println(io::IO, report::Report)
 end
 
 Base.isvalid(report::Report) = report.state
+
+function modprod(elements::Vector{T}, q::T) where T <: Integer
+    return reduce((x, y) -> (x * y) % q, elements; init=T(1))
+end
+
+# function modsum(elements::Vector{T}, q::T) where T <: Integer
+#     return reduce((x, y) -> (x + y) % q, elements; init=T(0))
+# end
+
+# Different implementations of modular sum
+function modsum(elements::Vector{T}, q::T; batch_size::Int=1000) where T <: Integer
+    n = length(elements)
+    result = T(0)
+    
+    # Process in batches to reduce number of modulo operations
+    for i in 1:batch_size:n
+        batch_end = min(i + batch_size - 1, n)
+        # Sum within batch without modulo
+        batch_sum = sum(@view(elements[i:batch_end]))
+        # Apply modulo only once per batch
+        result = (result + batch_sum) % q
+    end
+    
+    return result
+end

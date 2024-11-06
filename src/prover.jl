@@ -28,6 +28,8 @@ width(::Type{<:Shuffle{<:Group, N}}) where N = N
 
 Base.length(proposition::Shuffle) = length(proposition.𝐞)
 
+seed(verifier::Verifier, proposition::Shuffle, 𝐜; 𝐡) = nothing # optional method 
+
 struct PoSProof{G <: Group, N} <: Proof
     𝐜::Vector{G}
     𝐜̂::Vector{G}
@@ -41,10 +43,12 @@ import Base: ==
 
 width(::Type{PoSProof{<:Group, N}}) where N = N
 
-struct PoSChallenge 
-    𝐡::Vector{<:Group} # Independent set of generators
+struct PoSChallenge{G<:Group}
+    𝐡::Vector{G} # Independent set of generators
     𝐮::Vector{BigInt} # PoS commitment challenge
     c::BigInt # reencryption challenge
+
+    PoSChallenge(𝐡::Vector{G}, 𝐮::Vector{<:Integer}, c::Integer) where G <: Group = new{G}(𝐡, convert(Vector{BigInt}, 𝐮), convert(BigInt, c))
 end
 
 function verify(proposition::Shuffle, 𝐫′::Matrix{<:Integer}, 𝛙::Vector{<:Integer})
@@ -107,10 +111,9 @@ function gen_commitment_chain(g::Group, c0::T, 𝐮::Vector, 𝐫::Vector) where
     return 𝐜
 end
 
-
-∑(𝐱, q) = mod(sum(𝐱), q) ### Need to improve
+∑(𝐱::Vector{T}, q::T) where T <: Integer = modsum(𝐱, q) #mod(sum(𝐱), q) ### Need to improve
+∏(𝐞::Vector{T}, q::T) where T <: Integer = modprod(𝐞, q)
 ∏(𝐱) = prod(𝐱)
-∏(f, 𝐱) = prod(f, 𝐱)
 
 using Random: RandomDevice
 
@@ -153,7 +156,8 @@ function prove(proposition::Shuffle{G}, verifier::Verifier, 𝐫′::Matrix{<:In
 
     𝐜 = gen_perm_commitment(g, 𝐡, 𝛙, 𝐫)
 
-    𝐮 = challenge_perm(verifier, proposition, 𝐜)
+    _seed = seed(verifier, proposition, 𝐜; 𝐡)
+    𝐮 = challenge_perm(verifier, proposition, 𝐜; s = _seed)
 
     𝐮′ = 𝐮[𝛙]
 
@@ -162,7 +166,7 @@ function prove(proposition::Shuffle{G}, verifier::Verifier, 𝐫′::Matrix{<:In
     𝐯 = Vector{BigInt}(undef, N) 
     𝐯[N] = 1
     for i in N-1:-1:1
-        𝐯[i] = 𝐮′[i+1] * 𝐯[i+1] 
+        𝐯[i] = 𝐮′[i+1] * 𝐯[i+1] % q
     end
 
     r̄ = ∑(𝐫, q) 
@@ -186,7 +190,7 @@ function prove(proposition::Shuffle{G}, verifier::Verifier, 𝐫′::Matrix{<:In
 
     t = (t₁, t₂, t₃, t₄, 𝐭̂) 
 
-    c = challenge_reenc(verifier, proposition, 𝐜, 𝐜̂, t)
+    c = challenge_reenc(verifier, proposition, 𝐜, 𝐜̂, t; s = _seed)
 
     s₁ = mod(ω₁ + c * r̄, q)
     s₂ = mod(ω₂ + c * r̂, q)
@@ -214,12 +218,13 @@ end
 
 function verify(proposition::Shuffle{G}, proof::PoSProof{G}, verifier::Verifier) where G <: Group
 
-
+    #ρ = ro_prefix(verifier) # can be efficiently recomputed
     𝐡 = generator_basis(verifier, G, length(proposition))
+    s = seed(verifier, proposition, proof.𝐜; 𝐡)
     
-    𝐮 = challenge_perm(verifier, proposition, proof.𝐜)
+    𝐮 = challenge_perm(verifier, proposition, proof.𝐜; s)
 
-    c = challenge_reenc(verifier, proposition, proof.𝐜, proof.𝐜̂, proof.t)
+    c = challenge_reenc(verifier, proposition, proof.𝐜, proof.𝐜̂, proof.t; s)
 
     chg = PoSChallenge(𝐡, 𝐮, c)
 
@@ -242,7 +247,7 @@ function verify(proposition::Shuffle, proof::PoSProof, challenge::PoSChallenge; 
 
     
     c̄ = ∏(𝐜) / ∏(𝐡)
-    u = mod(∏(𝐮), q)
+    u = ∏(𝐮, q) 
     
     ĉ = 𝐜̂[N] / h^u
     c̃ = ∏(𝐜 .^ 𝐮)

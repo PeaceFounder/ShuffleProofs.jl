@@ -7,7 +7,7 @@ import CryptoGroups
 import SigmaProofs: generator_basis
 
 import ShuffleProofs: prove, verify, Simulator, Verifier, PoSChallenge, Shuffle, shuffle, VShuffleProof, PoSProof
-import ShuffleProofs: PoSChallenge, gen_roprg, challenge_perm, challenge_reenc
+import ShuffleProofs: PoSChallenge, gen_roprg, challenge_perm, challenge_reenc, seed
 
 
 ### 
@@ -17,12 +17,11 @@ end
 
 PoSChallenge(verifier::HonestVerifier) = verifier.challenge
 
-
 generator_basis(verifier::HonestVerifier, G, n) = verifier.challenge.𝐡
 
-challenge_perm(verifier::HonestVerifier, proposition, 𝐜) = verifier.challenge.𝐮
+challenge_perm(verifier::HonestVerifier, proposition, 𝐜; kwargs...) = verifier.challenge.𝐮
 
-challenge_reenc(verifier::HonestVerifier, proposition, 𝐜, 𝐜̂, t) = verifier.challenge.c
+challenge_reenc(verifier::HonestVerifier, proposition, 𝐜, 𝐜̂, t; kwargs...) = verifier.challenge.c
 
 
 function test_prover(g)

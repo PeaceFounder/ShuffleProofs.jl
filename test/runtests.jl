@@ -31,9 +31,9 @@ end
     include("serializer.jl")
 end
 
-# @safetestset "Testing OpenSSL integration" begin
-#     include("openssl.jl")
-# end
+@safetestset "Testing OpenSSL integration" begin
+    include("openssl.jl")
+end
 
 @safetestset "Testing examples" begin
     include("../examples/voting-PoS.jl")

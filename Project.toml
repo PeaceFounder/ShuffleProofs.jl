@@ -1,7 +1,7 @@
 name = "ShuffleProofs"
 uuid = "31a120cc-b3cb-4d07-bbdb-d498660ddfd8"
 authors = ["Janis Erdmanis <janiserdmanis@protonmail.ch>"]
-version = "0.4.2"
+version = "0.4.3"
 
 [deps]
 CryptoGroups = "bc997328-bedd-407e-bcd3-5758e064a52d"
@@ -20,6 +20,7 @@ julia = "1"
 [extras]
 SafeTestsets = "1bc83da4-3b8d-516f-aca4-4fe02f6d838f"
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
+OpenSSLGroups = "50771dd1-78b8-490c-a786-5ddc80ce15da"
 
 [targets]
-test = ["Test", "SafeTestsets"]
+test = ["Test", "SafeTestsets", "OpenSSLGroups"]

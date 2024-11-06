@@ -1,0 +1,6 @@
+[deps]
+CryptoGroups = "bc997328-bedd-407e-bcd3-5758e064a52d"
+Luxor = "ae8d54c2-7ccd-5906-9d76-62fc9837b5bc"
+OpenSSLGroups = "50771dd1-78b8-490c-a786-5ddc80ce15da"
+ShuffleProofs = "31a120cc-b3cb-4d07-bbdb-d498660ddfd8"
+SigmaProofs = "f8559b4c-f045-44a2-8db2-503e40bb7416"
