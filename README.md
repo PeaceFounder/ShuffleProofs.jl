@@ -11,11 +11,15 @@ Traditional cryptographic tools often focus solely on confidentiality and securi
 - **Standards-Compliant**: Compatible with the battle-tested Verificatum verifier specification
 - **Flexible Design**: Supports various cryptographic groups and custom verification strategies
 - **Developer-Friendly**: Clean, type-safe implementation with comprehensive testing that closely matches [Haenni et al.](https://link.springer.com/chapter/10.1007/978-3-319-70278-0_23#citeas) pseudocode
-- **Enabling Ecosystem**: Easily reuses [CryptoPRG](https://github.com/PeaceFounder/CryptoPRG.jl), [CryptoGroups](https://github.com/PeaceFounder/CryptoGroups.jl), [OpenSSLGroups](https://github.com/PeaceFounder/OpenSSLGroups.jl) and [SigmaProofs](https://github.com/PeaceFounder/SigmaProofs.jl) for other supporting zero-knowledge proofs and transition seamlessly from prototyping to production environments
+- **Enabling Ecosystem**: Easily reuse [CryptoPRG](https://github.com/PeaceFounder/CryptoPRG.jl), [CryptoGroups](https://github.com/PeaceFounder/CryptoGroups.jl), [OpenSSLGroups](https://github.com/PeaceFounder/OpenSSLGroups.jl) and [SigmaProofs](https://github.com/PeaceFounder/SigmaProofs.jl) for other supporting zero-knowledge proofs and transition seamlessly from prototyping to production environments
 - **High Performance**: Competitive with Verificatum on single-core benchmarks
 
-![P-256 Performance](test/benchmarks/results/P-256_N=100000.svg)
-![ModP Performance](test/benchmarks/results/modp_2048_N=10000.svg)
+<table>
+<tr>
+<td><img src="test/benchmarks/results/P-256_N=100000.svg" alt="P-256 Performance"></td>
+<td><img src="test/benchmarks/results/modp_2048_N=10000.svg" alt="ModP Performance"></td>
+</tr>
+</table>
 
 *Note: Light blue sections show the time taken for a proposition, proof deserialisation, and group membership validation in ShuffleProofs. The benchmarks for the P-256 group have been made using the implementation from OpenSSLGroups. Both quadratic residue prime group with 2048-bit prime modulus and NIST standard curve P-256 group offer 128-bit security for discrete logarithm problems. Performance tests made with Ubuntu 24.04 on M1 Pro. The benchmark figures have been made with code in `test/benchmarks/benchmark.jl`*
 
