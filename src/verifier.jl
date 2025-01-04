@@ -132,7 +132,7 @@ function challenge_perm(spec::ProtocolSpec, proposition, 𝐮;
     return 𝐞
 end
 
-function verify(proposition::Shuffle{G}, proof::PoSProof{G}, verifier::ProtocolSpec{G}) where G <: Group
+function verify(proposition::Shuffle{G, N}, proof::PoSProof{G, N}, verifier::ProtocolSpec{G}) where {G <: Group, N}
 
 
     ρ = ro_prefix(verifier)
@@ -149,7 +149,7 @@ function verify(proposition::Shuffle{G}, proof::PoSProof{G}, verifier::ProtocolS
 end
 
 
-function challenge_reenc(spec::ProtocolSpec{G}, proposition::Shuffle{G}, 𝐮, τ::Tuple{Vector{G}, G, Vector{G}, G, G, ElGamalRow{G, N}};     
+function challenge_reenc(spec::ProtocolSpec{G}, proposition::Shuffle{G, N}, 𝐮, τ::Tuple{Vector{G}, G, Vector{G}, G, G, ElGamalRow{G, N}};     
                         ρ = ro_prefix(spec),
                         s = seed(spec, proposition, 𝐮; ρ)
                         ) where {G <: Group, N}
@@ -172,7 +172,7 @@ function challenge_reenc(spec::ProtocolSpec{G}, proposition::Shuffle{G}, 𝐮, �
     return 𝓿
 end
 
-function challenge_reenc(spec::ProtocolSpec{G}, proposition::Shuffle{G}, 𝐜, 𝐜̂::Vector{G}, t::Tuple{G, G, G, ElGamalRow{G, N}, Vector{G}};
+function challenge_reenc(spec::ProtocolSpec{G}, proposition::Shuffle{G, N}, 𝐜, 𝐜̂::Vector{G}, t::Tuple{G, G, G, ElGamalRow{G, N}, Vector{G}};
                          ρ = ro_prefix(spec),
                          s = seed(spec, proposition, 𝐜; ρ)
                          ) where {G <: Group, N}
@@ -191,7 +191,7 @@ function challenge_reenc(spec::ProtocolSpec{G}, proposition::Shuffle{G}, 𝐜, �
     return challenge_reenc(spec, proposition, 𝐜, τ; ρ, s)
 end
 
-function verify(proposition::Shuffle{G}, proof::VShuffleProof{G}, challenge::PoSChallenge{G}; verbose=false) where G <: Group
+function verify(proposition::Shuffle{G, W}, proof::VShuffleProof{G, W}, challenge::PoSChallenge{G}; verbose=false) where {G <: Group, W}
 
     𝐡, 𝐞, 𝓿 = challenge.𝐡, challenge.𝐮, challenge.c
 
@@ -235,7 +235,7 @@ function verify(proposition::Shuffle{G}, proof::VShuffleProof{G}, challenge::PoS
 end
 
 
-function verify(proposition::Shuffle{G}, vproof::VShuffleProof{G}, verifier::Verifier) where G <: Group
+function verify(proposition::Shuffle{G, N}, vproof::VShuffleProof{G, N}, verifier::Verifier) where {G <: Group, N}
 
     ρ = ro_prefix(verifier)
     𝐡 = generator_basis(verifier, G, length(proposition.𝐞); ρ)

@@ -216,7 +216,7 @@ function prove(proposition::Shuffle{G}, verifier::Verifier, 𝐫′::Matrix{<:In
 end
 
 
-function verify(proposition::Shuffle{G}, proof::PoSProof{G}, verifier::Verifier) where G <: Group
+function verify(proposition::Shuffle{G, N}, proof::PoSProof{G, N}, verifier::Verifier) where {G <: Group, N}
 
     #ρ = ro_prefix(verifier) # can be efficiently recomputed
     𝐡 = generator_basis(verifier, G, length(proposition))
@@ -232,7 +232,7 @@ function verify(proposition::Shuffle{G}, proof::PoSProof{G}, verifier::Verifier)
 end
 
 
-function verify(proposition::Shuffle, proof::PoSProof, challenge::PoSChallenge; verbose=false)
+function verify(proposition::Shuffle{G, W}, proof::PoSProof{G, W}, challenge::PoSChallenge{G}; verbose=false) where {G <: Group, W}
 
     (; g, pk, 𝐞, 𝐞′) = proposition
     (; 𝐜, 𝐜̂, t, s) = proof
