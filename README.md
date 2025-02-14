@@ -202,8 +202,8 @@ verifier = ProtocolSpec(; g)
 ## References
 
 - Wikstrom, "How To Implement A Stand-Alone Verifier for the Verificatum Mix-Net"
-- Wikström, "A Commitment-Consistent Proof of a Shuffle"
 - Wikström, "User Manual for the Verificatum Mix-Net"
+- Wikström, "A Sender Verifiable Mix-Net and a New Proof of a Shuffle"
 - Haenni et al., "Pseudo-Code Algorithms for Verifiable Re-Encryption Mix-Nets"
 - [verificatum.org](https://verificatum.org)
 

@@ -31,10 +31,18 @@ end
     include("serializer.jl")
 end
 
+@safetestset "Verificatum Serilization tests" begin
+    include("verificatum_schema/serializer.jl")
+end
+
 @safetestset "Testing OpenSSL integration" begin
     include("openssl.jl")
 end
 
-@safetestset "Testing examples" begin
-    include("../examples/voting-PoS.jl")
+@safetestset "Testing voting example" begin
+    include("../examples/voting.jl")
+end
+
+@safetestset "Testing vmnv example" begin
+    include("../examples/vmnv.jl")
 end

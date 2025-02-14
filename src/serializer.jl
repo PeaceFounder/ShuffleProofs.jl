@@ -101,21 +101,28 @@ end
 
 load(::Type{Shuffle{G}}, basedir::Path) where G <: Group = load(Shuffle, basedir; G)
 
-function save(proof::VShuffleProof, dir::Path) 
+function save(proof::VShuffleProof{G, W}, dir::Path; suffix = "") where {G <: Group, W}
 
     (; μ, τ, σ) = proof
 
-    write(joinpath(dir, "PermutationCommitment.bt"), Tree(μ))
-    write(joinpath(dir, "PoSCommitment.bt"), Tree(τ))
+    write(joinpath(dir, "PermutationCommitment$suffix.bt"), Tree(μ))
+    write(joinpath(dir, "PoSCommitment$suffix.bt"), Tree(τ))
 
     L = bitlength(μ[1])
 
-    write(joinpath(dir, "PoSReply.bt"), Tree(σ; L))
+    k_A, 𝐤_B, k_C, k_D, 𝐤_E, k_F = σ
+    σ_tree = (k_A, 𝐤_B, k_C, k_D, 𝐤_E, W == 1 ? k_F[1] : k_F)
+
+    if G <: PGroup
+        write(joinpath(dir, "PoSReply$suffix.bt"), Tree(σ_tree; L = L - 1)) # bug in specs
+    else
+        write(joinpath(dir, "PoSReply$suffix.bt"), Tree(σ_tree; L))
+    end
     
     return 
 end 
 
-save(proof::PoSProof, dir::Path) = save(VShuffleProof(proof), dir)
+save(proof::PoSProof, dir::Path; suffix = "") = save(VShuffleProof(proof), dir; suffix)
 
 function load(::Type{VShuffleProof{G}}, basedir::Path) where G <: Group
 
@@ -296,3 +303,32 @@ function load_verificatum_simulator(basedir::AbstractString; auxsid = "default",
     return simulator
 end
 
+# May also make sense to use Path for basedir
+function store_verificatum_nizkp(basedir::Path, simulator::Simulator{Shuffle{G, N}}) where {G <: Group, N}
+
+    (; proposition, proof, verifier) = simulator
+
+    write(joinpath(basedir, "auxsid"), verifier.auxsid)
+    write(joinpath(basedir, "version"), verifier.version)
+    write(joinpath(basedir, "type"), "shuffling")
+    write(joinpath(basedir, "width"), string(N))
+
+    (; g, pk, 𝐞, 𝐞′) = proposition
+    write(joinpath(basedir, "Ciphertexts.bt"), Tree(𝐞))
+    write(joinpath(basedir, "ShuffledCiphertexts.bt"), Tree(𝐞′))
+
+    #g_ = N == 1 ? g : ntuple(n -> g, N)
+    #pk_ = N == 1 ? pk : ntuple(n -> pk, N)
+    #write(joinpath(basedir, "FullPublicKey.bt"), Tree((g_, pk_)))
+    write(joinpath(basedir, "FullPublicKey.bt"), Tree((g, pk))) # Spec bug: inconsistent with seed
+
+    mkdir(joinpath(basedir, "proofs"))
+    write(joinpath(basedir, "proofs", "Ciphertexts01.bt"), Tree(𝐞′))
+    write(joinpath(basedir, "proofs", "activethreshold"), string(1))
+
+    save(simulator.proof, joinpath(basedir, "proofs"); suffix = "01")
+
+    return
+end
+
+store_verificatum_nizkp(dir::AbstractString, simulator::Simulator{<:Shuffle}) = store_verificatum_nizkp(LocalPath(dir), simulator)
